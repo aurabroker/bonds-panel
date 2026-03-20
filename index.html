@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bonds — Panel</title>
+<title>Bonds â Panel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -167,11 +167,11 @@ input,select,textarea{font:inherit;color:inherit}
       <input class="form-input" style="width:100%" id="auth-email" type="email" placeholder="twoj@email.pl" autocomplete="email">
     </div>
     <div class="form-field">
-      <label class="form-label" for="auth-pass">Hasło</label>
-      <input class="form-input" style="width:100%" id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+      <label class="form-label" for="auth-pass">HasĹo</label>
+      <input class="form-input" style="width:100%" id="auth-pass" type="password" placeholder="â˘â˘â˘â˘â˘â˘â˘â˘" autocomplete="current-password">
     </div>
     <button class="btn btn-primary" style="width:100%;justify-content:center" id="btn-login">
-      <i data-lucide="log-in" width="16" height="16"></i> Zaloguj się
+      <i data-lucide="log-in" width="16" height="16"></i> Zaloguj siÄ
     </button>
   </div>
 </div>
@@ -189,7 +189,7 @@ input,select,textarea{font:inherit;color:inherit}
     </div>
     <div class="topbar-right">
       <span id="topbar-badge"></span>
-      <button class="btn-icon" data-theme-toggle aria-label="Przełącz motyw">
+      <button class="btn-icon" data-theme-toggle aria-label="PrzeĹÄcz motyw">
         <i data-lucide="sun" width="18" height="18"></i>
       </button>
       <button class="btn-icon" id="btn-logout" aria-label="Wyloguj">
@@ -204,30 +204,30 @@ input,select,textarea{font:inherit;color:inherit}
       <div class="nav-item" data-page="bonds"><i data-lucide="shield-check" width="16" height="16"></i> Gwarancje <span class="nav-badge" id="nav-expiring-badge" style="display:none">0</span></div>
       <div class="nav-item" data-page="limits"><i data-lucide="building-2" width="16" height="16"></i> Limity TU</div>
       <div class="nav-item" data-page="terminarz"><i data-lucide="calendar-clock" width="16" height="16"></i> Terminarz</div>
-      <div class="nav-item" data-page="skladki"><i data-lucide="calculator" width="16" height="16"></i> Składki</div>
+      <div class="nav-item" data-page="skladki"><i data-lucide="calculator" width="16" height="16"></i> SkĹadki</div>
       <div id="admin-nav" style="display:none">
-        <div class="nav-section" style="color:var(--color-admin)">⚡ God Admin</div>
+        <div class="nav-section" style="color:var(--color-admin)">âĄ God Admin</div>
         <div class="nav-item admin-nav" data-page="admin-clients"><i data-lucide="users" width="16" height="16"></i> Klienci</div>
         <div class="nav-item admin-nav" data-page="admin-insurers"><i data-lucide="landmark" width="16" height="16"></i> Ubezpieczyciele</div>
-        <div class="nav-item admin-nav" data-page="admin-users"><i data-lucide="user-cog" width="16" height="16"></i> Użytkownicy</div>
+        <div class="nav-item admin-nav" data-page="admin-users"><i data-lucide="user-cog" width="16" height="16"></i> UĹźytkownicy</div>
       </div>
     </nav>
     <main class="main">
 
       <div class="page active" id="page-dashboard">
         <h1 class="page-title">Dashboard</h1>
-        <p class="page-subtitle" id="dash-subtitle">Ładowanie…</p>
+        <p class="page-subtitle" id="dash-subtitle">ĹadowanieâŚ</p>
         <div id="alert-expiring" style="display:none" class="alert alert-warning">
           <i data-lucide="alert-triangle" width="18" height="18"></i>
           <span id="alert-text"></span>
         </div>
         <div id="admin-dash-alert" style="display:none" class="alert alert-admin">
           <i data-lucide="zap" width="18" height="18"></i>
-          <span>Jesteś zalogowany jako <strong>GOD ADMIN</strong> — masz dostęp do wszystkich danych.</span>
+          <span>JesteĹ zalogowany jako <strong>GOD ADMIN</strong> â masz dostÄp do wszystkich danych.</span>
         </div>
         <div class="kpi-grid" id="kpi-grid"></div>
         <div class="table-wrap">
-          <div class="table-toolbar"><h3>Najbliższe wygaśnięcia</h3></div>
+          <div class="table-toolbar"><h3>NajbliĹźsze wygaĹniÄcia</h3></div>
           <div id="timeline-list" style="padding:var(--space-4) var(--space-5)"></div>
         </div>
       </div>
@@ -245,15 +245,15 @@ input,select,textarea{font:inherit;color:inherit}
             <select class="form-select" id="filter-rodzaj" style="width:auto">
               <option value="">Wszystkie typy</option>
               <option value="WADIUM">Wadium</option>
-              <option value="NWK">Należyte wykonanie</option>
-              <option value="UWU">Usunięcie wad i usterek</option>
+              <option value="NWK">NaleĹźyte wykonanie</option>
+              <option value="UWU">UsuniÄcie wad i usterek</option>
               <option value="ZAL">Zwrot zaliczki</option>
             </select>
             <select class="form-select" id="filter-status" style="width:auto">
               <option value="">Wszystkie statusy</option>
               <option value="active">Aktywne</option>
-              <option value="expiring">Wygasające</option>
-              <option value="expired">Wygasłe</option>
+              <option value="expiring">WygasajÄce</option>
+              <option value="expired">WygasĹe</option>
             </select>
             <button class="btn btn-primary" id="btn-new-bond"><i data-lucide="plus" width="16" height="16"></i> Nowa gwarancja</button>
           </div>
@@ -261,7 +261,7 @@ input,select,textarea{font:inherit;color:inherit}
             <table class="tbl">
               <thead><tr>
                 <th>Nr</th><th>Rodzaj</th><th>Kontrakt / Inwestor / Beneficjent</th>
-                <th>TU</th><th>Okres</th><th class="num">Suma (PLN)</th><th class="num">Składka</th><th>Status</th><th></th>
+                <th>TU</th><th>Okres</th><th class="num">Suma (PLN)</th><th class="num">SkĹadka</th><th>Status</th><th></th>
               </tr></thead>
               <tbody id="bonds-tbody"></tbody>
             </table>
@@ -271,7 +271,7 @@ input,select,textarea{font:inherit;color:inherit}
 
       <div class="page" id="page-limits">
         <h1 class="page-title">Limity TU</h1>
-        <p class="page-subtitle">Umowy limitów — kwoty mrożone na poczet aktywnych gwarancji</p>
+        <p class="page-subtitle">Umowy limitĂłw â kwoty mroĹźone na poczet aktywnych gwarancji</p>
         <div id="limits-tenant-selector" class="tenant-selector" style="display:none">
           <label>Klient:</label>
           <select class="form-select" id="admin-tenant-filter-limits" style="min-width:200px"></select>
@@ -282,7 +282,7 @@ input,select,textarea{font:inherit;color:inherit}
 
       <div class="page" id="page-terminarz">
         <h1 class="page-title">Terminarz</h1>
-        <p class="page-subtitle">Gwarancje posortowane według daty wygaśnięcia</p>
+        <p class="page-subtitle">Gwarancje posortowane wedĹug daty wygaĹniÄcia</p>
         <div class="table-wrap">
           <div style="overflow-x:auto">
             <table class="tbl">
@@ -297,20 +297,20 @@ input,select,textarea{font:inherit;color:inherit}
       </div>
 
       <div class="page" id="page-skladki">
-        <h1 class="page-title">Składki</h1>
-        <p class="page-subtitle">Kalkulacja: liczba dni / 365 × stawka% × suma gwarancyjna</p>
+        <h1 class="page-title">SkĹadki</h1>
+        <p class="page-subtitle">Kalkulacja: liczba dni / 365 Ă stawka% Ă suma gwarancyjna</p>
         <div class="table-wrap">
           <div style="overflow-x:auto">
             <table class="tbl">
               <thead><tr>
                 <th>Nr</th><th>Kontrakt</th><th>Rodzaj</th>
                 <th class="num">Dni</th><th class="num">Stawka %</th>
-                <th class="num">Suma</th><th class="num">Składka (PLN)</th>
+                <th class="num">Suma</th><th class="num">SkĹadka (PLN)</th>
               </tr></thead>
               <tbody id="skladki-tbody"></tbody>
               <tfoot><tr>
-                <td colspan="6" style="font-weight:700;padding:var(--space-3) var(--space-4)">Łącznie</td>
-                <td class="num" id="skladki-total" style="font-weight:700;padding:var(--space-3) var(--space-4)">—</td>
+                <td colspan="6" style="font-weight:700;padding:var(--space-3) var(--space-4)">ĹÄcznie</td>
+                <td class="num" id="skladki-total" style="font-weight:700;padding:var(--space-3) var(--space-4)">â</td>
               </tr></tfoot>
             </table>
           </div>
@@ -319,16 +319,16 @@ input,select,textarea{font:inherit;color:inherit}
 
       <div class="page" id="page-admin-clients">
         <h1 class="page-title">Klienci</h1>
-        <p class="page-subtitle">Zarządzanie firmami klientów</p>
+        <p class="page-subtitle">ZarzÄdzanie firmami klientĂłw</p>
         <div class="table-wrap">
           <div class="table-toolbar">
-            <h3>Lista klientów</h3>
+            <h3>Lista klientĂłw</h3>
             <button class="btn btn-admin" id="btn-new-client"><i data-lucide="plus" width="16" height="16"></i> Nowy klient</button>
           </div>
           <div style="overflow-x:auto">
             <table class="tbl">
               <thead><tr>
-                <th>Firma</th><th>Slug</th><th class="num">Gwarancje</th><th class="num">Suma zaangażowana</th><th>Wygasające</th><th></th>
+                <th>Firma</th><th>Slug</th><th class="num">Gwarancje</th><th class="num">Suma zaangaĹźowana</th><th>WygasajÄce</th><th></th>
               </tr></thead>
               <tbody id="clients-tbody"></tbody>
             </table>
@@ -338,7 +338,7 @@ input,select,textarea{font:inherit;color:inherit}
 
       <div class="page" id="page-admin-insurers">
         <h1 class="page-title">Ubezpieczyciele</h1>
-        <p class="page-subtitle">Baza TU — każde TU może mieć wiele umów limitów dla różnych klientów</p>
+        <p class="page-subtitle">Baza TU â kaĹźde TU moĹźe mieÄ wiele umĂłw limitĂłw dla rĂłĹźnych klientĂłw</p>
         <div class="table-wrap">
           <div class="table-toolbar">
             <h3>Lista TU</h3>
@@ -347,7 +347,7 @@ input,select,textarea{font:inherit;color:inherit}
           <div style="overflow-x:auto">
             <table class="tbl">
               <thead><tr>
-                <th>Nazwa TU</th><th>Klient</th><th class="num">Limit (PLN)</th><th class="num">Stawka bazowa %</th><th class="num">Składka min.</th><th>UL nr</th><th>Ważność UL</th><th></th>
+                <th>Nazwa TU</th><th>Klient</th><th class="num">Limit (PLN)</th><th class="num">Stawka bazowa %</th><th class="num">SkĹadka min.</th><th>UL nr</th><th>WaĹźnoĹÄ UL</th><th></th>
               </tr></thead>
               <tbody id="insurers-tbody"></tbody>
             </table>
@@ -356,10 +356,10 @@ input,select,textarea{font:inherit;color:inherit}
       </div>
 
       <div class="page" id="page-admin-users">
-        <h1 class="page-title">Użytkownicy</h1>
-        <p class="page-subtitle">Przypisanie kont do firm klientów</p>
+        <h1 class="page-title">UĹźytkownicy</h1>
+        <p class="page-subtitle">Przypisanie kont do firm klientĂłw</p>
         <div class="table-wrap">
-          <div class="table-toolbar"><h3>Lista użytkowników</h3></div>
+          <div class="table-toolbar"><h3>Lista uĹźytkownikĂłw</h3></div>
           <div style="overflow-x:auto">
             <table class="tbl">
               <thead><tr><th>User ID / Email</th><th>Klient</th><th>Rola</th><th></th></tr></thead>
@@ -395,8 +395,8 @@ input,select,textarea{font:inherit;color:inherit}
           <label class="form-label" for="f-rodzaj">Rodzaj</label>
           <select class="form-select" style="width:100%" id="f-rodzaj">
             <option value="WADIUM">Wadium</option>
-            <option value="NWK">Należyte wykonanie (NWK)</option>
-            <option value="UWU">Usunięcie wad i usterek (UWU)</option>
+            <option value="NWK">NaleĹźyte wykonanie (NWK)</option>
+            <option value="UWU">UsuniÄcie wad i usterek (UWU)</option>
             <option value="ZAL">Zwrot zaliczki (ZAL)</option>
           </select>
         </div>
@@ -408,23 +408,23 @@ input,select,textarea{font:inherit;color:inherit}
       <div class="form-row">
         <div class="form-field">
           <label class="form-label" for="f-inwestor">Inwestor</label>
-          <input class="form-input" style="width:100%" id="f-inwestor" type="text" placeholder="np. GDDKiA Oddział Warszawa">
+          <input class="form-input" style="width:100%" id="f-inwestor" type="text" placeholder="np. GDDKiA OddziaĹ Warszawa">
         </div>
         <div class="form-field">
           <label class="form-label" for="f-beneficjent">Beneficjent gwarancji</label>
           <input class="form-input" style="width:100%" id="f-beneficjent" type="text" placeholder="np. GDDKiA Centrala">
-          <span class="form-hint">Podmiot uprawniony do żądania wypłaty</span>
+          <span class="form-hint">Podmiot uprawniony do ĹźÄdania wypĹaty</span>
         </div>
       </div>
       <div class="form-row">
         <div class="form-field">
-          <label class="form-label" for="f-tu">Towarzystwo Ubezpieczeń</label>
+          <label class="form-label" for="f-tu">Towarzystwo UbezpieczeĹ</label>
           <select class="form-select" style="width:100%" id="f-tu"></select>
         </div>
         <div class="form-field" style="display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:var(--space-1)">
           <label class="checkbox-row">
             <input type="checkbox" id="f-bez-limitu">
-            Gwarancja poza umową limitu
+            Gwarancja poza umowÄ limitu
           </label>
           <span class="form-hint">Zaznacz gdy brak UL z tym TU</span>
         </div>
@@ -454,13 +454,13 @@ input,select,textarea{font:inherit;color:inherit}
         </div>
       </div>
       <div class="calc-box">
-        <div class="calc-label">SKŁADKA = dni / 365 × stawka% × suma</div>
-        <div class="calc-value" id="calc-skladka">—</div>
+        <div class="calc-label">SKĹADKA = dni / 365 Ă stawka% Ă suma</div>
+        <div class="calc-value" id="calc-skladka">â</div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-bond')">Anuluj</button>
-      <button class="btn btn-primary" id="modal-bond-save"><i data-lucide="save" width="16" height="16"></i> Zapisz gwarancję</button>
+      <button class="btn btn-primary" id="modal-bond-save"><i data-lucide="save" width="16" height="16"></i> Zapisz gwarancjÄ</button>
     </div>
   </div>
 </div>
@@ -481,7 +481,7 @@ input,select,textarea{font:inherit;color:inherit}
       <div class="form-field">
         <label class="form-label" for="fc-slug">Slug</label>
         <input class="form-input" style="width:100%" id="fc-slug" type="text" placeholder="np. budimex">
-        <span class="form-hint">Małe litery, bez spacji</span>
+        <span class="form-hint">MaĹe litery, bez spacji</span>
       </div>
     </div>
     <div class="modal-footer">
@@ -516,7 +516,7 @@ input,select,textarea{font:inherit;color:inherit}
         <div class="form-field">
           <label class="form-label" for="fi-limit">Kwota limitu (PLN)</label>
           <input class="form-input" style="width:100%" id="fi-limit" type="number" min="0" step="1000" placeholder="5000000">
-          <span class="form-hint">Zostaw puste jeśli brak UL</span>
+          <span class="form-hint">Zostaw puste jeĹli brak UL</span>
         </div>
       </div>
       <div class="form-row">
@@ -535,7 +535,7 @@ input,select,textarea{font:inherit;color:inherit}
           <input class="form-input" style="width:100%" id="fi-stawka" type="number" min="0" step="0.001" placeholder="0.800">
         </div>
         <div class="form-field">
-          <label class="form-label" for="fi-skladka-min">Składka minimalna (PLN)</label>
+          <label class="form-label" for="fi-skladka-min">SkĹadka minimalna (PLN)</label>
           <input class="form-input" style="width:100%" id="fi-skladka-min" type="number" min="0" step="1" placeholder="500">
         </div>
       </div>
@@ -547,11 +547,11 @@ input,select,textarea{font:inherit;color:inherit}
   </div>
 </div>
 
-<!-- MODAL: UŻYTKOWNIK -->
+<!-- MODAL: UĹťYTKOWNIK -->
 <div class="modal-overlay" id="modal-user-assign">
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-header">
-      <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+      <h2 class="modal-title">Przypisz klienta do uĹźytkownika</h2>
       <button class="btn-icon" onclick="closeModal('modal-user-assign')"><i data-lucide="x" width="18" height="18"></i></button>
     </div>
     <div class="modal-body">
@@ -584,7 +584,7 @@ const SB_URL = 'https://kukvgsjrmrqtzhkszzum.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
-const fmt = n => n==null?'—':Number(n).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt = n => n==null?'â':Number(n).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
 const dateDiff = (a,b) => Math.round((new Date(b)-new Date(a))/(1000*60*60*24));
 const today = () => new Date().toISOString().slice(0,10);
 
@@ -595,8 +595,8 @@ function bondStatus(b){
 }
 function statusBadge(b){
   const s=bondStatus(b);
-  if(s==='expired')  return '<span class="badge badge-expired">Wygasły</span>';
-  if(s==='expiring') return '<span class="badge badge-expiring">Wygasa wkrótce</span>';
+  if(s==='expired')  return '<span class="badge badge-expired">WygasĹy</span>';
+  if(s==='expiring') return '<span class="badge badge-expiring">Wygasa wkrĂłtce</span>';
   return '<span class="badge badge-active">Aktywny</span>';
 }
 function rodzajBadge(r){
@@ -635,7 +635,7 @@ async function initApp(){
     .eq('bond_id',session.user.id).single();
   if(profile?.bond_is_admin){
     isAdmin=true;
-    document.getElementById('topbar-badge').innerHTML='<span class="admin-badge">⚡ God Admin</span>';
+    document.getElementById('topbar-badge').innerHTML='<span class="admin-badge">âĄ God Admin</span>';
     document.getElementById('admin-nav').style.display='block';
     document.getElementById('admin-dash-alert').style.display='flex';
     await loadAll();
@@ -702,7 +702,7 @@ function populateTenantSelectors(){
     document.getElementById('limits-tenant-selector').style.display='flex';
     document.getElementById('f-tenant-row').style.display='block';
   }
-  document.getElementById('dash-subtitle').textContent='Widok wszystkich klientów — '+allTenants.length+' firm';
+  document.getElementById('dash-subtitle').textContent='Widok wszystkich klientĂłw â '+allTenants.length+' firm';
 }
 
 function renderDashboard(bonds){
@@ -710,15 +710,15 @@ function renderDashboard(bonds){
   const expiring=bonds.filter(b=>bondStatus(b)==='expiring');
   const suma=[...active,...expiring].reduce((s,b)=>s+(b.bond_suma||0),0);
   const skladka=bonds.reduce((s,b)=>s+(b.bond_skladka||0),0);
-  const kpiExtra=isAdmin?`<div class="kpi-card"><div class="kpi-label">Klientów</div><div class="kpi-value">${allTenants.length}</div><div class="kpi-sub">aktywnych firm</div></div>`:'';
+  const kpiExtra=isAdmin?`<div class="kpi-card"><div class="kpi-label">KlientĂłw</div><div class="kpi-value">${allTenants.length}</div><div class="kpi-sub">aktywnych firm</div></div>`:'';
   document.getElementById('kpi-grid').innerHTML=`
-    <div class="kpi-card"><div class="kpi-label">Aktywne gwarancje</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">${expiring.length} wygasające wkrótce</div></div>
-    <div class="kpi-card"><div class="kpi-label">Suma zaangażowana</div><div class="kpi-value">${fmt(suma)}</div><div class="kpi-sub">PLN aktywne + wygasające</div></div>
-    <div class="kpi-card"><div class="kpi-label">Wygasające ≤30 dni</div><div class="kpi-value" style="color:${expiring.length>0?'var(--color-warning)':'inherit'}">${expiring.length}</div><div class="kpi-sub">wymagają uwagi</div></div>
-    <div class="kpi-card"><div class="kpi-label">Łączna składka</div><div class="kpi-value">${fmt(skladka)}</div><div class="kpi-sub">PLN wszystkie gwarancje</div></div>${kpiExtra}`;
+    <div class="kpi-card"><div class="kpi-label">Aktywne gwarancje</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">${expiring.length} wygasajÄce wkrĂłtce</div></div>
+    <div class="kpi-card"><div class="kpi-label">Suma zaangaĹźowana</div><div class="kpi-value">${fmt(suma)}</div><div class="kpi-sub">PLN aktywne + wygasajÄce</div></div>
+    <div class="kpi-card"><div class="kpi-label">WygasajÄce â¤30 dni</div><div class="kpi-value" style="color:${expiring.length>0?'var(--color-warning)':'inherit'}">${expiring.length}</div><div class="kpi-sub">wymagajÄ uwagi</div></div>
+    <div class="kpi-card"><div class="kpi-label">ĹÄczna skĹadka</div><div class="kpi-value">${fmt(skladka)}</div><div class="kpi-sub">PLN wszystkie gwarancje</div></div>${kpiExtra}`;
   if(expiring.length>0){
     document.getElementById('alert-expiring').style.display='flex';
-    document.getElementById('alert-text').innerHTML=`<strong>${expiring.length} gwarancji wygasa wkrótce</strong> — sprawdź terminarz.`;
+    document.getElementById('alert-text').innerHTML=`<strong>${expiring.length} gwarancji wygasa wkrĂłtce</strong> â sprawdĹş terminarz.`;
   } else document.getElementById('alert-expiring').style.display='none';
   const sorted=[...bonds].filter(b=>bondStatus(b)!=='expired').sort((a,b)=>a.bond_data_do.localeCompare(b.bond_data_do)).slice(0,8);
   const tl=document.getElementById('timeline-list');
@@ -726,7 +726,7 @@ function renderDashboard(bonds){
   tl.innerHTML=sorted.map(b=>{
     const s=bondStatus(b);const days=dateDiff(today(),b.bond_data_do);
     const tenantInfo=isAdmin&&b.bond_tenants?` <span class="badge badge-admin">${b.bond_tenants.bond_nazwa}</span>`:'';
-    return `<div class="timeline-item"><div class="dot dot-${s}"></div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--text-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}${tenantInfo}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${b.bond_nr} · ${b.bond_insurers?.bond_nazwa||'—'} · ${rodzajBadge(b.bond_rodzaj)}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:var(--text-sm);font-weight:600">${b.bond_data_do}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${days} dni</div></div></div>`;
+    return `<div class="timeline-item"><div class="dot dot-${s}"></div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--text-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}${tenantInfo}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${b.bond_nr} Âˇ ${b.bond_insurers?.bond_nazwa||'â'} Âˇ ${rodzajBadge(b.bond_rodzaj)}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:var(--text-sm);font-weight:600">${b.bond_data_do}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${days} dni</div></div></div>`;
   }).join('');
   lucide.createIcons();
 }
@@ -738,12 +738,12 @@ function renderBonds(bonds){
   if(rFil) list=list.filter(b=>b.bond_rodzaj===rFil);
   if(sFil) list=list.filter(b=>bondStatus(b)===sFil);
   const tb=document.getElementById('bonds-tbody');
-  if(!list.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><h3>Brak gwarancji</h3><p>Dodaj pierwszą gwarancję klikając przycisk powyżej</p></div></td></tr>`;lucide.createIcons();return;}
+  if(!list.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><h3>Brak gwarancji</h3><p>Dodaj pierwszÄ gwarancjÄ klikajÄc przycisk powyĹźej</p></div></td></tr>`;lucide.createIcons();return;}
   tb.innerHTML=list.map(b=>`<tr>
     <td><strong>${b.bond_nr}</strong>${b.bond_bez_limitu?'<br><span style="font-size:10px;color:var(--color-text-faint)">poza UL</span>':''}${b.bond_stawka_override?'<br><span style="font-size:10px;color:var(--color-warning)">stawka negocj.</span>':''}</td>
     <td>${rodzajBadge(b.bond_rodzaj)}</td>
-    <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${b.bond_inwestor||'—'}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">Ben: ${b.bond_beneficjent}</div>`:''}</td>
-    <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'—'}</td>
+    <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${b.bond_inwestor||'â'}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">Ben: ${b.bond_beneficjent}</div>`:''}</td>
+    <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'â'}</td>
     <td style="font-size:var(--text-xs);white-space:nowrap">${b.bond_data_od}<br>${b.bond_data_do}</td>
     <td class="num">${fmt(b.bond_suma)}</td>
     <td class="num">${fmt(b.bond_skladka)}</td>
@@ -767,7 +767,7 @@ document.getElementById('admin-tenant-filter-limits').addEventListener('change',
 
 function renderLimits(insurers,bonds){
   const grid=document.getElementById('limits-grid');
-  if(!insurers.length){grid.innerHTML='<div class="empty"><h3>Brak ubezpieczycieli</h3><p>Dodaj TU i umowę limitu w sekcji Admin → Ubezpieczyciele</p></div>';return;}
+  if(!insurers.length){grid.innerHTML='<div class="empty"><h3>Brak ubezpieczycieli</h3><p>Dodaj TU i umowÄ limitu w sekcji Admin â Ubezpieczyciele</p></div>';return;}
   grid.innerHTML=insurers.map(ins=>{
     const iBonds=bonds.filter(b=>b.bond_insurer_id===ins.bond_id&&bondStatus(b)!=='expired');
     const zaang=iBonds.reduce((s,b)=>s+(b.bond_suma||0),0);
@@ -777,9 +777,9 @@ function renderLimits(insurers,bonds){
     const fillClass=pct>=90?'danger':pct>=70?'warn':'';
     const tenantLabel=isAdmin&&ins.bond_tenants?`<div style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:var(--space-2)">${ins.bond_tenants.bond_nazwa}</div>`:'';
     return `<div class="limit-card">${tenantLabel}<div class="limit-card-header"><div class="limit-tu-name">${ins.bond_nazwa}</div><span class="badge badge-active">${iBonds.length} gwarancji</span></div>
-    ${lim!=null?`<div class="limit-bar-track"><div class="limit-bar-fill ${fillClass}" style="width:${pct}%"></div></div><div class="limit-nums"><span>Zaangażowane: <strong>${fmt(zaang)}</strong></span><span>${pct}%</span></div><div class="limit-nums" style="margin-top:var(--space-2)"><span>Limit: ${fmt(lim)}</span><span style="color:${(wolny||0)<0?'var(--color-error)':'var(--color-success)'}">Wolne: ${fmt(wolny)}</span></div>`:`<div style="font-size:var(--text-xs);color:var(--color-text-faint);font-style:italic">Brak umowy limitu (gwarancje jednostkowe)</div>${zaang>0?`<div style="font-size:var(--text-xs);margin-top:var(--space-2)">Zaangażowane: <strong>${fmt(zaang)}</strong></div>`:''}`}
-    ${ins.bond_ul_nr?`<div style="font-size:var(--text-xs);color:var(--color-text-faint);margin-top:var(--space-3)">UL: ${ins.bond_ul_nr}${ins.bond_ul_data_od?' · '+ins.bond_ul_data_od:''}–${ins.bond_ul_data_do||''}</div>`:''}
-    ${ins.bond_stawka_bazowa!=null?`<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-2)">Stawka bazowa: <strong>${ins.bond_stawka_bazowa}%</strong>${ins.bond_skladka_min?' · Min. składka: '+fmt(ins.bond_skladka_min)+' PLN':''}</div>`:''}
+    ${lim!=null?`<div class="limit-bar-track"><div class="limit-bar-fill ${fillClass}" style="width:${pct}%"></div></div><div class="limit-nums"><span>ZaangaĹźowane: <strong>${fmt(zaang)}</strong></span><span>${pct}%</span></div><div class="limit-nums" style="margin-top:var(--space-2)"><span>Limit: ${fmt(lim)}</span><span style="color:${(wolny||0)<0?'var(--color-error)':'var(--color-success)'}">Wolne: ${fmt(wolny)}</span></div>`:`<div style="font-size:var(--text-xs);color:var(--color-text-faint);font-style:italic">Brak umowy limitu (gwarancje jednostkowe)</div>${zaang>0?`<div style="font-size:var(--text-xs);margin-top:var(--space-2)">ZaangaĹźowane: <strong>${fmt(zaang)}</strong></div>`:''}`}
+    ${ins.bond_ul_nr?`<div style="font-size:var(--text-xs);color:var(--color-text-faint);margin-top:var(--space-3)">UL: ${ins.bond_ul_nr}${ins.bond_ul_data_od?' Âˇ '+ins.bond_ul_data_od:''}â${ins.bond_ul_data_do||''}</div>`:''}
+    ${ins.bond_stawka_bazowa!=null?`<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-2)">Stawka bazowa: <strong>${ins.bond_stawka_bazowa}%</strong>${ins.bond_skladka_min?' Âˇ Min. skĹadka: '+fmt(ins.bond_skladka_min)+' PLN':''}</div>`:''}
     ${isAdmin?`<div style="margin-top:var(--space-3)"><button class="btn btn-ghost" style="font-size:11px;padding:2px var(--space-2)" onclick="editInsurer('${ins.bond_id}')"><i data-lucide="pencil" width="12" height="12"></i> Edytuj UL</button></div>`:''}
     </div>`;
   }).join('');
@@ -791,7 +791,7 @@ function renderTerminarz(bonds){
     <td><strong>${b.bond_nr}</strong></td>
     <td style="max-width:180px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">${b.bond_beneficjent}</div>`:''}</td>
     <td>${rodzajBadge(b.bond_rodzaj)}</td>
-    <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'—'}</td>
+    <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'â'}</td>
     <td style="font-size:var(--text-xs)">${b.bond_data_od}</td>
     <td style="font-weight:600;white-space:nowrap">${b.bond_data_do}</td>
     <td class="num">${fmt(b.bond_suma)}</td>
@@ -804,14 +804,14 @@ function renderSkladki(bonds){
   document.getElementById('skladki-tbody').innerHTML=bonds.map(b=>{
     const dni=dateDiff(b.bond_data_od,b.bond_data_do);
     const sk=b.bond_skladka||0;total+=sk;
-    return `<tr><td><strong>${b.bond_nr}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</td><td>${rodzajBadge(b.bond_rodzaj)}</td><td class="num">${dni}</td><td class="num">${b.bond_stawka!=null?b.bond_stawka+'%':'—'}</td><td class="num">${fmt(b.bond_suma)}</td><td class="num" style="font-weight:600">${fmt(sk)}</td></tr>`;
+    return `<tr><td><strong>${b.bond_nr}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</td><td>${rodzajBadge(b.bond_rodzaj)}</td><td class="num">${dni}</td><td class="num">${b.bond_stawka!=null?b.bond_stawka+'%':'â'}</td><td class="num">${fmt(b.bond_suma)}</td><td class="num" style="font-weight:600">${fmt(sk)}</td></tr>`;
   }).join('');
   document.getElementById('skladki-total').textContent=fmt(total)+' PLN';
 }
 
 function renderClients(){
   const tb=document.getElementById('clients-tbody');
-  if(!allTenants.length){tb.innerHTML='<tr><td colspan="6"><div class="empty"><p>Brak klientów</p></div></td></tr>';return;}
+  if(!allTenants.length){tb.innerHTML='<tr><td colspan="6"><div class="empty"><p>Brak klientĂłw</p></div></td></tr>';return;}
   tb.innerHTML=allTenants.map(t=>{
     const tBonds=allBonds.filter(b=>b.bond_tenant_id===t.bond_id);
     const active=tBonds.filter(b=>bondStatus(b)!=='expired');
@@ -822,7 +822,7 @@ function renderClients(){
       <td><code style="font-size:var(--text-xs);background:var(--color-surface-offset);padding:2px 6px;border-radius:4px">${t.bond_slug}</code></td>
       <td class="num">${tBonds.length}</td>
       <td class="num">${fmt(suma)}</td>
-      <td>${expiring.length>0?`<span class="badge badge-expiring">${expiring.length} wygasające</span>`:'<span style="color:var(--color-text-faint);font-size:var(--text-xs)">—</span>'}</td>
+      <td>${expiring.length>0?`<span class="badge badge-expiring">${expiring.length} wygasajÄce</span>`:'<span style="color:var(--color-text-faint);font-size:var(--text-xs)">â</span>'}</td>
       <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editClient('${t.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteClient('${t.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
     </tr>`;
   }).join('');
@@ -834,12 +834,12 @@ function renderInsurers(){
   if(!allInsurers.length){tb.innerHTML='<tr><td colspan="8"><div class="empty"><p>Brak ubezpieczycieli</p></div></td></tr>';return;}
   tb.innerHTML=allInsurers.map(i=>`<tr>
     <td><strong>${i.bond_nazwa}</strong></td>
-    <td style="font-size:var(--text-xs)">${i.bond_tenants?.bond_nazwa||'—'}</td>
+    <td style="font-size:var(--text-xs)">${i.bond_tenants?.bond_nazwa||'â'}</td>
     <td class="num">${fmt(i.bond_limit)}</td>
-    <td class="num">${i.bond_stawka_bazowa!=null?i.bond_stawka_bazowa+'%':'—'}</td>
+    <td class="num">${i.bond_stawka_bazowa!=null?i.bond_stawka_bazowa+'%':'â'}</td>
     <td class="num">${fmt(i.bond_skladka_min)}</td>
-    <td style="font-size:var(--text-xs)">${i.bond_ul_nr||'—'}</td>
-    <td style="font-size:var(--text-xs);white-space:nowrap">${i.bond_ul_data_od||''}${i.bond_ul_data_do?' → '+i.bond_ul_data_do:''}</td>
+    <td style="font-size:var(--text-xs)">${i.bond_ul_nr||'â'}</td>
+    <td style="font-size:var(--text-xs);white-space:nowrap">${i.bond_ul_data_od||''}${i.bond_ul_data_do?' â '+i.bond_ul_data_do:''}</td>
     <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editInsurer('${i.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteInsurer('${i.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
   </tr>`).join('');
   lucide.createIcons();
@@ -847,7 +847,7 @@ function renderInsurers(){
 
 function renderUsers(){
   const tb=document.getElementById('users-tbody');
-  if(!allUsers.length){tb.innerHTML='<tr><td colspan="4"><div class="empty"><p>Brak profili użytkowników</p></div></td></tr>';return;}
+  if(!allUsers.length){tb.innerHTML='<tr><td colspan="4"><div class="empty"><p>Brak profili uĹźytkownikĂłw</p></div></td></tr>';return;}
   tb.innerHTML=allUsers.map(u=>`<tr>
     <td style="font-size:11px;word-break:break-all">${u.bond_id}</td>
     <td>${u.bond_tenants?.bond_nazwa||'<span style="color:var(--color-text-faint)">Nieprzypisany</span>'}</td>
@@ -892,7 +892,7 @@ function calcSkladka(){
   if(od&&dod&&suma&&st){
     const dni=dateDiff(od,dod);
     document.getElementById('calc-skladka').textContent=fmt(Math.round(dni/365*st/100*suma*100)/100)+' PLN ('+dni+' dni)';
-  } else document.getElementById('calc-skladka').textContent='—';
+  } else document.getElementById('calc-skladka').textContent='â';
 }
 ['f-od','f-do','f-suma','f-stawka'].forEach(id=>document.getElementById(id).addEventListener('input',calcSkladka));
 
@@ -973,7 +973,7 @@ function editBond(id){
 
 async function deleteBond(id){
   const b=allBonds.find(x=>x.bond_id===id);
-  if(!confirm('Usunąć gwarancję '+b?.bond_nr+'?'))return;
+  if(!confirm('UsunÄÄ gwarancjÄ '+b?.bond_nr+'?'))return;
   await sb.from('bond_bonds').delete().eq('bond_id',id);
   if(isAdmin) await loadAll(); else await loadBonds(tenantId);
 }
@@ -999,7 +999,7 @@ function editClient(id){
   openModal('modal-client');
 }
 async function deleteClient(id){
-  if(!confirm('Usunąć klienta? Usunięte zostaną też wszystkie jego dane!'))return;
+  if(!confirm('UsunÄÄ klienta? UsuniÄte zostanÄ teĹź wszystkie jego dane!'))return;
   await sb.from('bond_tenants').delete().eq('bond_id',id);
   await loadAll();
 }
@@ -1047,7 +1047,7 @@ function editInsurer(id){
   openModal('modal-insurer');
 }
 async function deleteInsurer(id){
-  if(!confirm('Usunąć tego ubezpieczyciela?'))return;
+  if(!confirm('UsunÄÄ tego ubezpieczyciela?'))return;
   await sb.from('bond_insurers').delete().eq('bond_id',id);
   await loadAll();
 }
