@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bonds — Panel</title>
+<title>Gwarancje.PRO — Panel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300..700;1,300..700&subset=latin-ext&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <style>
@@ -29,8 +29,8 @@
   --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
   --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
   --space-12:3rem;--space-16:4rem;
-  --font-body:'Inter','Helvetica Neue',sans-serif;
-  --font-display:'Instrument Serif',Georgia,serif;
+  --font-body:'Inter','Helvetica Neue',Arial,sans-serif;
+  --font-display:'Inter','Helvetica Neue',Arial,sans-serif;
   --transition:180ms cubic-bezier(0.16,1,0.3,1);
 }
 [data-theme="dark"]{
@@ -160,7 +160,7 @@ input,select,textarea{font:inherit;color:inherit}
 
 <div id="auth-screen">
   <div class="auth-card">
-    <div class="auth-logo">Bonds<span>.pro</span></div>
+    <div class="auth-logo">Gwarancje<span>.PRO</span></div>
     <div class="auth-error" id="auth-error"></div>
     <div class="form-field">
       <label class="form-label" for="auth-email">Email</label>
@@ -185,7 +185,7 @@ input,select,textarea{font:inherit;color:inherit}
         <rect x="3" y="15" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".5"/>
         <rect x="15" y="15" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".9"/>
       </svg>
-      Bonds<span>.pro</span>
+      Gwarancje<span>.PRO</span>
     </div>
     <div class="topbar-right">
       <span id="topbar-badge"></span>
@@ -328,7 +328,7 @@ input,select,textarea{font:inherit;color:inherit}
           <div style="overflow-x:auto">
             <table class="tbl">
               <thead><tr>
-                <th>Firma</th><th>Slug</th><th class="num">Gwarancje</th><th class="num">Suma zaangażowana</th><th>Wygasające</th><th></th>
+                <th>Firma</th><th>NIP / REGON</th><th class="num">Gwarancje</th><th class="num">Suma zaangażowana</th><th>Wygasające</th><th></th>
               </tr></thead>
               <tbody id="clients-tbody"></tbody>
             </table>
@@ -359,16 +359,63 @@ input,select,textarea{font:inherit;color:inherit}
         <h1 class="page-title">Użytkownicy</h1>
         <p class="page-subtitle">Przypisanie kont do firm klientów</p>
         <div class="table-wrap">
-          <div class="table-toolbar"><h3>Lista użytkowników</h3></div>
+          <div class="table-toolbar">
+            <h3>Lista użytkowników</h3>
+            <button class="btn btn-admin" id="btn-invite-user"><i data-lucide="user-plus" width="16" height="16"></i> Zaproś użytkownika</button>
+          </div>
           <div style="overflow-x:auto">
             <table class="tbl">
-              <thead><tr><th>User ID / Email</th><th>Klient</th><th>Rola</th><th></th></tr></thead>
+              <thead><tr><th>Email / ID użytkownika</th><th>Klient</th><th>Rola</th><th></th></tr></thead>
               <tbody id="users-tbody"></tbody>
             </table>
           </div>
         </div>
       </div>
 
+      <!-- PAGE: PANEL KLIENTA -->
+      <div class="page" id="page-tenant-detail">
+        <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
+          <button class="btn btn-ghost" onclick="navTo('admin-clients')" style="padding:var(--space-1) var(--space-3)"><i data-lucide="arrow-left" width="14" height="14"></i> Klienci</button>
+          <h1 class="page-title" id="tenant-detail-title" style="margin-bottom:0">—</h1>
+        </div>
+        <p class="page-subtitle" id="tenant-detail-meta"></p>
+        <div class="kpi-grid" id="tenant-detail-kpi"></div>
+        <div class="table-wrap">
+          <div class="table-toolbar"><h3>Gwarancje klienta</h3></div>
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr>
+                <th>Nr</th><th>Rodzaj</th><th>Kontrakt / Beneficjent</th>
+                <th>TU</th><th>Okres</th><th class="num">Suma</th><th class="num">Składka</th><th>Status</th>
+              </tr></thead>
+              <tbody id="tenant-detail-bonds-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="limit-grid" id="tenant-detail-limits"></div>
+      </div>
+
+      <!-- PAGE: PANEL UBEZPIECZYCIELA -->
+      <div class="page" id="page-insurer-detail">
+        <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
+          <button class="btn btn-ghost" onclick="navTo('admin-insurers')" style="padding:var(--space-1) var(--space-3)"><i data-lucide="arrow-left" width="14" height="14"></i> Ubezpieczyciele</button>
+          <h1 class="page-title" id="insurer-detail-title" style="margin-bottom:0">—</h1>
+        </div>
+        <p class="page-subtitle" id="insurer-detail-meta"></p>
+        <div class="kpi-grid" id="insurer-detail-kpi"></div>
+        <div class="table-wrap">
+          <div class="table-toolbar"><h3>Gwarancje w ramach tej UL</h3></div>
+          <div style="overflow-x:auto">
+            <table class="tbl">
+              <thead><tr>
+                <th>Nr</th><th>Rodzaj</th><th>Kontrakt / Beneficjent</th>
+                <th>Okres</th><th class="num">Suma</th><th class="num">Składka</th><th>Status</th>
+              </tr></thead>
+              <tbody id="insurer-detail-bonds-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </div>
@@ -381,8 +428,7 @@ input,select,textarea{font:inherit;color:inherit}
       <button class="btn-icon" onclick="closeModal('modal-bond')"><i data-lucide="x" width="18" height="18"></i></button>
     </div>
     <div class="modal-body">
-      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
-            <input type="hidden" id="f-id">
+      <input type="hidden" id="f-id">
       <div id="f-tenant-row" class="form-field" style="display:none">
         <label class="form-label">Klient</label>
         <select class="form-select" style="width:100%" id="f-tenant-select"></select>
@@ -474,16 +520,31 @@ input,select,textarea{font:inherit;color:inherit}
       <button class="btn-icon" onclick="closeModal('modal-client')"><i data-lucide="x" width="18" height="18"></i></button>
     </div>
     <div class="modal-body">
-      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
-            <input type="hidden" id="fc-id">
+      <input type="hidden" id="fc-id">
       <div class="form-field">
         <label class="form-label" for="fc-nazwa">Nazwa firmy</label>
         <input class="form-input" style="width:100%" id="fc-nazwa" type="text" placeholder="np. Budimex S.A.">
       </div>
-      <div class="form-field">
-        <label class="form-label" for="fc-slug">Slug</label>
-        <input class="form-input" style="width:100%" id="fc-slug" type="text" placeholder="np. budimex">
-        <span class="form-hint">Małe litery, bez spacji</span>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label" for="fc-nip">NIP</label>
+          <input class="form-input" style="width:100%" id="fc-nip" type="text" placeholder="np. 5260251167">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="fc-regon">REGON</label>
+          <input class="form-input" style="width:100%" id="fc-regon" type="text" placeholder="np. 010246540">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label" for="fc-krs">KRS <span style="font-weight:400;text-transform:none">(opcjonalnie)</span></label>
+          <input class="form-input" style="width:100%" id="fc-krs" type="text" placeholder="np. 0000001554">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="fc-slug">Slug</label>
+          <input class="form-input" style="width:100%" id="fc-slug" type="text" placeholder="np. budimex">
+          <span class="form-hint">Małe litery, bez spacji</span>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -501,8 +562,7 @@ input,select,textarea{font:inherit;color:inherit}
       <button class="btn-icon" onclick="closeModal('modal-insurer')"><i data-lucide="x" width="18" height="18"></i></button>
     </div>
     <div class="modal-body">
-      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
-            <input type="hidden" id="fi-id">
+      <input type="hidden" id="fi-id">
       <div class="form-field">
         <label class="form-label" for="fi-tenant">Klient</label>
         <select class="form-select" style="width:100%" id="fi-tenant"></select>
@@ -510,8 +570,8 @@ input,select,textarea{font:inherit;color:inherit}
       <div class="form-field">
         <label class="form-label" for="fi-nazwa">Nazwa TU</label>
         <div style="display:flex;gap:var(--space-2);align-items:center">
-          <select class="form-select" style="flex:1" id="fi-nazwa"></select>
-          <button class="btn btn-ghost" type="button" id="btn-add-tu-inline" title="Dodaj nowe TU do słownika" style="white-space:nowrap;flex-shrink:0">+ Nowe TU</button>
+          <select class="form-select" style="flex:1" id="fi-nazwa"><option value="">— wybierz TU —</option></select>
+          <button class="btn btn-ghost" type="button" id="btn-add-tu-inline" style="white-space:nowrap;flex-shrink:0">+ Nowe TU</button>
         </div>
       </div>
       <div class="form-row">
@@ -561,8 +621,7 @@ input,select,textarea{font:inherit;color:inherit}
       <button class="btn-icon" onclick="closeModal('modal-user-assign')"><i data-lucide="x" width="18" height="18"></i></button>
     </div>
     <div class="modal-body">
-      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
-            <input type="hidden" id="fu-id">
+      <input type="hidden" id="fu-id">
       <div class="form-field">
         <label class="form-label">User ID</label>
         <div id="fu-email" style="font-size:var(--text-sm);font-weight:600;padding:var(--space-2) 0;word-break:break-all"></div>
@@ -586,13 +645,45 @@ input,select,textarea{font:inherit;color:inherit}
   </div>
 </div>
 
+<!-- MODAL: ZAPROŚ UŻYTKOWNIKA -->
+<div class="modal-overlay" id="modal-invite">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2 class="modal-title">Zaproś użytkownika</h2>
+      <button class="btn-icon" onclick="closeModal('modal-invite')"><i data-lucide="x" width="18" height="18"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+      <div class="form-field">
+        <label class="form-label" for="finv-email">Adres e-mail</label>
+        <input class="form-input" style="width:100%" id="finv-email" type="email" placeholder="uzytkownik@firma.pl">
+        <span class="form-hint">Użytkownik otrzyma link aktywacyjny na ten adres</span>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="finv-tenant">Przypisz do klienta</label>
+        <select class="form-select" style="width:100%" id="finv-tenant">
+          <option value="">— wybierz klienta —</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="finv-rola">Rola</label>
+        <select class="form-select" style="width:100%" id="finv-rola">
+          <option value="klient">Klient</option>
+          <option value="admin">Admin klienta</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-invite')">Anuluj</button>
+      <button class="btn btn-admin" id="modal-invite-save"><i data-lucide="send" width="16" height="16"></i> Wyślij zaproszenie</button>
+    </div>
+  </div>
+</div>
 <script>
 const SB_URL = 'https://kukvgsjrmrqtzhkszzum.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
-
-const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
 const fmt = n => n==null?'—':Number(n).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
 const dateDiff = (a,b) => Math.round((new Date(b)-new Date(a))/(1000*60*60*24));
 const today = () => new Date().toISOString().slice(0,10);
@@ -615,7 +706,7 @@ function rodzajBadge(r){
 }
 
 let isAdmin=false, tenantId=null;
-let allBonds=[], allInsurers=[], allTenants=[], allUsers=[], allTuDict=[];
+let allBonds=[], allInsurers=[], allTenants=[], allUsers=[];
 
 document.getElementById('btn-login').addEventListener('click',async()=>{
   const email=document.getElementById('auth-email').value.trim();
@@ -634,23 +725,11 @@ document.getElementById('btn-logout').addEventListener('click',async()=>{
   lucide.createIcons();
 });
 
-
-async function loadTuDict(){
-  const {data}=await sb.from('bond_tu_dict').select('id,name').eq('is_active',true).order('name');
-  allTuDict=data||[];
-  populateTuSelect();
-}
-function populateTuSelect(){
-  const sel=document.getElementById('fi-nazwa');
-  if(!sel) return;
-  sel.innerHTML='<option value="">— wybierz TU —</option>'+allTuDict.map(t=>`<option value="${t.name}">${t.name}</option>`).join('');
-}
 async function initApp(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session) return;
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app').style.display='flex';
-  await loadTuDict();
   const {data:profile}=await sb.from('bond_profiles')
     .select('bond_tenant_id,bond_is_admin,bond_rola,bond_tenants(bond_nazwa,bond_slug)')
     .eq('bond_id',session.user.id).single();
@@ -711,7 +790,7 @@ async function loadBonds(tid){
 
 function populateTenantSelectors(){
   const opts=allTenants.map(t=>`<option value="${t.bond_id}">${t.bond_nazwa}</option>`).join('');
-  ['f-tenant-select','fi-tenant','fu-tenant'].forEach(id=>{
+  ['f-tenant-select','fi-tenant','fu-tenant','finv-tenant'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.innerHTML=opts;
   });
@@ -747,7 +826,7 @@ function renderDashboard(bonds){
   tl.innerHTML=sorted.map(b=>{
     const s=bondStatus(b);const days=dateDiff(today(),b.bond_data_do);
     const tenantInfo=isAdmin&&b.bond_tenants?` <span class="badge badge-admin">${b.bond_tenants.bond_nazwa}</span>`:'';
-    return `<div class="timeline-item"><div class="dot dot-${s}"></div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--text-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}${tenantInfo}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${escapeHTML(b.bond_nr)} · ${b.bond_insurers?.bond_nazwa||'—'} · ${rodzajBadge(b.bond_rodzaj)}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:var(--text-sm);font-weight:600">${b.bond_data_do}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${days} dni</div></div></div>`;
+    return `<div class="timeline-item"><div class="dot dot-${s}"></div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--text-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}${tenantInfo}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${b.bond_nr} · ${b.bond_insurers?.bond_nazwa||'—'} · ${rodzajBadge(b.bond_rodzaj)}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:var(--text-sm);font-weight:600">${b.bond_data_do}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${days} dni</div></div></div>`;
   }).join('');
   lucide.createIcons();
 }
@@ -761,9 +840,9 @@ function renderBonds(bonds){
   const tb=document.getElementById('bonds-tbody');
   if(!list.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><h3>Brak gwarancji</h3><p>Dodaj pierwszą gwarancję klikając przycisk powyżej</p></div></td></tr>`;lucide.createIcons();return;}
   tb.innerHTML=list.map(b=>`<tr>
-    <td><strong>${escapeHTML(b.bond_nr)}</strong>${b.bond_bez_limitu?'<br><span style="font-size:10px;color:var(--color-text-faint)">poza UL</span>':''}${b.bond_stawka_override?'<br><span style="font-size:10px;color:var(--color-warning)">stawka negocj.</span>':''}</td>
+    <td><strong>${b.bond_nr}</strong>${b.bond_bez_limitu?'<br><span style="font-size:10px;color:var(--color-text-faint)">poza UL</span>':''}${b.bond_stawka_override?'<br><span style="font-size:10px;color:var(--color-warning)">stawka negocj.</span>':''}</td>
     <td>${rodzajBadge(b.bond_rodzaj)}</td>
-    <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${escapeHTML(b.bond_inwestor)||'—'}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">Ben: ${escapeHTML(b.bond_beneficjent)}</div>`:''}</td>
+    <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${b.bond_inwestor||'—'}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">Ben: ${b.bond_beneficjent}</div>`:''}</td>
     <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'—'}</td>
     <td style="font-size:var(--text-xs);white-space:nowrap">${b.bond_data_od}<br>${b.bond_data_do}</td>
     <td class="num">${fmt(b.bond_suma)}</td>
@@ -809,8 +888,8 @@ function renderLimits(insurers,bonds){
 
 function renderTerminarz(bonds){
   document.getElementById('terminarz-tbody').innerHTML=[...bonds].sort((a,b)=>a.bond_data_do.localeCompare(b.bond_data_do)).map(b=>`<tr>
-    <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
-    <td style="max-width:180px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">${escapeHTML(b.bond_beneficjent)}</div>`:''}</td>
+    <td><strong>${b.bond_nr}</strong></td>
+    <td style="max-width:180px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">${b.bond_beneficjent}</div>`:''}</td>
     <td>${rodzajBadge(b.bond_rodzaj)}</td>
     <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'—'}</td>
     <td style="font-size:var(--text-xs)">${b.bond_data_od}</td>
@@ -825,7 +904,7 @@ function renderSkladki(bonds){
   document.getElementById('skladki-tbody').innerHTML=bonds.map(b=>{
     const dni=dateDiff(b.bond_data_od,b.bond_data_do);
     const sk=b.bond_skladka||0;total+=sk;
-    return `<tr><td><strong>${escapeHTML(b.bond_nr)}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</td><td>${rodzajBadge(b.bond_rodzaj)}</td><td class="num">${dni}</td><td class="num">${b.bond_stawka!=null?b.bond_stawka+'%':'—'}</td><td class="num">${fmt(b.bond_suma)}</td><td class="num" style="font-weight:600">${fmt(sk)}</td></tr>`;
+    return `<tr><td><strong>${b.bond_nr}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</td><td>${rodzajBadge(b.bond_rodzaj)}</td><td class="num">${dni}</td><td class="num">${b.bond_stawka!=null?b.bond_stawka+'%':'—'}</td><td class="num">${fmt(b.bond_suma)}</td><td class="num" style="font-weight:600">${fmt(sk)}</td></tr>`;
   }).join('');
   document.getElementById('skladki-total').textContent=fmt(total)+' PLN';
 }
@@ -839,12 +918,12 @@ function renderClients(){
     const expiring=tBonds.filter(b=>bondStatus(b)==='expiring');
     const suma=active.reduce((s,b)=>s+(b.bond_suma||0),0);
     return `<tr>
-      <td><strong>${escapeHTML(t.bond_nazwa)}</strong></td>
-      <td><code style="font-size:var(--text-xs);background:var(--color-surface-offset);padding:2px 6px;border-radius:4px">${escapeHTML(t.bond_slug)}</code></td>
+      <td><strong>${t.bond_nazwa}</strong><br><code style="font-size:10px;color:var(--color-text-faint)">${t.bond_slug||''}</code></td>
+      <td style="font-size:var(--text-xs)">${t.bond_nip?'NIP: '+t.bond_nip:'—'}${t.bond_regon?'<br>REGON: '+t.bond_regon:''}${t.bond_krs?'<br>KRS: '+t.bond_krs:''}</td>
       <td class="num">${tBonds.length}</td>
       <td class="num">${fmt(suma)}</td>
       <td>${expiring.length>0?`<span class="badge badge-expiring">${expiring.length} wygasające</span>`:'<span style="color:var(--color-text-faint);font-size:var(--text-xs)">—</span>'}</td>
-      <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editClient('${t.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteClient('${t.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
+      <td style="white-space:nowrap;display:flex;gap:4px"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:11px" onclick="openTenantDetail('${t.bond_id}')"><i data-lucide="layout-dashboard" width="12" height="12"></i> Panel</button><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editClient('${t.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteClient('${t.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
     </tr>`;
   }).join('');
   lucide.createIcons();
@@ -854,14 +933,14 @@ function renderInsurers(){
   const tb=document.getElementById('insurers-tbody');
   if(!allInsurers.length){tb.innerHTML='<tr><td colspan="8"><div class="empty"><p>Brak ubezpieczycieli</p></div></td></tr>';return;}
   tb.innerHTML=allInsurers.map(i=>`<tr>
-    <td><strong>${escapeHTML(i.bond_nazwa)}</strong></td>
-    <td style="font-size:var(--text-xs)">${escapeHTML(i.bond_tenants?.bond_nazwa)||'—'}</td>
+    <td><strong>${i.bond_nazwa}</strong></td>
+    <td style="font-size:var(--text-xs)">${i.bond_tenants?.bond_nazwa||'—'}</td>
     <td class="num">${fmt(i.bond_limit)}</td>
     <td class="num">${i.bond_stawka_bazowa!=null?i.bond_stawka_bazowa+'%':'—'}</td>
     <td class="num">${fmt(i.bond_skladka_min)}</td>
-    <td style="font-size:var(--text-xs)">${escapeHTML(i.bond_ul_nr)||'—'}</td>
+    <td style="font-size:var(--text-xs)">${i.bond_ul_nr||'—'}</td>
     <td style="font-size:var(--text-xs);white-space:nowrap">${i.bond_ul_data_od||''}${i.bond_ul_data_do?' → '+i.bond_ul_data_do:''}</td>
-    <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editInsurer('${i.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteInsurer('${i.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
+    <td style="white-space:nowrap;display:flex;gap:4px"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:11px" onclick="openInsurerDetail('${i.bond_id}')"><i data-lucide="layout-dashboard" width="12" height="12"></i> Panel</button><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editInsurer('${i.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteInsurer('${i.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
   </tr>`).join('');
   lucide.createIcons();
 }
@@ -870,7 +949,7 @@ function renderUsers(){
   const tb=document.getElementById('users-tbody');
   if(!allUsers.length){tb.innerHTML='<tr><td colspan="4"><div class="empty"><p>Brak profili użytkowników</p></div></td></tr>';return;}
   tb.innerHTML=allUsers.map(u=>`<tr>
-    <td style="font-size:11px;word-break:break-all">${u.bond_id}</td>
+    <td><div style="font-weight:600;font-size:var(--text-sm)">${u.bond_email?'<span style="color:var(--color-primary)">@</span> '+u.bond_email:''}</div><div style="font-size:10px;color:var(--color-text-faint);word-break:break-all">${u.bond_id}</div></td>
     <td>${u.bond_tenants?.bond_nazwa||'<span style="color:var(--color-text-faint)">Nieprzypisany</span>'}</td>
     <td><span class="badge ${u.bond_rola==='admin'?'badge-admin':'badge-active'}">${u.bond_rola||'klient'}</span></td>
     <td><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:var(--text-xs)" onclick="assignUser('${u.bond_id}','${u.bond_tenant_id||''}','${u.bond_rola||'klient'}')"><i data-lucide="user-cog" width="14" height="14"></i> Przypisz</button></td>
@@ -906,15 +985,6 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
   m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
 });
 
-
-function showModalError(modalId, msg){
-  const el=document.querySelector('#'+modalId+' .modal-error');
-  if(el){el.textContent=msg;el.style.display='block';}
-}
-function hideModalErrors(modalId){
-  const el=document.querySelector('#'+modalId+' .modal-error');
-  if(el) el.style.display='none';
-}
 function calcSkladka(){
   const od=document.getElementById('f-od').value,dod=document.getElementById('f-do').value;
   const suma=parseFloat(document.getElementById('f-suma').value)||0;
@@ -968,11 +1038,8 @@ document.getElementById('modal-bond-save').addEventListener('click',async()=>{
     bond_stawka_override:document.getElementById('f-stawka-override').checked,
     bond_tenant_id:tid
   };
-  hideModalErrors('modal-bond');
-  let errB;
-  if(id){const r=await sb.from('bond_bonds').update(payload).eq('bond_id',id);errB=r.error;}
-  else{const r=await sb.from('bond_bonds').insert(payload);errB=r.error;}
-  if(errB){showModalError('modal-bond','Błąd zapisu: '+errB.message);return;}
+  if(id) await sb.from('bond_bonds').update(payload).eq('bond_id',id);
+  else await sb.from('bond_bonds').insert(payload);
   closeModal('modal-bond');
   if(isAdmin) await loadAll(); else await loadBonds(tenantId);
 });
@@ -1018,12 +1085,15 @@ document.getElementById('btn-new-client').addEventListener('click',()=>{
 });
 document.getElementById('modal-client-save').addEventListener('click',async()=>{
   const id=document.getElementById('fc-id').value;
-  const payload={bond_nazwa:document.getElementById('fc-nazwa').value.trim(),bond_slug:document.getElementById('fc-slug').value.trim().toLowerCase()};
-  hideModalErrors('modal-client');
-  let errC;
-  if(id){const r=await sb.from('bond_tenants').update(payload).eq('bond_id',id);errC=r.error;}
-  else{const r=await sb.from('bond_tenants').insert(payload);errC=r.error;}
-  if(errC){showModalError('modal-client','Błąd zapisu: '+errC.message);return;}
+  const payload={
+    bond_nazwa:document.getElementById('fc-nazwa').value.trim(),
+    bond_slug:document.getElementById('fc-slug').value.trim().toLowerCase(),
+    bond_nip:document.getElementById('fc-nip').value.trim()||null,
+    bond_regon:document.getElementById('fc-regon').value.trim()||null,
+    bond_krs:document.getElementById('fc-krs').value.trim()||null
+  };
+  if(id) await sb.from('bond_tenants').update(payload).eq('bond_id',id);
+  else await sb.from('bond_tenants').insert(payload);
   closeModal('modal-client');await loadAll();
 });
 function editClient(id){
@@ -1032,6 +1102,9 @@ function editClient(id){
   document.getElementById('fc-id').value=t.bond_id;
   document.getElementById('fc-nazwa').value=t.bond_nazwa;
   document.getElementById('fc-slug').value=t.bond_slug;
+  document.getElementById('fc-nip').value=t.bond_nip||'';
+  document.getElementById('fc-regon').value=t.bond_regon||'';
+  document.getElementById('fc-krs').value=t.bond_krs||'';
   openModal('modal-client');
 }
 async function deleteClient(id){
@@ -1054,15 +1127,6 @@ document.getElementById('btn-new-limit').addEventListener('click',()=>{
   openModal('modal-insurer');
   if(tid) setTimeout(()=>{document.getElementById('fi-tenant').value=tid;},50);
 });
-
-document.getElementById('btn-add-tu-inline').addEventListener('click',async()=>{
-  const name=prompt('Nazwa nowego TU:');
-  if(!name||!name.trim()) return;
-  const {error}=await sb.from('bond_tu_dict').insert({name:name.trim()});
-  if(error){alert('Błąd: '+error.message);return;}
-  await loadTuDict();
-  document.getElementById('fi-nazwa').value=name.trim();
-});
 document.getElementById('modal-insurer-save').addEventListener('click',async()=>{
   const id=document.getElementById('fi-id').value;
   const payload={
@@ -1075,11 +1139,8 @@ document.getElementById('modal-insurer-save').addEventListener('click',async()=>
     bond_stawka_bazowa:parseFloat(document.getElementById('fi-stawka').value)||null,
     bond_skladka_min:parseFloat(document.getElementById('fi-skladka-min').value)||null
   };
-  hideModalErrors('modal-insurer');
-  let errI;
-  if(id){const r=await sb.from('bond_insurers').update(payload).eq('bond_id',id);errI=r.error;}
-  else{const r=await sb.from('bond_insurers').insert(payload);errI=r.error;}
-  if(errI){showModalError('modal-insurer','Błąd zapisu: '+errI.message);return;}
+  if(id) await sb.from('bond_insurers').update(payload).eq('bond_id',id);
+  else await sb.from('bond_insurers').insert(payload);
   closeModal('modal-insurer');await loadAll();
 });
 function editInsurer(id){
@@ -1087,7 +1148,7 @@ function editInsurer(id){
   document.getElementById('modal-insurer-title').textContent='Edytuj TU / UL';
   document.getElementById('fi-id').value=i.bond_id;
   document.getElementById('fi-tenant').value=i.bond_tenant_id||'';
-  populateTuSelect(); document.getElementById('fi-nazwa').value=i.bond_nazwa;
+  populateTuSelect(); document.getElementById('fi-nazwa').value=i.bond_nazwa||'';
   document.getElementById('fi-ul-nr').value=i.bond_ul_nr||'';
   document.getElementById('fi-limit').value=i.bond_limit||'';
   document.getElementById('fi-ul-od').value=i.bond_ul_data_od||'';
@@ -1111,12 +1172,10 @@ function assignUser(uid,currentTenantId,currentRola){
 }
 document.getElementById('modal-user-save').addEventListener('click',async()=>{
   const id=document.getElementById('fu-id').value;
-  hideModalErrors('modal-user-assign');
-  const {error:errU}=await sb.from('bond_profiles').update({
+  await sb.from('bond_profiles').update({
     bond_tenant_id:document.getElementById('fu-tenant').value||null,
     bond_rola:document.getElementById('fu-rola').value
   }).eq('bond_id',id);
-  if(errU){showModalError('modal-user-assign','Błąd zapisu: '+errU.message);return;}
   closeModal('modal-user-assign');await loadAll();
 });
 
@@ -1136,6 +1195,144 @@ document.getElementById('modal-user-save').addEventListener('click',async()=>{
   const {data:{session}}=await sb.auth.getSession();
   if(session) initApp(); else lucide.createIcons();
 })();
+// ── escapeHTML ──
+const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
+
+// ── navTo helper ──
+function navTo(page){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const navEl=document.querySelector('[data-page="'+page+'"]');
+  if(navEl) navEl.classList.add('active');
+  const pageEl=document.getElementById('page-'+page);
+  if(pageEl) pageEl.classList.add('active');
+  lucide.createIcons();
+}
+
+// ── TU dict ──
+let allTuDict=[];
+async function loadTuDict(){
+  const {data}=await sb.from('bond_tu_dict').select('id,name').eq('is_active',true).order('name');
+  allTuDict=data||[];
+  populateTuSelect();
+}
+function populateTuSelect(){
+  const sel=document.getElementById('fi-nazwa');
+  if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— wybierz TU —</option>'+allTuDict.map(t=>`<option value="${escapeHTML(t.name)}">${escapeHTML(t.name)}</option>`).join('');
+  if(cur) sel.value=cur;
+}
+document.getElementById('btn-add-tu-inline').addEventListener('click',async()=>{
+  const name=prompt('Nazwa nowego TU:');
+  if(!name||!name.trim()) return;
+  const {error}=await sb.from('bond_tu_dict').insert({name:name.trim()});
+  if(error){alert('Błąd: '+error.message);return;}
+  await loadTuDict();
+  document.getElementById('fi-nazwa').value=name.trim();
+});
+
+// ── Invite user ──
+document.getElementById('btn-invite-user').addEventListener('click',()=>{
+  const opts=allTenants.map(t=>`<option value="${t.bond_id}">${escapeHTML(t.bond_nazwa)}</option>`).join('');
+  document.getElementById('finv-tenant').innerHTML='<option value="">— wybierz klienta —</option>'+opts;
+  openModal('modal-invite');
+});
+document.getElementById('modal-invite-save').addEventListener('click',async()=>{
+  const email=document.getElementById('finv-email').value.trim();
+  const tenantId_inv=document.getElementById('finv-tenant').value;
+  const rola=document.getElementById('finv-rola').value;
+  const errEl=document.querySelector('#modal-invite .modal-error');
+  errEl.style.display='none';
+  if(!email){errEl.textContent='Podaj adres e-mail';errEl.style.display='block';return;}
+  // Create user via Supabase Admin — requires service role or Edge Function
+  // For now: show instruction
+  errEl.style.display='none';
+  alert('Zaproszenie: Użyj Supabase Dashboard → Authentication → Users → Invite User dla: '+email+'\nPo rejestracji przypisz klienta: '+tenantId_inv+' / rola: '+rola);
+  closeModal('modal-invite');
+});
+
+// ── Tenant detail panel ──
+function openTenantDetail(tid){
+  const t=allTenants.find(x=>x.bond_id===tid); if(!t) return;
+  const bonds=allBonds.filter(b=>b.bond_tenant_id===tid);
+  const insurers=allInsurers.filter(i=>i.bond_tenant_id===tid);
+  const active=bonds.filter(b=>bondStatus(b)!=='expired');
+  const expiring=bonds.filter(b=>bondStatus(b)==='expiring');
+  const suma=active.reduce((s,b)=>s+(b.bond_suma||0),0);
+  const skladka=bonds.reduce((s,b)=>s+(b.bond_skladka||0),0);
+  document.getElementById('tenant-detail-title').textContent=t.bond_nazwa;
+  document.getElementById('tenant-detail-meta').textContent=[
+    t.bond_nip?'NIP: '+t.bond_nip:'',
+    t.bond_regon?'REGON: '+t.bond_regon:'',
+    t.bond_krs?'KRS: '+t.bond_krs:'',
+    'Slug: '+t.bond_slug
+  ].filter(Boolean).join(' · ');
+  document.getElementById('tenant-detail-kpi').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Aktywne gwarancje</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">${expiring.length} wygasające</div></div>
+    <div class="kpi-card"><div class="kpi-label">Suma zaangażowana</div><div class="kpi-value">${fmt(suma)}</div><div class="kpi-sub">PLN</div></div>
+    <div class="kpi-card"><div class="kpi-label">Łączna składka</div><div class="kpi-value">${fmt(skladka)}</div><div class="kpi-sub">PLN</div></div>
+    <div class="kpi-card"><div class="kpi-label">Umowy limitów</div><div class="kpi-value">${insurers.length}</div><div class="kpi-sub">TU</div></div>`;
+  document.getElementById('tenant-detail-bonds-tbody').innerHTML=bonds.length?bonds.map(b=>`<tr>
+    <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
+    <td>${rodzajBadge(b.bond_rodzaj)}</td>
+    <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div><div style="font-size:var(--text-xs);color:var(--color-primary)">${escapeHTML(b.bond_beneficjent||'')}</div></td>
+    <td style="font-size:var(--text-xs)">${escapeHTML(b.bond_insurers?.bond_nazwa||'—')}</td>
+    <td style="font-size:var(--text-xs);white-space:nowrap">${b.bond_data_od}<br>${b.bond_data_do}</td>
+    <td class="num">${fmt(b.bond_suma)}</td>
+    <td class="num">${fmt(b.bond_skladka)}</td>
+    <td>${statusBadge(b)}</td>
+  </tr>`).join(''):'<tr><td colspan="8"><div class="empty"><p>Brak gwarancji</p></div></td></tr>';
+  // reuse renderLimits logic inline
+  document.getElementById('tenant-detail-limits').innerHTML=insurers.length?insurers.map(ins=>{
+    const iBonds=bonds.filter(b=>b.bond_insurer_id===ins.bond_id&&bondStatus(b)!=='expired');
+    const zaang=iBonds.reduce((s,b)=>s+(b.bond_suma||0),0);
+    const lim=ins.bond_limit; const wolny=lim!=null?lim-zaang:null;
+    const pct=lim?Math.min(100,Math.round(zaang/lim*100)):0;
+    const fillClass=pct>=90?'danger':pct>=70?'warn':'';
+    return `<div class="limit-card"><div class="limit-card-header"><div class="limit-tu-name">${escapeHTML(ins.bond_nazwa)}</div><span class="badge badge-active">${iBonds.length} gwarancji</span></div>
+    ${lim!=null?`<div class="limit-bar-track"><div class="limit-bar-fill ${fillClass}" style="width:${pct}%"></div></div><div class="limit-nums"><span>Zaangażowane: <strong>${fmt(zaang)}</strong></span><span>${pct}%</span></div><div class="limit-nums" style="margin-top:var(--space-2)"><span>Limit: ${fmt(lim)}</span><span style="color:${(wolny||0)<0?'var(--color-error)':'var(--color-success)'}">Wolne: ${fmt(wolny)}</span></div>`:`<div style="font-size:var(--text-xs);color:var(--color-text-faint);font-style:italic">Brak UL</div>`}
+    ${ins.bond_ul_nr?`<div style="font-size:var(--text-xs);color:var(--color-text-faint);margin-top:var(--space-3)">UL: ${escapeHTML(ins.bond_ul_nr)}</div>`:''}
+    </div>`;
+  }).join(''):'<div class="empty"><p>Brak umów limitów</p></div>';
+  navTo('tenant-detail');
+}
+
+// ── Insurer detail panel ──
+function openInsurerDetail(iid){
+  const ins=allInsurers.find(x=>x.bond_id===iid); if(!ins) return;
+  const bonds=allBonds.filter(b=>b.bond_insurer_id===iid);
+  const active=bonds.filter(b=>bondStatus(b)!=='expired');
+  const zaang=active.reduce((s,b)=>s+(b.bond_suma||0),0);
+  const lim=ins.bond_limit; const pct=lim?Math.min(100,Math.round(zaang/lim*100)):0;
+  const tenant=allTenants.find(t=>t.bond_id===ins.bond_tenant_id);
+  document.getElementById('insurer-detail-title').textContent=ins.bond_nazwa;
+  document.getElementById('insurer-detail-meta').textContent=[
+    tenant?'Klient: '+tenant.bond_nazwa:'',
+    ins.bond_ul_nr?'UL nr: '+ins.bond_ul_nr:'',
+    ins.bond_ul_data_od&&ins.bond_ul_data_do?ins.bond_ul_data_od+' – '+ins.bond_ul_data_do:'',
+    ins.bond_stawka_bazowa?'Stawka: '+ins.bond_stawka_bazowa+'%':''
+  ].filter(Boolean).join(' · ');
+  document.getElementById('insurer-detail-kpi').innerHTML=`
+    <div class="kpi-card"><div class="kpi-label">Limit UL</div><div class="kpi-value">${fmt(lim)}</div><div class="kpi-sub">PLN</div></div>
+    <div class="kpi-card"><div class="kpi-label">Zaangażowane</div><div class="kpi-value">${fmt(zaang)}</div><div class="kpi-sub">${pct}% limitu</div></div>
+    <div class="kpi-card"><div class="kpi-label">Wolne</div><div class="kpi-value" style="color:${lim&&zaang>lim?'var(--color-error)':'var(--color-success)'}">${fmt(lim!=null?lim-zaang:null)}</div><div class="kpi-sub">PLN</div></div>
+    <div class="kpi-card"><div class="kpi-label">Gwarancji aktywnych</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">z ${bonds.length} łącznie</div></div>`;
+  document.getElementById('insurer-detail-bonds-tbody').innerHTML=bonds.length?bonds.map(b=>`<tr>
+    <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
+    <td>${rodzajBadge(b.bond_rodzaj)}</td>
+    <td style="max-width:220px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div><div style="font-size:var(--text-xs);color:var(--color-primary)">${escapeHTML(b.bond_beneficjent||'')}</div></td>
+    <td style="font-size:var(--text-xs);white-space:nowrap">${b.bond_data_od}<br>${b.bond_data_do}</td>
+    <td class="num">${fmt(b.bond_suma)}</td>
+    <td class="num">${fmt(b.bond_skladka)}</td>
+    <td>${statusBadge(b)}</td>
+  </tr>`).join(''):'<tr><td colspan="7"><div class="empty"><p>Brak gwarancji</p></div></td></tr>';
+  navTo('insurer-detail');
+}
+
+// ── loadTuDict on init ──
+(async()=>{await loadTuDict();})();
+
 </script>
 </body>
 </html>
