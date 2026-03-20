@@ -149,10 +149,31 @@ input,select,textarea{font:inherit;color:inherit}
 .calc-box{background:var(--color-primary-highlight);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
 .calc-label{font-size:var(--text-xs);font-weight:600;color:var(--color-primary)}
 .calc-value{font-size:var(--text-lg);font-weight:700;color:var(--color-primary);margin-top:4px;font-variant-numeric:tabular-nums}
-@media(max-width:768px){
-  .sidebar{display:none}
-  .main{padding:var(--space-4)}
-  .form-row,.form-row-3{grid-template-columns:1fr}
+
+/* Risk Module Styles */
+.risk-container { display:flex; gap:var(--space-6); align-items:flex-start; }
+.risk-form-col { width: 340px; flex-shrink: 0; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-5); box-shadow:var(--shadow-sm); }
+.risk-results-col { flex: 1; display:flex; flex-direction:column; gap:var(--space-6); }
+.risk-row { display:flex; justify-content:space-between; align-items:center; padding:var(--space-2) 0; border-bottom:1px solid var(--color-divider); }
+.risk-row:last-child { border-bottom: none; }
+.risk-row label { font-size:var(--text-sm); font-weight:500; color:var(--color-text); }
+.risk-row input { width: 100px; text-align:right; }
+.risk-header { font-size:var(--text-xs); font-weight:700; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.05em; margin:var(--space-4) 0 var(--space-2); }
+.risk-decision-card { padding:var(--space-6); border-radius:var(--radius-lg); border:2px solid; display:flex; justify-content:space-between; align-items:center; }
+.risk-flag-list { list-style: none; padding: 0; }
+.risk-flag-item { display:flex; gap:var(--space-3); padding:var(--space-4); border-bottom:1px solid var(--color-divider); }
+.risk-flag-item:last-child { border-bottom:none; }
+
+@media(max-width:900px){
+  .risk-container { flex-direction:column; }
+  .risk-form-col { width:100%; }
+}
+@media print {
+  .sidebar, .topbar, .print-hidden { display: none !important; }
+  .main { padding: 0 !important; }
+  body { background: white; }
+  .risk-container { display: block; }
+  .risk-form-col { width: 100%; box-shadow: none; border: none; padding: 0; margin-bottom: 2rem; }
 }
 </style>
 </head>
@@ -205,6 +226,7 @@ input,select,textarea{font:inherit;color:inherit}
       <div class="nav-item" data-page="limits"><i data-lucide="building-2" width="16" height="16"></i> Limity TU</div>
       <div class="nav-item" data-page="terminarz"><i data-lucide="calendar-clock" width="16" height="16"></i> Terminarz</div>
       <div class="nav-item" data-page="skladki"><i data-lucide="calculator" width="16" height="16"></i> Składki</div>
+      <div class="nav-item" data-page="ocena"><i data-lucide="activity" width="16" height="16"></i> Ocena Ryzyka</div>
       <div id="admin-nav" style="display:none">
         <div class="nav-section" style="color:var(--color-admin)">⚡ God Admin</div>
         <div class="nav-item admin-nav" data-page="admin-clients"><i data-lucide="users" width="16" height="16"></i> Klienci</div>
@@ -313,6 +335,121 @@ input,select,textarea{font:inherit;color:inherit}
                 <td class="num" id="skladki-total" style="font-weight:700;padding:var(--space-3) var(--space-4)">—</td>
               </tr></tfoot>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: OCENA RYZYKA (UNDERWRITING) -->
+      <div class="page" id="page-ocena">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start" class="print-hidden">
+          <div>
+            <h1 class="page-title">Ocena Ryzyka (Underwriting)</h1>
+            <p class="page-subtitle">Zautomatyzowany model oceny finansowej firmy ubiegającej się o limit gwarancyjny.</p>
+          </div>
+          <div style="display:flex;gap:var(--space-3)">
+            <button class="btn btn-ghost" onclick="window.print()"><i data-lucide="printer" width="16" height="16"></i> Drukuj Raport</button>
+            <button class="btn btn-primary" id="btn-risk-sample">Wczytaj przykład</button>
+          </div>
+        </div>
+
+        <div class="risk-container">
+          <!-- LEWA KOLUMNA: DANE -->
+          <div class="risk-form-col">
+            <h3 style="font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)">
+              <i data-lucide="dollar-sign" width="18" height="18" style="color:var(--color-primary)"></i> Dane Finansowe
+            </h3>
+            
+            <div class="risk-header">Bilans - Aktywa</div>
+            <div class="risk-row"><label>Aktywa Razem</label><input type="number" class="form-input" id="r-assets"></div>
+            <div class="risk-row"><label>Aktywa Obrotowe</label><input type="number" class="form-input" id="r-curr-assets"></div>
+            <div class="risk-row"><label>Zapasy</label><input type="number" class="form-input" id="r-inv"></div>
+            <div class="risk-row"><label>Należności</label><input type="number" class="form-input" id="r-rec"></div>
+            <div class="risk-row"><label>Środki Pieniężne</label><input type="number" class="form-input" id="r-cash"></div>
+
+            <div class="risk-header">Bilans - Pasywa</div>
+            <div class="risk-row"><label>Kapitał Własny</label><input type="number" class="form-input" id="r-equity"></div>
+            <div class="risk-row"><label>Zyski Zatrzymane</label><input type="number" class="form-input" id="r-ret-earn"></div>
+            <div class="risk-row"><label>Zobowiązania Ogółem</label><input type="number" class="form-input" id="r-tot-liab"></div>
+            <div class="risk-row"><label>Zob. Długoterminowe</label><input type="number" class="form-input" id="r-lt-liab"></div>
+            <div class="risk-row"><label>Zob. Krótkoterminowe</label><input type="number" class="form-input" id="r-st-liab"></div>
+            <div class="risk-row"><label>Zob. Handlowe</label><input type="number" class="form-input" id="r-trade-pay"></div>
+
+            <div class="risk-header">Rachunek Wyników i Przepływy</div>
+            <div class="risk-row"><label>Przychody</label><input type="number" class="form-input" id="r-rev"></div>
+            <div class="risk-row"><label>EBIT</label><input type="number" class="form-input" id="r-ebit"></div>
+            <div class="risk-row"><label>Amortyzacja</label><input type="number" class="form-input" id="r-da"></div>
+            <div class="risk-row"><label>OCF Bieżący (T)</label><input type="number" class="form-input" id="r-ocf1"></div>
+            <div class="risk-row"><label>OCF Poprzedni (T-1)</label><input type="number" class="form-input" id="r-ocf2"></div>
+          </div>
+
+          <!-- PRAWA KOLUMNA: WYNIKI -->
+          <div class="risk-results-col">
+            
+            <div class="risk-decision-card" id="risk-decision-card" style="background:var(--color-surface);border-color:var(--color-border)">
+              <div>
+                <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Decyzja Underwritera</div>
+                <div id="risk-decision-text" style="font-size:var(--text-xl);font-weight:900;color:var(--color-text-faint)">Wprowadź dane</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Rating Modelu</div>
+                <div id="risk-rating-text" style="font-size:32px;font-weight:900;color:var(--color-text-faint)">-</div>
+              </div>
+            </div>
+
+            <div class="kpi-grid" style="margin-bottom:0">
+              <div class="kpi-card">
+                <div class="kpi-label">Płynność Bieżąca</div>
+                <div class="kpi-value" id="risk-kpi-cr">0.00</div>
+                <div class="kpi-sub">Cel: > 1.20</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Dług Netto / EBITDA</div>
+                <div class="kpi-value" id="risk-kpi-lev">0.00</div>
+                <div class="kpi-sub">Cel: < 3.50</div>
+              </div>
+              <div class="kpi-card" id="risk-kpi-z-card">
+                <div class="kpi-label">Z''-Score (Bankructwo)</div>
+                <div class="kpi-value" id="risk-kpi-z">0.00</div>
+                <div class="kpi-sub">Bezpiecznie: > 2.60</div>
+              </div>
+            </div>
+
+            <div class="table-wrap" style="margin-bottom:0">
+              <div class="table-toolbar" style="background:var(--color-surface-offset)">
+                <h3>Weryfikacja Czerwonych Flag (Red Flags)</h3>
+              </div>
+              <ul class="risk-flag-list">
+                <li class="risk-flag-item" id="flag-eq">
+                  <i data-lucide="check-circle" width="20" height="20" style="color:var(--color-success)"></i>
+                  <div>
+                    <div style="font-weight:600;font-size:var(--text-sm)">Utrata Kapitałów Własnych</div>
+                    <div style="font-size:var(--text-xs);color:var(--color-text-muted)">Kapitał własny stanowi mniej niż 10% sumy bilansowej.</div>
+                  </div>
+                </li>
+                <li class="risk-flag-item" id="flag-liq">
+                  <i data-lucide="check-circle" width="20" height="20" style="color:var(--color-success)"></i>
+                  <div>
+                    <div style="font-weight:600;font-size:var(--text-sm)">Załamanie Płynności</div>
+                    <div style="font-size:var(--text-xs);color:var(--color-text-muted)">Wskaźnik bieżący poniżej 1.0. Firma nie ma z czego spłacić bieżących zobowiązań.</div>
+                  </div>
+                </li>
+                <li class="risk-flag-item" id="flag-cash">
+                  <i data-lucide="check-circle" width="20" height="20" style="color:var(--color-success)"></i>
+                  <div>
+                    <div style="font-weight:600;font-size:var(--text-sm)">Przeżeranie Gotówki</div>
+                    <div style="font-size:var(--text-xs);color:var(--color-text-muted)">Ujemne przepływy operacyjne (OCF) przez dwa badane lata z rzędu.</div>
+                  </div>
+                </li>
+                <li class="risk-flag-item" id="flag-lev">
+                  <i data-lucide="check-circle" width="20" height="20" style="color:var(--color-success)"></i>
+                  <div>
+                    <div style="font-weight:600;font-size:var(--text-sm)">Przelewarowanie (Warning)</div>
+                    <div style="font-size:var(--text-xs);color:var(--color-text-muted)">Dług Netto do EBITDA przekracza 4.5. Złamanie standardowych kowenantów.</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
           </div>
         </div>
       </div>
@@ -1329,6 +1466,148 @@ function openInsurerDetail(iid){
   </tr>`).join(''):'<tr><td colspan="7"><div class="empty"><p>Brak gwarancji</p></div></td></tr>';
   navTo('insurer-detail');
 }
+
+// ── RISK MODEL (OCENA RYZYKA) LOGIC ──
+function calculateRiskModel() {
+  const val = id => Number(document.getElementById(id).value) || 0;
+  
+  const assets = val('r-assets');
+  const currentAssets = val('r-curr-assets');
+  const inventory = val('r-inv');
+  const receivables = val('r-rec');
+  const cash = val('r-cash');
+  const equity = val('r-equity');
+  const retainedEarnings = val('r-ret-earn');
+  const totalLiab = val('r-tot-liab');
+  const longTermLiab = val('r-lt-liab');
+  const shortTermLiab = val('r-st-liab');
+  const tradePayables = val('r-trade-pay');
+  const revenue = val('r-rev');
+  const ebit = val('r-ebit');
+  const da = val('r-da');
+  const ocf_T = val('r-ocf1');
+  const ocf_T1 = val('r-ocf2');
+
+  const currentRatio = shortTermLiab !== 0 ? currentAssets / shortTermLiab : 0;
+  const ebitda = ebit + da;
+  const netDebt = longTermLiab + shortTermLiab - tradePayables - cash;
+  const netDebtEbitda = ebitda > 0 ? netDebt / ebitda : (netDebt <= 0 ? 0 : 999);
+  
+  let zScore = 0;
+  if (assets > 0) {
+    const x1 = (currentAssets - shortTermLiab) / assets;
+    const x2 = retainedEarnings / assets;
+    const x3 = ebit / assets;
+    const x4 = totalLiab > 0 ? equity / totalLiab : 0;
+    zScore = 3.25 + (6.56 * x1) + (3.26 * x2) + (6.72 * x3) + (1.05 * x4);
+  }
+
+  // Punktacja
+  let pLiq = 1;
+  if (currentRatio > 1.5) pLiq = 5; else if (currentRatio > 1.2) pLiq = 4; else if (currentRatio > 1.0) pLiq = 3; else if (currentRatio > 0.8) pLiq = 2;
+  
+  let pLev = 1;
+  if (netDebtEbitda < 1) pLev = 5; else if (netDebtEbitda < 2.5) pLev = 4; else if (netDebtEbitda < 3.5) pLev = 3; else if (netDebtEbitda < 4.5) pLev = 2;
+
+  const score = (pLiq * 0.6) + (pLev * 0.4);
+
+  // Red flags
+  const flags = {
+    equityLost: assets > 0 && equity < (assets * 0.1),
+    cashBurn: ocf_T < 0 && ocf_T1 < 0,
+    illiquid: currentRatio > 0 && currentRatio < 1.0,
+    overleveraged: netDebtEbitda > 4.5,
+    bankruptcyRisk: zScore > 0 && zScore < 1.1
+  };
+  const hasCrit = flags.equityLost || flags.bankruptcyRisk;
+
+  // Wyrok
+  let rating = "-", decision = "Wprowadź dane", state = "empty";
+  if (assets > 0) {
+    if (hasCrit || equity < 0) { rating = "D / Śmieciowy"; decision = "ODRZUĆ LIMIT"; state = "danger"; }
+    else if (score >= 4.5) { rating = "AAA"; decision = "AKCEPTUJ BEZ WARUNKÓW"; state = "success"; }
+    else if (score >= 4.0) { rating = "AA"; decision = "AKCEPTUJ"; state = "success"; }
+    else if (score >= 3.0) { rating = "BBB"; decision = "AKCEPTUJ"; state = "success"; }
+    else if (score >= 2.0) { rating = "BB"; decision = "ANALIZA POGŁĘBIONA"; state = "warning"; }
+    else { rating = "CCC"; decision = "WYSOKIE RYZYKO"; state = "danger"; }
+  }
+
+  // Update UI
+  document.getElementById('risk-kpi-cr').textContent = currentRatio.toFixed(2);
+  document.getElementById('risk-kpi-lev').textContent = netDebtEbitda === 999 ? "Brak" : netDebtEbitda.toFixed(2);
+  document.getElementById('risk-kpi-z').textContent = zScore.toFixed(2);
+
+  const card = document.getElementById('risk-decision-card');
+  const dText = document.getElementById('risk-decision-text');
+  const rText = document.getElementById('risk-rating-text');
+  
+  dText.textContent = decision;
+  rText.textContent = rating;
+  
+  if(state === 'danger') {
+    card.style.background = 'oklch(from var(--color-error) l c h / 0.08)'; card.style.borderColor = 'var(--color-error)';
+    dText.style.color = 'var(--color-error)'; rText.style.color = 'var(--color-error)';
+  } else if (state === 'success') {
+    card.style.background = 'oklch(from var(--color-success) l c h / 0.08)'; card.style.borderColor = 'var(--color-success)';
+    dText.style.color = 'var(--color-success)'; rText.style.color = 'var(--color-success)';
+  } else if (state === 'warning') {
+    card.style.background = 'oklch(from var(--color-warning) l c h / 0.08)'; card.style.borderColor = 'var(--color-warning)';
+    dText.style.color = 'var(--color-warning)'; rText.style.color = 'var(--color-warning)';
+  } else {
+    card.style.background = 'var(--color-surface)'; card.style.borderColor = 'var(--color-border)';
+    dText.style.color = 'var(--color-text-faint)'; rText.style.color = 'var(--color-text-faint)';
+  }
+
+  // Update flags
+  const updateFlag = (id, isTriggered, isWarning = false) => {
+    const el = document.getElementById(id);
+    const icon = el.querySelector('i');
+    if (isTriggered) {
+      el.style.background = isWarning ? 'oklch(from var(--color-warning) l c h / 0.08)' : 'oklch(from var(--color-error) l c h / 0.08)';
+      icon.setAttribute('data-lucide', isWarning ? 'alert-triangle' : 'x-circle');
+      icon.style.color = isWarning ? 'var(--color-warning)' : 'var(--color-error)';
+    } else {
+      el.style.background = 'transparent';
+      icon.setAttribute('data-lucide', 'check-circle');
+      icon.style.color = 'var(--color-success)';
+    }
+  };
+
+  updateFlag('flag-eq', flags.equityLost);
+  updateFlag('flag-liq', flags.illiquid);
+  updateFlag('flag-cash', flags.cashBurn);
+  updateFlag('flag-lev', flags.overleveraged, true);
+  
+  const zCard = document.getElementById('risk-kpi-z-card');
+  if(flags.bankruptcyRisk) { zCard.style.borderColor = 'var(--color-error)'; zCard.style.background = 'oklch(from var(--color-error) l c h / 0.05)'; }
+  else { zCard.style.borderColor = 'var(--color-border)'; zCard.style.background = 'var(--color-surface)'; }
+
+  lucide.createIcons();
+}
+
+document.querySelectorAll('#page-ocena input').forEach(input => {
+  input.addEventListener('input', calculateRiskModel);
+});
+
+document.getElementById('btn-risk-sample').addEventListener('click', () => {
+  document.getElementById('r-assets').value = 1200000;
+  document.getElementById('r-curr-assets').value = 750000;
+  document.getElementById('r-inv').value = 250000;
+  document.getElementById('r-rec').value = 350000;
+  document.getElementById('r-cash').value = 150000;
+  document.getElementById('r-equity').value = 450000;
+  document.getElementById('r-ret-earn').value = 200000;
+  document.getElementById('r-tot-liab').value = 750000;
+  document.getElementById('r-lt-liab').value = 350000;
+  document.getElementById('r-st-liab').value = 400000;
+  document.getElementById('r-trade-pay').value = 200000;
+  document.getElementById('r-rev').value = 1800000;
+  document.getElementById('r-ebit').value = 200000;
+  document.getElementById('r-da').value = 60000;
+  document.getElementById('r-ocf1').value = 160000;
+  document.getElementById('r-ocf2').value = 120000;
+  calculateRiskModel();
+});
 
 // ── loadTuDict on init ──
 (async()=>{await loadTuDict();})();
