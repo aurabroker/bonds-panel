@@ -1,513 +1,71 @@
-<!DOCTYPE html>
-<html lang="pl" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bonds — Panel</title>
 <title>Gwarancje.PRO — Panel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300..700;1,300..700&subset=latin-ext&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <style>
-:root,[data-theme="light"]{
-  --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;
-  --color-surface-offset:#f3f0ec;--color-border:#d4d1ca;--color-divider:#dcd9d5;
-  --color-text:#28251d;--color-text-muted:#7a7974;--color-text-faint:#bab9b4;
-  --color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-highlight:#cedcd8;
-  --color-error:#a12c7b;--color-success:#437a22;--color-warning:#964219;
-  --color-gold:#d19900;--color-orange:#da7101;--color-admin:#7a39bb;
-  --shadow-sm:0 1px 2px oklch(0.2 0.01 80/0.06);
-  --shadow-md:0 4px 12px oklch(0.2 0.01 80/0.08);
-  --shadow-lg:0 12px 32px oklch(0.2 0.01 80/0.12);
-  --radius-sm:0.375rem;--radius-md:0.5rem;--radius-lg:0.75rem;--radius-xl:1rem;--radius-full:9999px;
-  --text-xs:clamp(0.75rem,0.7rem + 0.25vw,0.875rem);
-  --text-sm:clamp(0.875rem,0.8rem + 0.35vw,1rem);
-  --text-base:clamp(1rem,0.95rem + 0.25vw,1.125rem);
-  --text-lg:clamp(1.125rem,1rem + 0.75vw,1.5rem);
-  --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
-  --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
-  --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
-  --space-12:3rem;--space-16:4rem;
+@@ -29,8 +29,8 @@
+--space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
+--space-12:3rem;--space-16:4rem;
+  --font-body:'Inter','Helvetica Neue',sans-serif;
+  --font-display:'Instrument Serif',Georgia,serif;
   --font-body:'Inter','Helvetica Neue',Arial,sans-serif;
   --font-display:'Inter','Helvetica Neue',Arial,sans-serif;
-  --transition:180ms cubic-bezier(0.16,1,0.3,1);
+--transition:180ms cubic-bezier(0.16,1,0.3,1);
 }
 [data-theme="dark"]{
-  --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;
-  --color-surface-offset:#1d1c1a;--color-border:#393836;--color-divider:#262523;
-  --color-text:#cdccca;--color-text-muted:#797876;--color-text-faint:#5a5957;
-  --color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-highlight:#313b3b;
-  --color-error:#d163a7;--color-success:#6daa45;--color-warning:#bb653b;
-  --color-gold:#e8af34;--color-orange:#fdab43;--color-admin:#a86fdf;
-  --shadow-sm:0 1px 2px oklch(0 0 0/0.2);--shadow-md:0 4px 12px oklch(0 0 0/0.3);
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
-body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);display:flex;flex-direction:column}
-button{cursor:pointer;background:none;border:none;font:inherit;color:inherit}
-table{border-collapse:collapse;width:100%}
-input,select,textarea{font:inherit;color:inherit}
-#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:var(--space-4)}
-.auth-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-10);width:100%;max-width:420px;box-shadow:var(--shadow-lg)}
-.auth-logo{font-family:var(--font-display);font-size:var(--text-xl);color:var(--color-primary);margin-bottom:var(--space-8);text-align:center}
-.auth-logo span{color:var(--color-text-muted);font-size:var(--text-base);font-family:var(--font-body)}
-.auth-error{background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4);display:none}
-#app{display:none;flex-direction:column;min-height:100dvh}
-.topbar{background:var(--color-surface);border-bottom:1px solid var(--color-border);padding:0 var(--space-6);height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm)}
-.topbar-logo{font-family:var(--font-display);font-size:var(--text-lg);color:var(--color-primary);display:flex;align-items:center;gap:var(--space-2)}
-.topbar-logo span{color:var(--color-text-muted);font-size:var(--text-sm);font-family:var(--font-body)}
-.topbar-right{display:flex;align-items:center;gap:var(--space-3)}
-.admin-badge{background:oklch(from var(--color-admin) l c h/0.15);color:var(--color-admin);border-radius:var(--radius-full);padding:var(--space-1) var(--space-3);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.tenant-badge{background:var(--color-primary-highlight);color:var(--color-primary);border-radius:var(--radius-full);padding:var(--space-1) var(--space-3);font-size:var(--text-xs);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-.btn-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);color:var(--color-text-muted);transition:background var(--transition),color var(--transition)}
-.btn-icon:hover{background:var(--color-surface-offset);color:var(--color-text)}
-.layout{display:flex;flex:1}
-.sidebar{width:230px;background:var(--color-surface);border-right:1px solid var(--color-border);padding:var(--space-4) 0;flex-shrink:0;position:sticky;top:56px;height:calc(100dvh - 56px);overflow-y:auto}
-.nav-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-5);font-size:var(--text-sm);color:var(--color-text-muted);cursor:pointer;transition:background var(--transition),color var(--transition)}
-.nav-item:hover{background:var(--color-surface-offset);color:var(--color-text)}
-.nav-item.active{background:var(--color-primary-highlight);color:var(--color-primary);font-weight:600}
-.nav-item.admin-nav{color:var(--color-admin)}
-.nav-item.admin-nav.active{background:oklch(from var(--color-admin) l c h/0.12);color:var(--color-admin)}
-.nav-section{padding:var(--space-5) var(--space-5) var(--space-2);font-size:var(--text-xs);font-weight:600;color:var(--color-text-faint);text-transform:uppercase;letter-spacing:.08em}
-.nav-badge{margin-left:auto;background:var(--color-warning);color:#fff;border-radius:var(--radius-full);padding:0 var(--space-2);font-size:10px;font-weight:700;min-width:18px;text-align:center}
-.main{flex:1;padding:var(--space-8);overflow-y:auto}
-.page{display:none}
-.page.active{display:block}
-.page-title{font-family:var(--font-display);font-size:var(--text-xl);color:var(--color-text);margin-bottom:var(--space-2)}
-.page-subtitle{font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--space-8)}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4);margin-bottom:var(--space-8)}
-.kpi-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow-sm)}
-.kpi-label{font-size:var(--text-xs);color:var(--color-text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:var(--space-2)}
-.kpi-value{font-size:var(--text-lg);font-weight:700;color:var(--color-text);font-variant-numeric:tabular-nums}
-.kpi-sub{font-size:var(--text-xs);color:var(--color-text-faint);margin-top:var(--space-1)}
-.alert{border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-6);display:flex;align-items:center;gap:var(--space-3);font-size:var(--text-sm)}
-.alert-warning{background:oklch(from var(--color-warning) l c h/0.08);border:1px solid oklch(from var(--color-warning) l c h/0.2);color:var(--color-warning)}
-.alert-admin{background:oklch(from var(--color-admin) l c h/0.08);border:1px solid oklch(from var(--color-admin) l c h/0.2);color:var(--color-admin)}
-.table-wrap{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:var(--space-6)}
-.table-toolbar{padding:var(--space-4) var(--space-5);display:flex;align-items:center;gap:var(--space-3);border-bottom:1px solid var(--color-divider);flex-wrap:wrap}
-.table-toolbar h3{font-size:var(--text-base);font-weight:600;margin-right:auto}
-.tbl th{padding:var(--space-3) var(--space-4);text-align:left;font-size:var(--text-xs);font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--color-surface-offset);border-bottom:1px solid var(--color-divider)}
-.tbl td{padding:var(--space-3) var(--space-4);font-size:var(--text-sm);border-bottom:1px solid var(--color-divider);vertical-align:middle}
-.tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:var(--color-surface-offset)}
-.num{text-align:right;font-variant-numeric:tabular-nums}
-.badge{display:inline-flex;align-items:center;padding:2px var(--space-2);border-radius:var(--radius-full);font-size:11px;font-weight:600;white-space:nowrap}
-.badge-wadium{background:#e8f0f8;color:#006494}
-.badge-nwk{background:var(--color-primary-highlight);color:var(--color-primary)}
-.badge-uwu{background:#f5edcc;color:#a07800}
-.badge-zal{background:#fdeede;color:#b05800}
-.badge-active{background:#dff0d4;color:var(--color-success)}
-.badge-expiring{background:#faebd7;color:var(--color-warning)}
-.badge-expired{background:#eeeeed;color:var(--color-text-muted)}
-.badge-admin{background:oklch(from var(--color-admin) l c h/0.15);color:var(--color-admin)}
-.btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-4);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:500;cursor:pointer;transition:background var(--transition),color var(--transition);border:none}
-.btn-primary{background:var(--color-primary);color:#fff}
-.btn-primary:hover{background:var(--color-primary-hover)}
-.btn-admin{background:var(--color-admin);color:#fff}
-.btn-admin:hover{background:#5f2699}
-.btn-ghost{background:transparent;color:var(--color-text-muted);border:1px solid var(--color-border)}
-.btn-ghost:hover{background:var(--color-surface-offset);color:var(--color-text)}
-.btn-danger{background:transparent;color:var(--color-error);border:1px solid oklch(from var(--color-error) l c h/0.3)}
-.btn-danger:hover{background:oklch(from var(--color-error) l c h/0.08)}
-.form-select,.form-input{padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);font-size:var(--text-sm);color:var(--color-text);outline:none;transition:border-color var(--transition),box-shadow var(--transition)}
-.form-select:focus,.form-input:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px oklch(from var(--color-primary) l c h/0.15)}
-.form-label{display:block;font-size:var(--text-xs);font-weight:600;color:var(--color-text-muted);margin-bottom:var(--space-2);text-transform:uppercase;letter-spacing:.05em}
-.form-hint{font-size:var(--text-xs);color:var(--color-text-faint);margin-top:var(--space-1)}
-.form-field{margin-bottom:var(--space-5)}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)}
-.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4)}
-.checkbox-row{display:flex;align-items:center;gap:var(--space-2);font-size:var(--text-sm);cursor:pointer}
-.checkbox-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--color-primary)}
-.modal-overlay{position:fixed;inset:0;background:oklch(0.1 0 0/0.5);align-items:center;justify-content:center;z-index:200;padding:var(--space-4);display:none}
-.modal-overlay.open{display:flex}
-.modal{background:var(--color-surface);border-radius:var(--radius-xl);width:100%;max-width:640px;max-height:90dvh;overflow-y:auto;box-shadow:var(--shadow-lg)}
-.modal-header{padding:var(--space-6);border-bottom:1px solid var(--color-divider);display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-size:var(--text-lg);font-weight:600}
-.modal-body{padding:var(--space-6)}
-.modal-footer{padding:var(--space-4) var(--space-6);border-top:1px solid var(--color-divider);display:flex;justify-content:flex-end;gap:var(--space-3)}
-.limit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4);margin-bottom:var(--space-8)}
-.limit-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow-sm)}
-.limit-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-4)}
-.limit-tu-name{font-weight:600;font-size:var(--text-sm)}
-.limit-bar-track{height:8px;background:var(--color-surface-offset);border-radius:var(--radius-full);overflow:hidden;margin-bottom:var(--space-3)}
-.limit-bar-fill{height:100%;border-radius:var(--radius-full);background:var(--color-primary);transition:width .4s ease}
-.limit-bar-fill.warn{background:var(--color-warning)}
-.limit-bar-fill.danger{background:var(--color-error)}
-.limit-nums{display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--color-text-muted)}
-.timeline-item{display:flex;gap:var(--space-4);padding:var(--space-3) 0;border-bottom:1px solid var(--color-divider)}
-.timeline-item:last-child{border-bottom:none}
-.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
-.dot-active{background:var(--color-success)}
-.dot-expiring{background:var(--color-warning)}
-.dot-expired{background:var(--color-text-faint)}
-.empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:var(--space-16) var(--space-8);color:var(--color-text-muted)}
-.empty h3{color:var(--color-text);margin-bottom:var(--space-2)}
-.empty p{max-width:36ch;margin-bottom:var(--space-6);font-size:var(--text-sm)}
-.tenant-selector{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-6);display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap}
-.tenant-selector label{font-size:var(--text-sm);font-weight:600;color:var(--color-text-muted);white-space:nowrap}
-.calc-box{background:var(--color-primary-highlight);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
-.calc-label{font-size:var(--text-xs);font-weight:600;color:var(--color-primary)}
-.calc-value{font-size:var(--text-lg);font-weight:700;color:var(--color-primary);margin-top:4px;font-variant-numeric:tabular-nums}
-
-/* Risk Module Styles */
-.risk-container { display:flex; gap:var(--space-6); align-items:flex-start; }
-.risk-form-col { width: 340px; flex-shrink: 0; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-5); box-shadow:var(--shadow-sm); }
-.risk-results-col { flex: 1; display:flex; flex-direction:column; gap:var(--space-6); }
-.risk-row { display:flex; justify-content:space-between; align-items:center; padding:var(--space-2) 0; border-bottom:1px solid var(--color-divider); }
-.risk-row:last-child { border-bottom: none; }
-.risk-row label { font-size:var(--text-sm); font-weight:500; color:var(--color-text); }
-.risk-row input { width: 100px; text-align:right; }
-.risk-header { font-size:var(--text-xs); font-weight:700; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.05em; margin:var(--space-4) 0 var(--space-2); }
-.risk-decision-card { padding:var(--space-6); border-radius:var(--radius-lg); border:2px solid; display:flex; justify-content:space-between; align-items:center; }
-.risk-flag-list { list-style: none; padding: 0; }
-.risk-flag-item { display:flex; gap:var(--space-3); padding:var(--space-4); border-bottom:1px solid var(--color-divider); }
-.risk-flag-item:last-child { border-bottom:none; }
-
-@media(max-width:900px){
-  .risk-container { flex-direction:column; }
-  .risk-form-col { width:100%; }
-}
-@media print {
-  .sidebar, .topbar, .print-hidden { display: none !important; }
-  .main { padding: 0 !important; }
-  body { background: white; }
-  .risk-container { display: block; }
-  .risk-form-col { width: 100%; box-shadow: none; border: none; padding: 0; margin-bottom: 2rem; }
-}
-</style>
-</head>
-<body>
+@@ -160,7 +160,7 @@
 
 <div id="auth-screen">
-  <div class="auth-card">
+<div class="auth-card">
+    <div class="auth-logo">Bonds<span>.pro</span></div>
     <div class="auth-logo">Gwarancje<span>.PRO</span></div>
-    <div class="auth-error" id="auth-error"></div>
-    <div class="form-field">
-      <label class="form-label" for="auth-email">Email</label>
-      <input class="form-input" style="width:100%" id="auth-email" type="email" placeholder="twoj@email.pl" autocomplete="email">
-    </div>
-    <div class="form-field">
-      <label class="form-label" for="auth-pass">Hasło</label>
-      <input class="form-input" style="width:100%" id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center" id="btn-login">
-      <i data-lucide="log-in" width="16" height="16"></i> Zaloguj się
-    </button>
-  </div>
-</div>
-
-<div id="app">
-  <header class="topbar">
-    <div class="topbar-logo">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-label="Bonds logo">
-        <rect x="3" y="3" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".9"/>
-        <rect x="15" y="3" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".5"/>
-        <rect x="3" y="15" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".5"/>
-        <rect x="15" y="15" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".9"/>
-      </svg>
+<div class="auth-error" id="auth-error"></div>
+<div class="form-field">
+<label class="form-label" for="auth-email">Email</label>
+@@ -185,7 +185,7 @@
+<rect x="3" y="15" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".5"/>
+<rect x="15" y="15" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".9"/>
+</svg>
+      Bonds<span>.pro</span>
       Gwarancje<span>.PRO</span>
-    </div>
-    <div class="topbar-right">
-      <span id="topbar-badge"></span>
-      <button class="btn-icon" data-theme-toggle aria-label="Przełącz motyw">
-        <i data-lucide="sun" width="18" height="18"></i>
-      </button>
-      <button class="btn-icon" id="btn-logout" aria-label="Wyloguj">
-        <i data-lucide="log-out" width="18" height="18"></i>
-      </button>
-    </div>
-  </header>
-  <div class="layout">
-    <nav class="sidebar">
-      <div class="nav-section">Panel</div>
-      <div class="nav-item active" data-page="dashboard"><i data-lucide="layout-dashboard" width="16" height="16"></i> Dashboard</div>
-      <div class="nav-item" data-page="bonds"><i data-lucide="shield-check" width="16" height="16"></i> Gwarancje <span class="nav-badge" id="nav-expiring-badge" style="display:none">0</span></div>
-      <div class="nav-item" data-page="limits"><i data-lucide="building-2" width="16" height="16"></i> Limity TU</div>
-      <div class="nav-item" data-page="terminarz"><i data-lucide="calendar-clock" width="16" height="16"></i> Terminarz</div>
-      <div class="nav-item" data-page="skladki"><i data-lucide="calculator" width="16" height="16"></i> Składki</div>
-      <div class="nav-item" data-page="ocena"><i data-lucide="activity" width="16" height="16"></i> Ocena Ryzyka</div>
-      <div id="admin-nav" style="display:none">
-        <div class="nav-section" style="color:var(--color-admin)">⚡ God Admin</div>
-        <div class="nav-item admin-nav" data-page="admin-clients"><i data-lucide="users" width="16" height="16"></i> Klienci</div>
-        <div class="nav-item admin-nav" data-page="admin-insurers"><i data-lucide="landmark" width="16" height="16"></i> Ubezpieczyciele</div>
-        <div class="nav-item admin-nav" data-page="admin-users"><i data-lucide="user-cog" width="16" height="16"></i> Użytkownicy</div>
-      </div>
-    </nav>
-    <main class="main">
-
-      <div class="page active" id="page-dashboard">
-        <h1 class="page-title">Dashboard</h1>
-        <p class="page-subtitle" id="dash-subtitle">Ładowanie…</p>
-        <div id="alert-expiring" style="display:none" class="alert alert-warning">
-          <i data-lucide="alert-triangle" width="18" height="18"></i>
-          <span id="alert-text"></span>
-        </div>
-        <div id="admin-dash-alert" style="display:none" class="alert alert-admin">
-          <i data-lucide="zap" width="18" height="18"></i>
-          <span>Jesteś zalogowany jako <strong>GOD ADMIN</strong> — masz dostęp do wszystkich danych.</span>
-        </div>
-        <div class="kpi-grid" id="kpi-grid"></div>
-        <div class="table-wrap">
-          <div class="table-toolbar"><h3>Najbliższe wygaśnięcia</h3></div>
-          <div id="timeline-list" style="padding:var(--space-4) var(--space-5)"></div>
-        </div>
-      </div>
-
-      <div class="page" id="page-bonds">
-        <h1 class="page-title">Gwarancje</h1>
-        <p class="page-subtitle">Lista wszystkich gwarancji ubezpieczeniowych</p>
-        <div id="bonds-tenant-selector" class="tenant-selector" style="display:none">
-          <label>Klient:</label>
-          <select class="form-select" id="admin-tenant-filter-bonds" style="min-width:200px"></select>
-        </div>
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <h3>Lista gwarancji</h3>
-            <select class="form-select" id="filter-rodzaj" style="width:auto">
-              <option value="">Wszystkie typy</option>
-              <option value="WADIUM">Wadium</option>
-              <option value="NWK">Należyte wykonanie</option>
-              <option value="UWU">Usunięcie wad i usterek</option>
-              <option value="ZAL">Zwrot zaliczki</option>
-            </select>
-            <select class="form-select" id="filter-status" style="width:auto">
-              <option value="">Wszystkie statusy</option>
-              <option value="active">Aktywne</option>
-              <option value="expiring">Wygasające</option>
-              <option value="expired">Wygasłe</option>
-            </select>
-            <button class="btn btn-primary" id="btn-new-bond"><i data-lucide="plus" width="16" height="16"></i> Nowa gwarancja</button>
-          </div>
-          <div style="overflow-x:auto">
-            <table class="tbl">
-              <thead><tr>
-                <th>Nr</th><th>Rodzaj</th><th>Kontrakt / Inwestor / Beneficjent</th>
-                <th>TU</th><th>Okres</th><th class="num">Suma (PLN)</th><th class="num">Składka</th><th>Status</th><th></th>
-              </tr></thead>
-              <tbody id="bonds-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="page" id="page-limits">
-        <h1 class="page-title">Limity TU</h1>
-        <p class="page-subtitle">Umowy limitów — kwoty mrożone na poczet aktywnych gwarancji</p>
-        <div id="limits-tenant-selector" class="tenant-selector" style="display:none">
-          <label>Klient:</label>
-          <select class="form-select" id="admin-tenant-filter-limits" style="min-width:200px"></select>
-          <button class="btn btn-admin" id="btn-new-limit"><i data-lucide="plus" width="16" height="16"></i> Nowa umowa limitu</button>
-        </div>
-        <div class="limit-grid" id="limits-grid"></div>
-      </div>
-
-      <div class="page" id="page-terminarz">
-        <h1 class="page-title">Terminarz</h1>
-        <p class="page-subtitle">Gwarancje posortowane według daty wygaśnięcia</p>
-        <div class="table-wrap">
-          <div style="overflow-x:auto">
-            <table class="tbl">
-              <thead><tr>
-                <th>Nr</th><th>Kontrakt / Beneficjent</th><th>Rodzaj</th>
-                <th>TU</th><th>Data od</th><th>Wygasa</th><th class="num">Suma</th><th>Status</th>
-              </tr></thead>
-              <tbody id="terminarz-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="page" id="page-skladki">
-        <h1 class="page-title">Składki</h1>
-        <p class="page-subtitle">Kalkulacja: liczba dni / 365 × stawka% × suma gwarancyjna</p>
-        <div class="table-wrap">
-          <div style="overflow-x:auto">
-            <table class="tbl">
-              <thead><tr>
-                <th>Nr</th><th>Kontrakt</th><th>Rodzaj</th>
-                <th class="num">Dni</th><th class="num">Stawka %</th>
-                <th class="num">Suma</th><th class="num">Składka (PLN)</th>
-              </tr></thead>
-              <tbody id="skladki-tbody"></tbody>
-              <tfoot><tr>
-                <td colspan="6" style="font-weight:700;padding:var(--space-3) var(--space-4)">Łącznie</td>
-                <td class="num" id="skladki-total" style="font-weight:700;padding:var(--space-3) var(--space-4)">—</td>
-              </tr></tfoot>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAGE: OCENA RYZYKA (UNDERWRITING) -->
-      <div class="page" id="page-ocena">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start" class="print-hidden">
-          <div>
-            <h1 class="page-title">Ocena Ryzyka (Underwriting)</h1>
-            <p class="page-subtitle">Zautomatyzowany model oceny finansowej firmy ubiegającej się o limit gwarancyjny.</p>
-          </div>
-          <div style="display:flex;gap:var(--space-3)">
-            <button class="btn btn-ghost" onclick="window.print()"><i data-lucide="printer" width="16" height="16"></i> Drukuj Raport</button>
-            <button class="btn btn-primary" id="btn-risk-sample">Wczytaj przykład</button>
-          </div>
-        </div>
-
-        <div class="risk-container">
-          <!-- LEWA KOLUMNA: DANE -->
-          <div class="risk-form-col">
-            <h3 style="font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)">
-              <i data-lucide="dollar-sign" width="18" height="18" style="color:var(--color-primary)"></i> Dane Finansowe
-            </h3>
-            
-            <div class="risk-header">Bilans - Aktywa</div>
-            <div class="risk-row"><label>Aktywa Razem</label><input type="number" class="form-input" id="r-assets"></div>
-            <div class="risk-row"><label>Aktywa Obrotowe</label><input type="number" class="form-input" id="r-curr-assets"></div>
-            <div class="risk-row"><label>Zapasy</label><input type="number" class="form-input" id="r-inv"></div>
-            <div class="risk-row"><label>Należności</label><input type="number" class="form-input" id="r-rec"></div>
-            <div class="risk-row"><label>Środki Pieniężne</label><input type="number" class="form-input" id="r-cash"></div>
-
-            <div class="risk-header">Bilans - Pasywa</div>
-            <div class="risk-row"><label>Kapitał Własny</label><input type="number" class="form-input" id="r-equity"></div>
-            <div class="risk-row"><label>Zyski Zatrzymane</label><input type="number" class="form-input" id="r-ret-earn"></div>
-            <div class="risk-row"><label>Zobowiązania Ogółem</label><input type="number" class="form-input" id="r-tot-liab"></div>
-            <div class="risk-row"><label>Zob. Długoterminowe</label><input type="number" class="form-input" id="r-lt-liab"></div>
-            <div class="risk-row"><label>Zob. Krótkoterminowe</label><input type="number" class="form-input" id="r-st-liab"></div>
-            <div class="risk-row"><label>Zob. Handlowe</label><input type="number" class="form-input" id="r-trade-pay"></div>
-
-            <div class="risk-header">Rachunek Wyników i Przepływy</div>
-            <div class="risk-row"><label>Przychody</label><input type="number" class="form-input" id="r-rev"></div>
-            <div class="risk-row"><label>EBIT</label><input type="number" class="form-input" id="r-ebit"></div>
-            <div class="risk-row"><label>Amortyzacja</label><input type="number" class="form-input" id="r-da"></div>
-            <div class="risk-row"><label>OCF Bieżący (T)</label><input type="number" class="form-input" id="r-ocf1"></div>
-            <div class="risk-row"><label>OCF Poprzedni (T-1)</label><input type="number" class="form-input" id="r-ocf2"></div>
-          </div>
-
-          <!-- PRAWA KOLUMNA: WYNIKI -->
-          <div class="risk-results-col">
-            
-            <div class="risk-decision-card" id="risk-decision-card" style="background:var(--color-surface);border-color:var(--color-border)">
-              <div>
-                <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Decyzja Underwritera</div>
-                <div id="risk-decision-text" style="font-size:var(--text-xl);font-weight:900;color:var(--color-text-faint)">Wprowadź dane</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:var(--text-xs);font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Rating Modelu</div>
-                <div id="risk-rating-text" style="font-size:32px;font-weight:900;color:var(--color-text-faint)">-</div>
-              </div>
-            </div>
-
-            <div class="kpi-grid" style="margin-bottom:0">
-              <div class="kpi-card">
-                <div class="kpi-label">Płynność Bieżąca</div>
-                <div class="kpi-value" id="risk-kpi-cr">0.00</div>
-                <div class="kpi-sub">Cel: > 1.20</div>
-              </div>
-              <div class="kpi-card">
-                <div class="kpi-label">Dług Netto / EBITDA</div>
-                <div class="kpi-value" id="risk-kpi-lev">0.00</div>
-                <div class="kpi-sub">Cel: < 3.50</div>
-              </div>
-              <div class="kpi-card" id="risk-kpi-z-card">
-                <div class="kpi-label">Z''-Score (Bankructwo)</div>
-                <div class="kpi-value" id="risk-kpi-z">0.00</div>
-                <div class="kpi-sub">Bezpiecznie: > 2.60</div>
-              </div>
-            </div>
-
-            <div class="table-wrap" style="margin-bottom:0">
-              <div class="table-toolbar" style="background:var(--color-surface-offset)">
-                <h3>Weryfikacja Czerwonych Flag (Red Flags)</h3>
-              </div>
-              <ul class="risk-flag-list">
-                <li class="risk-flag-item" id="flag-eq">
-                  <i data-lucide="check-circle" width="20" height="20" style="color:var(--color-success)"></i>
-                  <div>
-                    <div style="font-weight:600;font-size:var(--text-sm)">Utrata Kapitałów Własnych</div>
-                    <div style="font-size:var(--text-xs);color:var(--color-text-muted)">Kapitał własny stanowi mniej niż 10% sumy bilansowej.</div>
-                  </div>
-                </li>
-                <li class="risk-flag-item" id="flag-liq">
-                  <i data-lucide="check-circle" width="20" height="20" style="color:var(--color-success)"></i>
-                  <div>
-                    <div style="font-weight:600;font-size:var(--text-sm)">Załamanie Płynności</div>
-                    <div style="font-size:var(--text-xs);color:var(--color-text-muted)">Wskaźnik bieżący poniżej 1.0. Firma nie ma z czego spłacić bieżących zobowiązań.</div>
-                  </div>
-                </li>
-                <li class="risk-flag-item" id="flag-cash">
-                  <i data-lucide="check-circle" width="20" height="20" style="color:var(--color-success)"></i>
-                  <div>
-                    <div style="font-weight:600;font-size:var(--text-sm)">Przeżeranie Gotówki</div>
-                    <div style="font-size:var(--text-xs);color:var(--color-text-muted)">Ujemne przepływy operacyjne (OCF) przez dwa badane lata z rzędu.</div>
-                  </div>
-                </li>
-                <li class="risk-flag-item" id="flag-lev">
-                  <i data-lucide="check-circle" width="20" height="20" style="color:var(--color-success)"></i>
-                  <div>
-                    <div style="font-weight:600;font-size:var(--text-sm)">Przelewarowanie (Warning)</div>
-                    <div style="font-size:var(--text-xs);color:var(--color-text-muted)">Dług Netto do EBITDA przekracza 4.5. Złamanie standardowych kowenantów.</div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <div class="page" id="page-admin-clients">
-        <h1 class="page-title">Klienci</h1>
-        <p class="page-subtitle">Zarządzanie firmami klientów</p>
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <h3>Lista klientów</h3>
-            <button class="btn btn-admin" id="btn-new-client"><i data-lucide="plus" width="16" height="16"></i> Nowy klient</button>
-          </div>
-          <div style="overflow-x:auto">
-            <table class="tbl">
-              <thead><tr>
+</div>
+<div class="topbar-right">
+<span id="topbar-badge"></span>
+@@ -328,7 +328,7 @@ <h3>Lista klientów</h3>
+<div style="overflow-x:auto">
+<table class="tbl">
+<thead><tr>
+                <th>Firma</th><th>Slug</th><th class="num">Gwarancje</th><th class="num">Suma zaangażowana</th><th>Wygasające</th><th></th>
                 <th>Firma</th><th>NIP / REGON</th><th class="num">Gwarancje</th><th class="num">Suma zaangażowana</th><th>Wygasające</th><th></th>
-              </tr></thead>
-              <tbody id="clients-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="page" id="page-admin-insurers">
-        <h1 class="page-title">Ubezpieczyciele</h1>
-        <p class="page-subtitle">Baza TU — każde TU może mieć wiele umów limitów dla różnych klientów</p>
-        <div class="table-wrap">
-          <div class="table-toolbar">
-            <h3>Lista TU</h3>
-            <button class="btn btn-admin" id="btn-new-insurer"><i data-lucide="plus" width="16" height="16"></i> Nowe TU / umowa limitu</button>
-          </div>
-          <div style="overflow-x:auto">
-            <table class="tbl">
-              <thead><tr>
-                <th>Nazwa TU</th><th>Klient</th><th class="num">Limit (PLN)</th><th class="num">Stawka bazowa %</th><th class="num">Składka min.</th><th>UL nr</th><th>Ważność UL</th><th></th>
-              </tr></thead>
-              <tbody id="insurers-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="page" id="page-admin-users">
-        <h1 class="page-title">Użytkownicy</h1>
-        <p class="page-subtitle">Przypisanie kont do firm klientów</p>
-        <div class="table-wrap">
+</tr></thead>
+<tbody id="clients-tbody"></tbody>
+</table>
+@@ -359,16 +359,63 @@ <h3>Lista TU</h3>
+<h1 class="page-title">Użytkownicy</h1>
+<p class="page-subtitle">Przypisanie kont do firm klientów</p>
+<div class="table-wrap">
+          <div class="table-toolbar"><h3>Lista użytkowników</h3></div>
           <div class="table-toolbar">
             <h3>Lista użytkowników</h3>
             <button class="btn btn-admin" id="btn-invite-user"><i data-lucide="user-plus" width="16" height="16"></i> Zaproś użytkownika</button>
           </div>
-          <div style="overflow-x:auto">
-            <table class="tbl">
+<div style="overflow-x:auto">
+<table class="tbl">
+              <thead><tr><th>User ID / Email</th><th>Klient</th><th>Rola</th><th></th></tr></thead>
               <thead><tr><th>Email / ID użytkownika</th><th>Klient</th><th>Rola</th><th></th></tr></thead>
-              <tbody id="users-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+<tbody id="users-tbody"></tbody>
+</table>
+</div>
+</div>
+</div>
 
       <!-- PAGE: PANEL KLIENTA -->
       <div class="page" id="page-tenant-detail">
@@ -553,115 +111,34 @@ input,select,textarea{font:inherit;color:inherit}
           </div>
         </div>
       </div>
-    </main>
-  </div>
+</main>
 </div>
-
-<!-- MODAL: GWARANCJA -->
-<div class="modal-overlay" id="modal-bond">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modal-bond-title">Nowa gwarancja</h2>
-      <button class="btn-icon" onclick="closeModal('modal-bond')"><i data-lucide="x" width="18" height="18"></i></button>
-    </div>
-    <div class="modal-body">
+</div>
+@@ -381,8 +428,7 @@ <h2 class="modal-title" id="modal-bond-title">Nowa gwarancja</h2>
+<button class="btn-icon" onclick="closeModal('modal-bond')"><i data-lucide="x" width="18" height="18"></i></button>
+</div>
+<div class="modal-body">
+      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+            <input type="hidden" id="f-id">
       <input type="hidden" id="f-id">
-      <div id="f-tenant-row" class="form-field" style="display:none">
-        <label class="form-label">Klient</label>
-        <select class="form-select" style="width:100%" id="f-tenant-select"></select>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label" for="f-nr">Nr gwarancji</label>
-          <input class="form-input" style="width:100%" id="f-nr" type="text" placeholder="np. G/2026/0001">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="f-rodzaj">Rodzaj</label>
-          <select class="form-select" style="width:100%" id="f-rodzaj">
-            <option value="WADIUM">Wadium</option>
-            <option value="NWK">Należyte wykonanie (NWK)</option>
-            <option value="UWU">Usunięcie wad i usterek (UWU)</option>
-            <option value="ZAL">Zwrot zaliczki (ZAL)</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="f-kontrakt">Nazwa kontraktu</label>
-        <input class="form-input" style="width:100%" id="f-kontrakt" type="text" placeholder="np. Budowa drogi DK7 odcinek B">
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label" for="f-inwestor">Inwestor</label>
-          <input class="form-input" style="width:100%" id="f-inwestor" type="text" placeholder="np. GDDKiA Oddział Warszawa">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="f-beneficjent">Beneficjent gwarancji</label>
-          <input class="form-input" style="width:100%" id="f-beneficjent" type="text" placeholder="np. GDDKiA Centrala">
-          <span class="form-hint">Podmiot uprawniony do żądania wypłaty</span>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label" for="f-tu">Towarzystwo Ubezpieczeń</label>
-          <select class="form-select" style="width:100%" id="f-tu"></select>
-        </div>
-        <div class="form-field" style="display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:var(--space-1)">
-          <label class="checkbox-row">
-            <input type="checkbox" id="f-bez-limitu">
-            Gwarancja poza umową limitu
-          </label>
-          <span class="form-hint">Zaznacz gdy brak UL z tym TU</span>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label" for="f-od">Data od</label>
-          <input class="form-input" style="width:100%" id="f-od" type="date">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="f-do">Data do</label>
-          <input class="form-input" style="width:100%" id="f-do" type="date">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label" for="f-suma">Suma gwarancyjna (PLN)</label>
-          <input class="form-input" style="width:100%" id="f-suma" type="number" min="0" step="0.01" placeholder="250000">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="f-stawka">Stawka roczna (%)</label>
-          <input class="form-input" style="width:100%" id="f-stawka" type="number" min="0" step="0.001" placeholder="0.800">
-          <label class="checkbox-row" style="margin-top:var(--space-2)">
-            <input type="checkbox" id="f-stawka-override">
-            Stawka negocjowana (odbiega od UL)
-          </label>
-        </div>
-      </div>
-      <div class="calc-box">
-        <div class="calc-label">SKŁADKA = dni / 365 × stawka% × suma</div>
-        <div class="calc-value" id="calc-skladka">—</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-bond')">Anuluj</button>
-      <button class="btn btn-primary" id="modal-bond-save"><i data-lucide="save" width="16" height="16"></i> Zapisz gwarancję</button>
-    </div>
-  </div>
+<div id="f-tenant-row" class="form-field" style="display:none">
+<label class="form-label">Klient</label>
+<select class="form-select" style="width:100%" id="f-tenant-select"></select>
+@@ -474,16 +520,31 @@ <h2 class="modal-title" id="modal-client-title">Nowy klient</h2>
+<button class="btn-icon" onclick="closeModal('modal-client')"><i data-lucide="x" width="18" height="18"></i></button>
 </div>
-
-<!-- MODAL: KLIENT -->
-<div class="modal-overlay" id="modal-client">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modal-client-title">Nowy klient</h2>
-      <button class="btn-icon" onclick="closeModal('modal-client')"><i data-lucide="x" width="18" height="18"></i></button>
-    </div>
-    <div class="modal-body">
+<div class="modal-body">
+      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+            <input type="hidden" id="fc-id">
       <input type="hidden" id="fc-id">
+<div class="form-field">
+<label class="form-label" for="fc-nazwa">Nazwa firmy</label>
+<input class="form-input" style="width:100%" id="fc-nazwa" type="text" placeholder="np. Budimex S.A.">
+</div>
       <div class="form-field">
-        <label class="form-label" for="fc-nazwa">Nazwa firmy</label>
-        <input class="form-input" style="width:100%" id="fc-nazwa" type="text" placeholder="np. Budimex S.A.">
-      </div>
+        <label class="form-label" for="fc-slug">Slug</label>
+        <input class="form-input" style="width:100%" id="fc-slug" type="text" placeholder="np. budimex">
+        <span class="form-hint">Małe litery, bez spacji</span>
       <div class="form-row">
         <div class="form-field">
           <label class="form-label" for="fc-nip">NIP</label>
@@ -682,104 +159,42 @@ input,select,textarea{font:inherit;color:inherit}
           <input class="form-input" style="width:100%" id="fc-slug" type="text" placeholder="np. budimex">
           <span class="form-hint">Małe litery, bez spacji</span>
         </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-client')">Anuluj</button>
-      <button class="btn btn-admin" id="modal-client-save"><i data-lucide="save" width="16" height="16"></i> Zapisz klienta</button>
-    </div>
-  </div>
 </div>
-
-<!-- MODAL: UBEZPIECZYCIEL -->
-<div class="modal-overlay" id="modal-insurer">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <h2 class="modal-title" id="modal-insurer-title">Nowy ubezpieczyciel / umowa limitu</h2>
-      <button class="btn-icon" onclick="closeModal('modal-insurer')"><i data-lucide="x" width="18" height="18"></i></button>
-    </div>
-    <div class="modal-body">
+</div>
+<div class="modal-footer">
+@@ -501,17 +562,16 @@ <h2 class="modal-title" id="modal-insurer-title">Nowy ubezpieczyciel / umowa lim
+<button class="btn-icon" onclick="closeModal('modal-insurer')"><i data-lucide="x" width="18" height="18"></i></button>
+</div>
+<div class="modal-body">
+      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+            <input type="hidden" id="fi-id">
       <input type="hidden" id="fi-id">
-      <div class="form-field">
-        <label class="form-label" for="fi-tenant">Klient</label>
-        <select class="form-select" style="width:100%" id="fi-tenant"></select>
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="fi-nazwa">Nazwa TU</label>
-        <div style="display:flex;gap:var(--space-2);align-items:center">
+<div class="form-field">
+<label class="form-label" for="fi-tenant">Klient</label>
+<select class="form-select" style="width:100%" id="fi-tenant"></select>
+</div>
+<div class="form-field">
+<label class="form-label" for="fi-nazwa">Nazwa TU</label>
+<div style="display:flex;gap:var(--space-2);align-items:center">
+          <select class="form-select" style="flex:1" id="fi-nazwa"></select>
+          <button class="btn btn-ghost" type="button" id="btn-add-tu-inline" title="Dodaj nowe TU do słownika" style="white-space:nowrap;flex-shrink:0">+ Nowe TU</button>
           <select class="form-select" style="flex:1" id="fi-nazwa"><option value="">— wybierz TU —</option></select>
           <button class="btn btn-ghost" type="button" id="btn-add-tu-inline" style="white-space:nowrap;flex-shrink:0">+ Nowe TU</button>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label" for="fi-ul-nr">Nr umowy limitu</label>
-          <input class="form-input" style="width:100%" id="fi-ul-nr" type="text" placeholder="np. UL/2026/001">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="fi-limit">Kwota limitu (PLN)</label>
-          <input class="form-input" style="width:100%" id="fi-limit" type="number" min="0" step="1000" placeholder="5000000">
-          <span class="form-hint">Zostaw puste jeśli brak UL</span>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label" for="fi-ul-od">Data od UL</label>
-          <input class="form-input" style="width:100%" id="fi-ul-od" type="date">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="fi-ul-do">Data do UL</label>
-          <input class="form-input" style="width:100%" id="fi-ul-do" type="date">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label" for="fi-stawka">Stawka bazowa z UL (%)</label>
-          <input class="form-input" style="width:100%" id="fi-stawka" type="number" min="0" step="0.001" placeholder="0.800">
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="fi-skladka-min">Składka minimalna (PLN)</label>
-          <input class="form-input" style="width:100%" id="fi-skladka-min" type="number" min="0" step="1" placeholder="500">
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-insurer')">Anuluj</button>
-      <button class="btn btn-admin" id="modal-insurer-save"><i data-lucide="save" width="16" height="16"></i> Zapisz</button>
-    </div>
-  </div>
 </div>
-
-<!-- MODAL: UŻYTKOWNIK -->
-<div class="modal-overlay" id="modal-user-assign">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-header">
-      <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
-      <button class="btn-icon" onclick="closeModal('modal-user-assign')"><i data-lucide="x" width="18" height="18"></i></button>
-    </div>
-    <div class="modal-body">
+</div>
+<div class="form-row">
+@@ -561,8 +621,7 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+<button class="btn-icon" onclick="closeModal('modal-user-assign')"><i data-lucide="x" width="18" height="18"></i></button>
+</div>
+<div class="modal-body">
+      <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+            <input type="hidden" id="fu-id">
       <input type="hidden" id="fu-id">
-      <div class="form-field">
-        <label class="form-label">User ID</label>
-        <div id="fu-email" style="font-size:var(--text-sm);font-weight:600;padding:var(--space-2) 0;word-break:break-all"></div>
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="fu-tenant">Przypisz do klienta</label>
-        <select class="form-select" style="width:100%" id="fu-tenant"></select>
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="fu-rola">Rola</label>
-        <select class="form-select" style="width:100%" id="fu-rola">
-          <option value="klient">Klient</option>
-          <option value="admin">Admin klienta</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modal-user-assign')">Anuluj</button>
-      <button class="btn btn-admin" id="modal-user-save"><i data-lucide="save" width="16" height="16"></i> Zapisz</button>
-    </div>
-  </div>
+<div class="form-field">
+<label class="form-label">User ID</label>
+<div id="fu-email" style="font-size:var(--text-sm);font-weight:600;padding:var(--space-2) 0;word-break:break-all"></div>
+@@ -586,13 +645,45 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+</div>
 </div>
 
 <!-- MODAL: ZAPROŚ UŻYTKOWNIKA -->
@@ -821,407 +236,178 @@ const SB_URL = 'https://kukvgsjrmrqtzhkszzum.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
+
+const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
 const fmt = n => n==null?'—':Number(n).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
 const dateDiff = (a,b) => Math.round((new Date(b)-new Date(a))/(1000*60*60*24));
 const today = () => new Date().toISOString().slice(0,10);
-
-function bondStatus(b){
-  if(b.bond_data_do < today()) return 'expired';
-  if(dateDiff(today(),b.bond_data_do)<=30) return 'expiring';
-  return 'active';
-}
-function statusBadge(b){
-  const s=bondStatus(b);
-  if(s==='expired')  return '<span class="badge badge-expired">Wygasły</span>';
-  if(s==='expiring') return '<span class="badge badge-expiring">Wygasa wkrótce</span>';
-  return '<span class="badge badge-active">Aktywny</span>';
-}
-function rodzajBadge(r){
-  const map={WADIUM:'badge-wadium',NWK:'badge-nwk',UWU:'badge-uwu',ZAL:'badge-zal'};
-  const lbl={WADIUM:'Wadium',NWK:'NWK',UWU:'UWU',ZAL:'ZAL'};
-  return `<span class="badge ${map[r]||''}">${lbl[r]||r}</span>`;
+@@ -615,7 +706,7 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
 }
 
 let isAdmin=false, tenantId=null;
+let allBonds=[], allInsurers=[], allTenants=[], allUsers=[], allTuDict=[];
 let allBonds=[], allInsurers=[], allTenants=[], allUsers=[];
 
 document.getElementById('btn-login').addEventListener('click',async()=>{
-  const email=document.getElementById('auth-email').value.trim();
-  const pass=document.getElementById('auth-pass').value;
-  const errEl=document.getElementById('auth-error');
-  errEl.style.display='none';
-  const {error}=await sb.auth.signInWithPassword({email,password:pass});
-  if(error){errEl.textContent=error.message;errEl.style.display='block';return;}
-  initApp();
-});
-document.getElementById('auth-pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('btn-login').click();});
-document.getElementById('btn-logout').addEventListener('click',async()=>{
-  await sb.auth.signOut();
-  document.getElementById('app').style.display='none';
-  document.getElementById('auth-screen').style.display='flex';
-  lucide.createIcons();
+const email=document.getElementById('auth-email').value.trim();
+@@ -634,23 +725,11 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+lucide.createIcons();
 });
 
+
+async function loadTuDict(){
+  const {data}=await sb.from('bond_tu_dict').select('id,name').eq('is_active',true).order('name');
+  allTuDict=data||[];
+  populateTuSelect();
+}
+function populateTuSelect(){
+  const sel=document.getElementById('fi-nazwa');
+  if(!sel) return;
+  sel.innerHTML='<option value="">— wybierz TU —</option>'+allTuDict.map(t=>`<option value="${t.name}">${t.name}</option>`).join('');
+}
 async function initApp(){
-  const {data:{session}}=await sb.auth.getSession();
-  if(!session) return;
-  document.getElementById('auth-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
-  const {data:profile}=await sb.from('bond_profiles')
-    .select('bond_tenant_id,bond_is_admin,bond_rola,bond_tenants(bond_nazwa,bond_slug)')
-    .eq('bond_id',session.user.id).single();
-  if(profile?.bond_is_admin){
-    isAdmin=true;
-    document.getElementById('topbar-badge').innerHTML='<span class="admin-badge">⚡ God Admin</span>';
-    document.getElementById('admin-nav').style.display='block';
-    document.getElementById('admin-dash-alert').style.display='flex';
-    await loadAll();
-  } else {
-    tenantId=profile?.bond_tenant_id;
-    const slug=(profile?.bond_tenants?.bond_slug||'').toUpperCase();
-    document.getElementById('topbar-badge').innerHTML=`<span class="tenant-badge">${slug}</span>`;
-    document.getElementById('dash-subtitle').textContent=profile?.bond_tenants?.bond_nazwa||'';
-    await loadInsurers(tenantId);
-    await loadBonds(tenantId);
-  }
-  lucide.createIcons();
-}
-
-async function loadAll(){
-  const [t,i,b]=await Promise.all([
-    sb.from('bond_tenants').select('*').order('bond_nazwa'),
-    sb.from('bond_insurers').select('*,bond_tenants(bond_nazwa)').order('bond_nazwa'),
-    sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)').order('bond_data_do')
-  ]);
-  allTenants=t.data||[];
-  allInsurers=i.data||[];
-  allBonds=b.data||[];
-  const {data:profiles}=await sb.from('bond_profiles').select('bond_id,bond_rola,bond_tenant_id,bond_tenants(bond_nazwa)');
-  allUsers=profiles||[];
-  populateTenantSelectors();
-  renderDashboard(allBonds);
-  renderBonds(allBonds);
-  renderLimits(allInsurers,allBonds);
-  renderTerminarz(allBonds);
-  renderSkladki(allBonds);
-  renderClients();
-  renderInsurers();
-  renderUsers();
-  updateNavBadge(allBonds);
-}
-
-async function loadInsurers(tid){
-  const {data}=await sb.from('bond_insurers').select('*').eq('bond_tenant_id',tid).order('bond_nazwa');
-  allInsurers=data||[];
-}
-async function loadBonds(tid){
-  const {data}=await sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit)').eq('bond_tenant_id',tid).order('bond_data_do');
-  allBonds=data||[];
-  renderDashboard(allBonds);
-  renderBonds(allBonds);
-  renderLimits(allInsurers,allBonds);
-  renderTerminarz(allBonds);
-  renderSkladki(allBonds);
-  updateNavBadge(allBonds);
-}
+const {data:{session}}=await sb.auth.getSession();
+if(!session) return;
+document.getElementById('auth-screen').style.display='none';
+document.getElementById('app').style.display='flex';
+  await loadTuDict();
+const {data:profile}=await sb.from('bond_profiles')
+.select('bond_tenant_id,bond_is_admin,bond_rola,bond_tenants(bond_nazwa,bond_slug)')
+.eq('bond_id',session.user.id).single();
+@@ -711,7 +790,7 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
 
 function populateTenantSelectors(){
-  const opts=allTenants.map(t=>`<option value="${t.bond_id}">${t.bond_nazwa}</option>`).join('');
+const opts=allTenants.map(t=>`<option value="${t.bond_id}">${t.bond_nazwa}</option>`).join('');
+  ['f-tenant-select','fi-tenant','fu-tenant'].forEach(id=>{
   ['f-tenant-select','fi-tenant','fu-tenant','finv-tenant'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.innerHTML=opts;
-  });
-  const filterOpts='<option value="">Wszyscy klienci</option>'+opts;
-  document.getElementById('admin-tenant-filter-bonds').innerHTML=filterOpts;
-  document.getElementById('admin-tenant-filter-limits').innerHTML=filterOpts;
-  if(isAdmin){
-    document.getElementById('bonds-tenant-selector').style.display='flex';
-    document.getElementById('limits-tenant-selector').style.display='flex';
-    document.getElementById('f-tenant-row').style.display='block';
-  }
-  document.getElementById('dash-subtitle').textContent='Widok wszystkich klientów — '+allTenants.length+' firm';
-}
-
-function renderDashboard(bonds){
-  const active=bonds.filter(b=>bondStatus(b)==='active');
-  const expiring=bonds.filter(b=>bondStatus(b)==='expiring');
-  const suma=[...active,...expiring].reduce((s,b)=>s+(b.bond_suma||0),0);
-  const skladka=bonds.reduce((s,b)=>s+(b.bond_skladka||0),0);
-  const kpiExtra=isAdmin?`<div class="kpi-card"><div class="kpi-label">Klientów</div><div class="kpi-value">${allTenants.length}</div><div class="kpi-sub">aktywnych firm</div></div>`:'';
-  document.getElementById('kpi-grid').innerHTML=`
-    <div class="kpi-card"><div class="kpi-label">Aktywne gwarancje</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">${expiring.length} wygasające wkrótce</div></div>
-    <div class="kpi-card"><div class="kpi-label">Suma zaangażowana</div><div class="kpi-value">${fmt(suma)}</div><div class="kpi-sub">PLN aktywne + wygasające</div></div>
-    <div class="kpi-card"><div class="kpi-label">Wygasające ≤30 dni</div><div class="kpi-value" style="color:${expiring.length>0?'var(--color-warning)':'inherit'}">${expiring.length}</div><div class="kpi-sub">wymagają uwagi</div></div>
-    <div class="kpi-card"><div class="kpi-label">Łączna składka</div><div class="kpi-value">${fmt(skladka)}</div><div class="kpi-sub">PLN wszystkie gwarancje</div></div>${kpiExtra}`;
-  if(expiring.length>0){
-    document.getElementById('alert-expiring').style.display='flex';
-    document.getElementById('alert-text').innerHTML=`<strong>${expiring.length} gwarancji wygasa wkrótce</strong> — sprawdź terminarz.`;
-  } else document.getElementById('alert-expiring').style.display='none';
-  const sorted=[...bonds].filter(b=>bondStatus(b)!=='expired').sort((a,b)=>a.bond_data_do.localeCompare(b.bond_data_do)).slice(0,8);
-  const tl=document.getElementById('timeline-list');
-  if(!sorted.length){tl.innerHTML='<div class="empty" style="padding:var(--space-8)"><p>Brak aktywnych gwarancji</p></div>';lucide.createIcons();return;}
-  tl.innerHTML=sorted.map(b=>{
-    const s=bondStatus(b);const days=dateDiff(today(),b.bond_data_do);
-    const tenantInfo=isAdmin&&b.bond_tenants?` <span class="badge badge-admin">${b.bond_tenants.bond_nazwa}</span>`:'';
+const el=document.getElementById(id);
+if(el) el.innerHTML=opts;
+});
+@@ -747,7 +826,7 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+tl.innerHTML=sorted.map(b=>{
+const s=bondStatus(b);const days=dateDiff(today(),b.bond_data_do);
+const tenantInfo=isAdmin&&b.bond_tenants?` <span class="badge badge-admin">${b.bond_tenants.bond_nazwa}</span>`:'';
+    return `<div class="timeline-item"><div class="dot dot-${s}"></div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--text-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}${tenantInfo}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${escapeHTML(b.bond_nr)} · ${b.bond_insurers?.bond_nazwa||'—'} · ${rodzajBadge(b.bond_rodzaj)}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:var(--text-sm);font-weight:600">${b.bond_data_do}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${days} dni</div></div></div>`;
     return `<div class="timeline-item"><div class="dot dot-${s}"></div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--text-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}${tenantInfo}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${b.bond_nr} · ${b.bond_insurers?.bond_nazwa||'—'} · ${rodzajBadge(b.bond_rodzaj)}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:var(--text-sm);font-weight:600">${b.bond_data_do}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${days} dni</div></div></div>`;
-  }).join('');
-  lucide.createIcons();
+}).join('');
+lucide.createIcons();
 }
-
-function renderBonds(bonds){
-  const rFil=document.getElementById('filter-rodzaj').value;
-  const sFil=document.getElementById('filter-status').value;
-  let list=bonds;
-  if(rFil) list=list.filter(b=>b.bond_rodzaj===rFil);
-  if(sFil) list=list.filter(b=>bondStatus(b)===sFil);
-  const tb=document.getElementById('bonds-tbody');
-  if(!list.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><h3>Brak gwarancji</h3><p>Dodaj pierwszą gwarancję klikając przycisk powyżej</p></div></td></tr>`;lucide.createIcons();return;}
-  tb.innerHTML=list.map(b=>`<tr>
+@@ -761,9 +840,9 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+const tb=document.getElementById('bonds-tbody');
+if(!list.length){tb.innerHTML=`<tr><td colspan="9"><div class="empty"><h3>Brak gwarancji</h3><p>Dodaj pierwszą gwarancję klikając przycisk powyżej</p></div></td></tr>`;lucide.createIcons();return;}
+tb.innerHTML=list.map(b=>`<tr>
+    <td><strong>${escapeHTML(b.bond_nr)}</strong>${b.bond_bez_limitu?'<br><span style="font-size:10px;color:var(--color-text-faint)">poza UL</span>':''}${b.bond_stawka_override?'<br><span style="font-size:10px;color:var(--color-warning)">stawka negocj.</span>':''}</td>
     <td><strong>${b.bond_nr}</strong>${b.bond_bez_limitu?'<br><span style="font-size:10px;color:var(--color-text-faint)">poza UL</span>':''}${b.bond_stawka_override?'<br><span style="font-size:10px;color:var(--color-warning)">stawka negocj.</span>':''}</td>
-    <td>${rodzajBadge(b.bond_rodzaj)}</td>
+   <td>${rodzajBadge(b.bond_rodzaj)}</td>
+    <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${escapeHTML(b.bond_inwestor)||'—'}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">Ben: ${escapeHTML(b.bond_beneficjent)}</div>`:''}</td>
     <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${b.bond_inwestor||'—'}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">Ben: ${b.bond_beneficjent}</div>`:''}</td>
-    <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'—'}</td>
-    <td style="font-size:var(--text-xs);white-space:nowrap">${b.bond_data_od}<br>${b.bond_data_do}</td>
-    <td class="num">${fmt(b.bond_suma)}</td>
-    <td class="num">${fmt(b.bond_skladka)}</td>
-    <td>${statusBadge(b)}</td>
-    <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editBond('${b.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteBond('${b.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
-  </tr>`).join('');
-  lucide.createIcons();
-}
-
-document.getElementById('filter-rodzaj').addEventListener('change',()=>renderBonds(allBonds));
-document.getElementById('filter-status').addEventListener('change',()=>renderBonds(allBonds));
-document.getElementById('admin-tenant-filter-bonds').addEventListener('change',async function(){
-  if(!this.value){renderBonds(allBonds);return;}
-  const {data}=await sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit)').eq('bond_tenant_id',this.value).order('bond_data_do');
-  renderBonds(data||[]);
-});
-document.getElementById('admin-tenant-filter-limits').addEventListener('change',function(){
-  if(!this.value){renderLimits(allInsurers,allBonds);return;}
-  renderLimits(allInsurers.filter(i=>i.bond_tenant_id===this.value),allBonds.filter(b=>b.bond_tenant_id===this.value));
-});
-
-function renderLimits(insurers,bonds){
-  const grid=document.getElementById('limits-grid');
-  if(!insurers.length){grid.innerHTML='<div class="empty"><h3>Brak ubezpieczycieli</h3><p>Dodaj TU i umowę limitu w sekcji Admin → Ubezpieczyciele</p></div>';return;}
-  grid.innerHTML=insurers.map(ins=>{
-    const iBonds=bonds.filter(b=>b.bond_insurer_id===ins.bond_id&&bondStatus(b)!=='expired');
-    const zaang=iBonds.reduce((s,b)=>s+(b.bond_suma||0),0);
-    const lim=ins.bond_limit;
-    const wolny=lim!=null?lim-zaang:null;
-    const pct=lim?Math.min(100,Math.round(zaang/lim*100)):0;
-    const fillClass=pct>=90?'danger':pct>=70?'warn':'';
-    const tenantLabel=isAdmin&&ins.bond_tenants?`<div style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:var(--space-2)">${ins.bond_tenants.bond_nazwa}</div>`:'';
-    return `<div class="limit-card">${tenantLabel}<div class="limit-card-header"><div class="limit-tu-name">${ins.bond_nazwa}</div><span class="badge badge-active">${iBonds.length} gwarancji</span></div>
-    ${lim!=null?`<div class="limit-bar-track"><div class="limit-bar-fill ${fillClass}" style="width:${pct}%"></div></div><div class="limit-nums"><span>Zaangażowane: <strong>${fmt(zaang)}</strong></span><span>${pct}%</span></div><div class="limit-nums" style="margin-top:var(--space-2)"><span>Limit: ${fmt(lim)}</span><span style="color:${(wolny||0)<0?'var(--color-error)':'var(--color-success)'}">Wolne: ${fmt(wolny)}</span></div>`:`<div style="font-size:var(--text-xs);color:var(--color-text-faint);font-style:italic">Brak umowy limitu (gwarancje jednostkowe)</div>${zaang>0?`<div style="font-size:var(--text-xs);margin-top:var(--space-2)">Zaangażowane: <strong>${fmt(zaang)}</strong></div>`:''}`}
-    ${ins.bond_ul_nr?`<div style="font-size:var(--text-xs);color:var(--color-text-faint);margin-top:var(--space-3)">UL: ${ins.bond_ul_nr}${ins.bond_ul_data_od?' · '+ins.bond_ul_data_od:''}–${ins.bond_ul_data_do||''}</div>`:''}
-    ${ins.bond_stawka_bazowa!=null?`<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-2)">Stawka bazowa: <strong>${ins.bond_stawka_bazowa}%</strong>${ins.bond_skladka_min?' · Min. składka: '+fmt(ins.bond_skladka_min)+' PLN':''}</div>`:''}
-    ${isAdmin?`<div style="margin-top:var(--space-3)"><button class="btn btn-ghost" style="font-size:11px;padding:2px var(--space-2)" onclick="editInsurer('${ins.bond_id}')"><i data-lucide="pencil" width="12" height="12"></i> Edytuj UL</button></div>`:''}
-    </div>`;
-  }).join('');
-  lucide.createIcons();
-}
+   <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'—'}</td>
+   <td style="font-size:var(--text-xs);white-space:nowrap">${b.bond_data_od}<br>${b.bond_data_do}</td>
+   <td class="num">${fmt(b.bond_suma)}</td>
+@@ -809,8 +888,8 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
 
 function renderTerminarz(bonds){
-  document.getElementById('terminarz-tbody').innerHTML=[...bonds].sort((a,b)=>a.bond_data_do.localeCompare(b.bond_data_do)).map(b=>`<tr>
+document.getElementById('terminarz-tbody').innerHTML=[...bonds].sort((a,b)=>a.bond_data_do.localeCompare(b.bond_data_do)).map(b=>`<tr>
+    <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
+    <td style="max-width:180px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">${escapeHTML(b.bond_beneficjent)}</div>`:''}</td>
     <td><strong>${b.bond_nr}</strong></td>
     <td style="max-width:180px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">${b.bond_beneficjent}</div>`:''}</td>
-    <td>${rodzajBadge(b.bond_rodzaj)}</td>
-    <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'—'}</td>
-    <td style="font-size:var(--text-xs)">${b.bond_data_od}</td>
-    <td style="font-weight:600;white-space:nowrap">${b.bond_data_do}</td>
-    <td class="num">${fmt(b.bond_suma)}</td>
-    <td>${statusBadge(b)}</td>
-  </tr>`).join('');
-}
-
-function renderSkladki(bonds){
-  let total=0;
-  document.getElementById('skladki-tbody').innerHTML=bonds.map(b=>{
-    const dni=dateDiff(b.bond_data_od,b.bond_data_do);
-    const sk=b.bond_skladka||0;total+=sk;
+   <td>${rodzajBadge(b.bond_rodzaj)}</td>
+   <td style="font-size:var(--text-xs)">${b.bond_insurers?.bond_nazwa||'—'}</td>
+   <td style="font-size:var(--text-xs)">${b.bond_data_od}</td>
+@@ -825,7 +904,7 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+document.getElementById('skladki-tbody').innerHTML=bonds.map(b=>{
+const dni=dateDiff(b.bond_data_od,b.bond_data_do);
+const sk=b.bond_skladka||0;total+=sk;
+    return `<tr><td><strong>${escapeHTML(b.bond_nr)}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</td><td>${rodzajBadge(b.bond_rodzaj)}</td><td class="num">${dni}</td><td class="num">${b.bond_stawka!=null?b.bond_stawka+'%':'—'}</td><td class="num">${fmt(b.bond_suma)}</td><td class="num" style="font-weight:600">${fmt(sk)}</td></tr>`;
     return `<tr><td><strong>${b.bond_nr}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.bond_kontrakt}</td><td>${rodzajBadge(b.bond_rodzaj)}</td><td class="num">${dni}</td><td class="num">${b.bond_stawka!=null?b.bond_stawka+'%':'—'}</td><td class="num">${fmt(b.bond_suma)}</td><td class="num" style="font-weight:600">${fmt(sk)}</td></tr>`;
-  }).join('');
-  document.getElementById('skladki-total').textContent=fmt(total)+' PLN';
+}).join('');
+document.getElementById('skladki-total').textContent=fmt(total)+' PLN';
 }
-
-function renderClients(){
-  const tb=document.getElementById('clients-tbody');
-  if(!allTenants.length){tb.innerHTML='<tr><td colspan="6"><div class="empty"><p>Brak klientów</p></div></td></tr>';return;}
-  tb.innerHTML=allTenants.map(t=>{
-    const tBonds=allBonds.filter(b=>b.bond_tenant_id===t.bond_id);
-    const active=tBonds.filter(b=>bondStatus(b)!=='expired');
-    const expiring=tBonds.filter(b=>bondStatus(b)==='expiring');
-    const suma=active.reduce((s,b)=>s+(b.bond_suma||0),0);
-    return `<tr>
+@@ -839,12 +918,12 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+const expiring=tBonds.filter(b=>bondStatus(b)==='expiring');
+const suma=active.reduce((s,b)=>s+(b.bond_suma||0),0);
+return `<tr>
+      <td><strong>${escapeHTML(t.bond_nazwa)}</strong></td>
+      <td><code style="font-size:var(--text-xs);background:var(--color-surface-offset);padding:2px 6px;border-radius:4px">${escapeHTML(t.bond_slug)}</code></td>
       <td><strong>${t.bond_nazwa}</strong><br><code style="font-size:10px;color:var(--color-text-faint)">${t.bond_slug||''}</code></td>
       <td style="font-size:var(--text-xs)">${t.bond_nip?'NIP: '+t.bond_nip:'—'}${t.bond_regon?'<br>REGON: '+t.bond_regon:''}${t.bond_krs?'<br>KRS: '+t.bond_krs:''}</td>
-      <td class="num">${tBonds.length}</td>
-      <td class="num">${fmt(suma)}</td>
-      <td>${expiring.length>0?`<span class="badge badge-expiring">${expiring.length} wygasające</span>`:'<span style="color:var(--color-text-faint);font-size:var(--text-xs)">—</span>'}</td>
+     <td class="num">${tBonds.length}</td>
+     <td class="num">${fmt(suma)}</td>
+     <td>${expiring.length>0?`<span class="badge badge-expiring">${expiring.length} wygasające</span>`:'<span style="color:var(--color-text-faint);font-size:var(--text-xs)">—</span>'}</td>
+      <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editClient('${t.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteClient('${t.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
       <td style="white-space:nowrap;display:flex;gap:4px"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:11px" onclick="openTenantDetail('${t.bond_id}')"><i data-lucide="layout-dashboard" width="12" height="12"></i> Panel</button><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editClient('${t.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteClient('${t.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
-    </tr>`;
-  }).join('');
-  lucide.createIcons();
-}
-
-function renderInsurers(){
-  const tb=document.getElementById('insurers-tbody');
-  if(!allInsurers.length){tb.innerHTML='<tr><td colspan="8"><div class="empty"><p>Brak ubezpieczycieli</p></div></td></tr>';return;}
-  tb.innerHTML=allInsurers.map(i=>`<tr>
+   </tr>`;
+}).join('');
+lucide.createIcons();
+@@ -854,14 +933,14 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+const tb=document.getElementById('insurers-tbody');
+if(!allInsurers.length){tb.innerHTML='<tr><td colspan="8"><div class="empty"><p>Brak ubezpieczycieli</p></div></td></tr>';return;}
+tb.innerHTML=allInsurers.map(i=>`<tr>
+    <td><strong>${escapeHTML(i.bond_nazwa)}</strong></td>
+    <td style="font-size:var(--text-xs)">${escapeHTML(i.bond_tenants?.bond_nazwa)||'—'}</td>
     <td><strong>${i.bond_nazwa}</strong></td>
     <td style="font-size:var(--text-xs)">${i.bond_tenants?.bond_nazwa||'—'}</td>
-    <td class="num">${fmt(i.bond_limit)}</td>
-    <td class="num">${i.bond_stawka_bazowa!=null?i.bond_stawka_bazowa+'%':'—'}</td>
-    <td class="num">${fmt(i.bond_skladka_min)}</td>
+   <td class="num">${fmt(i.bond_limit)}</td>
+   <td class="num">${i.bond_stawka_bazowa!=null?i.bond_stawka_bazowa+'%':'—'}</td>
+   <td class="num">${fmt(i.bond_skladka_min)}</td>
+    <td style="font-size:var(--text-xs)">${escapeHTML(i.bond_ul_nr)||'—'}</td>
     <td style="font-size:var(--text-xs)">${i.bond_ul_nr||'—'}</td>
-    <td style="font-size:var(--text-xs);white-space:nowrap">${i.bond_ul_data_od||''}${i.bond_ul_data_do?' → '+i.bond_ul_data_do:''}</td>
+   <td style="font-size:var(--text-xs);white-space:nowrap">${i.bond_ul_data_od||''}${i.bond_ul_data_do?' → '+i.bond_ul_data_do:''}</td>
+    <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editInsurer('${i.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteInsurer('${i.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
     <td style="white-space:nowrap;display:flex;gap:4px"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:11px" onclick="openInsurerDetail('${i.bond_id}')"><i data-lucide="layout-dashboard" width="12" height="12"></i> Panel</button><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editInsurer('${i.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteInsurer('${i.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
-  </tr>`).join('');
-  lucide.createIcons();
+ </tr>`).join('');
+lucide.createIcons();
 }
-
-function renderUsers(){
-  const tb=document.getElementById('users-tbody');
-  if(!allUsers.length){tb.innerHTML='<tr><td colspan="4"><div class="empty"><p>Brak profili użytkowników</p></div></td></tr>';return;}
-  tb.innerHTML=allUsers.map(u=>`<tr>
+@@ -870,7 +949,7 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+const tb=document.getElementById('users-tbody');
+if(!allUsers.length){tb.innerHTML='<tr><td colspan="4"><div class="empty"><p>Brak profili użytkowników</p></div></td></tr>';return;}
+tb.innerHTML=allUsers.map(u=>`<tr>
+    <td style="font-size:11px;word-break:break-all">${u.bond_id}</td>
     <td><div style="font-weight:600;font-size:var(--text-sm)">${u.bond_email?'<span style="color:var(--color-primary)">@</span> '+u.bond_email:''}</div><div style="font-size:10px;color:var(--color-text-faint);word-break:break-all">${u.bond_id}</div></td>
-    <td>${u.bond_tenants?.bond_nazwa||'<span style="color:var(--color-text-faint)">Nieprzypisany</span>'}</td>
-    <td><span class="badge ${u.bond_rola==='admin'?'badge-admin':'badge-active'}">${u.bond_rola||'klient'}</span></td>
-    <td><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:var(--text-xs)" onclick="assignUser('${u.bond_id}','${u.bond_tenant_id||''}','${u.bond_rola||'klient'}')"><i data-lucide="user-cog" width="14" height="14"></i> Przypisz</button></td>
-  </tr>`).join('');
-  lucide.createIcons();
-}
-
-function updateNavBadge(bonds){
-  const exp=bonds.filter(b=>bondStatus(b)==='expiring').length;
-  const badge=document.getElementById('nav-expiring-badge');
-  if(exp>0){badge.textContent=exp;badge.style.display='inline-block';}
-  else badge.style.display='none';
-}
-
-document.querySelectorAll('.nav-item').forEach(item=>{
-  item.addEventListener('click',()=>{
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    item.classList.add('active');
-    document.getElementById('page-'+item.dataset.page).classList.add('active');
-    lucide.createIcons();
-  });
+   <td>${u.bond_tenants?.bond_nazwa||'<span style="color:var(--color-text-faint)">Nieprzypisany</span>'}</td>
+   <td><span class="badge ${u.bond_rola==='admin'?'badge-admin':'badge-active'}">${u.bond_rola||'klient'}</span></td>
+   <td><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:var(--text-xs)" onclick="assignUser('${u.bond_id}','${u.bond_tenant_id||''}','${u.bond_rola||'klient'}')"><i data-lucide="user-cog" width="14" height="14"></i> Przypisz</button></td>
+@@ -906,15 +985,6 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
 });
 
-function openModal(id){document.getElementById(id).classList.add('open');lucide.createIcons();}
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  document.getElementById(id).querySelectorAll('input:not([type=hidden]),select').forEach(f=>{
-    if(f.type==='checkbox') f.checked=false; else f.value='';
-  });
-}
-document.querySelectorAll('.modal-overlay').forEach(m=>{
-  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
-});
 
+function showModalError(modalId, msg){
+  const el=document.querySelector('#'+modalId+' .modal-error');
+  if(el){el.textContent=msg;el.style.display='block';}
+}
+function hideModalErrors(modalId){
+  const el=document.querySelector('#'+modalId+' .modal-error');
+  if(el) el.style.display='none';
+}
 function calcSkladka(){
-  const od=document.getElementById('f-od').value,dod=document.getElementById('f-do').value;
-  const suma=parseFloat(document.getElementById('f-suma').value)||0;
-  const st=parseFloat(document.getElementById('f-stawka').value)||0;
-  if(od&&dod&&suma&&st){
-    const dni=dateDiff(od,dod);
-    document.getElementById('calc-skladka').textContent=fmt(Math.round(dni/365*st/100*suma*100)/100)+' PLN ('+dni+' dni)';
-  } else document.getElementById('calc-skladka').textContent='—';
-}
-['f-od','f-do','f-suma','f-stawka'].forEach(id=>document.getElementById(id).addEventListener('input',calcSkladka));
-
-document.getElementById('f-tu').addEventListener('change',function(){
-  if(document.getElementById('f-stawka-override').checked) return;
-  const ins=allInsurers.find(i=>i.bond_id===this.value);
-  if(ins?.bond_stawka_bazowa){
-    document.getElementById('f-stawka').value=ins.bond_stawka_bazowa;
-    calcSkladka();
-  }
-});
-
-document.getElementById('f-tenant-select').addEventListener('change',function(){
-  const tid=this.value;
-  const ins=allInsurers.filter(i=>i.bond_tenant_id===tid);
-  document.getElementById('f-tu').innerHTML=ins.map(i=>`<option value="${i.bond_id}">${i.bond_nazwa}</option>`).join('');
-});
-
-document.getElementById('btn-new-bond').addEventListener('click',()=>{
-  document.getElementById('modal-bond-title').textContent='Nowa gwarancja';
-  document.getElementById('f-id').value='';
-  if(!isAdmin){
-    document.getElementById('f-tu').innerHTML=allInsurers.map(i=>`<option value="${i.bond_id}">${i.bond_nazwa}</option>`).join('');
-  }
-  openModal('modal-bond');
-});
-
-document.getElementById('modal-bond-save').addEventListener('click',async()=>{
-  const id=document.getElementById('f-id').value;
-  const tid=isAdmin?document.getElementById('f-tenant-select').value:tenantId;
-  const payload={
-    bond_nr:document.getElementById('f-nr').value.trim(),
-    bond_rodzaj:document.getElementById('f-rodzaj').value,
-    bond_kontrakt:document.getElementById('f-kontrakt').value.trim(),
-    bond_inwestor:document.getElementById('f-inwestor').value.trim(),
-    bond_beneficjent:document.getElementById('f-beneficjent').value.trim(),
-    bond_insurer_id:document.getElementById('f-tu').value||null,
-    bond_data_od:document.getElementById('f-od').value,
-    bond_data_do:document.getElementById('f-do').value,
-    bond_suma:parseFloat(document.getElementById('f-suma').value)||0,
-    bond_stawka:parseFloat(document.getElementById('f-stawka').value)||null,
-    bond_bez_limitu:document.getElementById('f-bez-limitu').checked,
-    bond_stawka_override:document.getElementById('f-stawka-override').checked,
-    bond_tenant_id:tid
-  };
+const od=document.getElementById('f-od').value,dod=document.getElementById('f-do').value;
+const suma=parseFloat(document.getElementById('f-suma').value)||0;
+@@ -968,11 +1038,8 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+bond_stawka_override:document.getElementById('f-stawka-override').checked,
+bond_tenant_id:tid
+};
+  hideModalErrors('modal-bond');
+  let errB;
+  if(id){const r=await sb.from('bond_bonds').update(payload).eq('bond_id',id);errB=r.error;}
+  else{const r=await sb.from('bond_bonds').insert(payload);errB=r.error;}
+  if(errB){showModalError('modal-bond','Błąd zapisu: '+errB.message);return;}
   if(id) await sb.from('bond_bonds').update(payload).eq('bond_id',id);
   else await sb.from('bond_bonds').insert(payload);
-  closeModal('modal-bond');
-  if(isAdmin) await loadAll(); else await loadBonds(tenantId);
+closeModal('modal-bond');
+if(isAdmin) await loadAll(); else await loadBonds(tenantId);
 });
-
-function editBond(id){
-  const b=allBonds.find(x=>x.bond_id===id);if(!b)return;
-  document.getElementById('modal-bond-title').textContent='Edytuj: '+b.bond_nr;
-  document.getElementById('f-id').value=b.bond_id;
-  document.getElementById('f-nr').value=b.bond_nr;
-  document.getElementById('f-rodzaj').value=b.bond_rodzaj;
-  document.getElementById('f-kontrakt').value=b.bond_kontrakt;
-  document.getElementById('f-inwestor').value=b.bond_inwestor||'';
-  document.getElementById('f-beneficjent').value=b.bond_beneficjent||'';
-  if(isAdmin){
-    document.getElementById('f-tenant-select').value=b.bond_tenant_id||'';
-    const ins=allInsurers.filter(i=>i.bond_tenant_id===b.bond_tenant_id);
-    document.getElementById('f-tu').innerHTML=ins.map(i=>`<option value="${i.bond_id}">${i.bond_nazwa}</option>`).join('');
-  } else {
-    document.getElementById('f-tu').innerHTML=allInsurers.map(i=>`<option value="${i.bond_id}">${i.bond_nazwa}</option>`).join('');
-  }
-  document.getElementById('f-tu').value=b.bond_insurer_id||'';
-  document.getElementById('f-od').value=b.bond_data_od;
-  document.getElementById('f-do').value=b.bond_data_do;
-  document.getElementById('f-suma').value=b.bond_suma;
-  document.getElementById('f-stawka').value=b.bond_stawka||'';
-  document.getElementById('f-bez-limitu').checked=b.bond_bez_limitu||false;
-  document.getElementById('f-stawka-override').checked=b.bond_stawka_override||false;
-  calcSkladka();
-  openModal('modal-bond');
-}
-
-async function deleteBond(id){
-  const b=allBonds.find(x=>x.bond_id===id);
-  if(!confirm('Usunąć gwarancję '+b?.bond_nr+'?'))return;
-  await sb.from('bond_bonds').delete().eq('bond_id',id);
-  if(isAdmin) await loadAll(); else await loadBonds(tenantId);
-}
-
-document.getElementById('btn-new-client').addEventListener('click',()=>{
-  document.getElementById('modal-client-title').textContent='Nowy klient';
-  document.getElementById('fc-id').value='';
-  openModal('modal-client');
+@@ -1018,12 +1085,15 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
 });
 document.getElementById('modal-client-save').addEventListener('click',async()=>{
-  const id=document.getElementById('fc-id').value;
+const id=document.getElementById('fc-id').value;
+  const payload={bond_nazwa:document.getElementById('fc-nazwa').value.trim(),bond_slug:document.getElementById('fc-slug').value.trim().toLowerCase()};
+  hideModalErrors('modal-client');
+  let errC;
+  if(id){const r=await sb.from('bond_tenants').update(payload).eq('bond_id',id);errC=r.error;}
+  else{const r=await sb.from('bond_tenants').insert(payload);errC=r.error;}
+  if(errC){showModalError('modal-client','Błąd zapisu: '+errC.message);return;}
   const payload={
     bond_nazwa:document.getElementById('fc-nazwa').value.trim(),
     bond_slug:document.getElementById('fc-slug').value.trim().toLowerCase(),
@@ -1231,106 +417,75 @@ document.getElementById('modal-client-save').addEventListener('click',async()=>{
   };
   if(id) await sb.from('bond_tenants').update(payload).eq('bond_id',id);
   else await sb.from('bond_tenants').insert(payload);
-  closeModal('modal-client');await loadAll();
+closeModal('modal-client');await loadAll();
 });
 function editClient(id){
-  const t=allTenants.find(x=>x.bond_id===id);if(!t)return;
-  document.getElementById('modal-client-title').textContent='Edytuj klienta';
-  document.getElementById('fc-id').value=t.bond_id;
-  document.getElementById('fc-nazwa').value=t.bond_nazwa;
-  document.getElementById('fc-slug').value=t.bond_slug;
+@@ -1032,6 +1102,9 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+document.getElementById('fc-id').value=t.bond_id;
+document.getElementById('fc-nazwa').value=t.bond_nazwa;
+document.getElementById('fc-slug').value=t.bond_slug;
   document.getElementById('fc-nip').value=t.bond_nip||'';
   document.getElementById('fc-regon').value=t.bond_regon||'';
   document.getElementById('fc-krs').value=t.bond_krs||'';
-  openModal('modal-client');
+openModal('modal-client');
 }
 async function deleteClient(id){
-  if(!confirm('Usunąć klienta? Usunięte zostaną też wszystkie jego dane!'))return;
-  await sb.from('bond_tenants').delete().eq('bond_id',id);
-  await loadAll();
-}
-
-document.getElementById('btn-new-insurer').addEventListener('click',()=>{
-  document.getElementById('modal-insurer-title').textContent='Nowy ubezpieczyciel / umowa limitu';
-  document.getElementById('fi-id').value='';
-  populateTuSelect();
-  openModal('modal-insurer');
+@@ -1054,15 +1127,6 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+openModal('modal-insurer');
+if(tid) setTimeout(()=>{document.getElementById('fi-tenant').value=tid;},50);
 });
-document.getElementById('btn-new-limit').addEventListener('click',()=>{
-  document.getElementById('modal-insurer-title').textContent='Nowa umowa limitu';
-  document.getElementById('fi-id').value='';
-  const tid=document.getElementById('admin-tenant-filter-limits').value;
-  populateTuSelect();
-  openModal('modal-insurer');
-  if(tid) setTimeout(()=>{document.getElementById('fi-tenant').value=tid;},50);
+
+document.getElementById('btn-add-tu-inline').addEventListener('click',async()=>{
+  const name=prompt('Nazwa nowego TU:');
+  if(!name||!name.trim()) return;
+  const {error}=await sb.from('bond_tu_dict').insert({name:name.trim()});
+  if(error){alert('Błąd: '+error.message);return;}
+  await loadTuDict();
+  document.getElementById('fi-nazwa').value=name.trim();
 });
 document.getElementById('modal-insurer-save').addEventListener('click',async()=>{
-  const id=document.getElementById('fi-id').value;
-  const payload={
-    bond_tenant_id:document.getElementById('fi-tenant').value||null,
-    bond_nazwa:document.getElementById('fi-nazwa').value.trim(),
-    bond_ul_nr:document.getElementById('fi-ul-nr').value.trim()||null,
-    bond_limit:parseFloat(document.getElementById('fi-limit').value)||null,
-    bond_ul_data_od:document.getElementById('fi-ul-od').value||null,
-    bond_ul_data_do:document.getElementById('fi-ul-do').value||null,
-    bond_stawka_bazowa:parseFloat(document.getElementById('fi-stawka').value)||null,
-    bond_skladka_min:parseFloat(document.getElementById('fi-skladka-min').value)||null
-  };
+const id=document.getElementById('fi-id').value;
+const payload={
+@@ -1075,19 +1139,16 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+bond_stawka_bazowa:parseFloat(document.getElementById('fi-stawka').value)||null,
+bond_skladka_min:parseFloat(document.getElementById('fi-skladka-min').value)||null
+};
+  hideModalErrors('modal-insurer');
+  let errI;
+  if(id){const r=await sb.from('bond_insurers').update(payload).eq('bond_id',id);errI=r.error;}
+  else{const r=await sb.from('bond_insurers').insert(payload);errI=r.error;}
+  if(errI){showModalError('modal-insurer','Błąd zapisu: '+errI.message);return;}
   if(id) await sb.from('bond_insurers').update(payload).eq('bond_id',id);
   else await sb.from('bond_insurers').insert(payload);
-  closeModal('modal-insurer');await loadAll();
+closeModal('modal-insurer');await loadAll();
 });
 function editInsurer(id){
-  const i=allInsurers.find(x=>x.bond_id===id);if(!i)return;
-  document.getElementById('modal-insurer-title').textContent='Edytuj TU / UL';
-  document.getElementById('fi-id').value=i.bond_id;
-  document.getElementById('fi-tenant').value=i.bond_tenant_id||'';
+const i=allInsurers.find(x=>x.bond_id===id);if(!i)return;
+document.getElementById('modal-insurer-title').textContent='Edytuj TU / UL';
+document.getElementById('fi-id').value=i.bond_id;
+document.getElementById('fi-tenant').value=i.bond_tenant_id||'';
+  populateTuSelect(); document.getElementById('fi-nazwa').value=i.bond_nazwa;
   populateTuSelect(); document.getElementById('fi-nazwa').value=i.bond_nazwa||'';
-  document.getElementById('fi-ul-nr').value=i.bond_ul_nr||'';
-  document.getElementById('fi-limit').value=i.bond_limit||'';
-  document.getElementById('fi-ul-od').value=i.bond_ul_data_od||'';
-  document.getElementById('fi-ul-do').value=i.bond_ul_data_do||'';
-  document.getElementById('fi-stawka').value=i.bond_stawka_bazowa||'';
-  document.getElementById('fi-skladka-min').value=i.bond_skladka_min||'';
-  openModal('modal-insurer');
-}
-async function deleteInsurer(id){
-  if(!confirm('Usunąć tego ubezpieczyciela?'))return;
-  await sb.from('bond_insurers').delete().eq('bond_id',id);
-  await loadAll();
-}
-
-function assignUser(uid,currentTenantId,currentRola){
-  document.getElementById('fu-id').value=uid;
-  document.getElementById('fu-email').textContent=uid;
-  document.getElementById('fu-tenant').value=currentTenantId||'';
-  document.getElementById('fu-rola').value=currentRola||'klient';
-  openModal('modal-user-assign');
+document.getElementById('fi-ul-nr').value=i.bond_ul_nr||'';
+document.getElementById('fi-limit').value=i.bond_limit||'';
+document.getElementById('fi-ul-od').value=i.bond_ul_data_od||'';
+@@ -1111,12 +1172,10 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
 }
 document.getElementById('modal-user-save').addEventListener('click',async()=>{
-  const id=document.getElementById('fu-id').value;
+const id=document.getElementById('fu-id').value;
+  hideModalErrors('modal-user-assign');
+  const {error:errU}=await sb.from('bond_profiles').update({
   await sb.from('bond_profiles').update({
-    bond_tenant_id:document.getElementById('fu-tenant').value||null,
-    bond_rola:document.getElementById('fu-rola').value
-  }).eq('bond_id',id);
-  closeModal('modal-user-assign');await loadAll();
+bond_tenant_id:document.getElementById('fu-tenant').value||null,
+bond_rola:document.getElementById('fu-rola').value
+}).eq('bond_id',id);
+  if(errU){showModalError('modal-user-assign','Błąd zapisu: '+errU.message);return;}
+closeModal('modal-user-assign');await loadAll();
 });
 
-(function(){
-  const t=document.querySelector('[data-theme-toggle]'),r=document.documentElement;
-  let d=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
-  r.setAttribute('data-theme',d);
-  if(t)t.addEventListener('click',()=>{
-    d=d==='dark'?'light':'dark';r.setAttribute('data-theme',d);
-    t.innerHTML=d==='dark'
-      ?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
-      :'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  });
-})();
-
-(async()=>{
-  const {data:{session}}=await sb.auth.getSession();
-  if(session) initApp(); else lucide.createIcons();
+@@ -1136,6 +1195,144 @@ <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+const {data:{session}}=await sb.auth.getSession();
+if(session) initApp(); else lucide.createIcons();
 })();
 // ── escapeHTML ──
 const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
@@ -1466,148 +621,6 @@ function openInsurerDetail(iid){
   </tr>`).join(''):'<tr><td colspan="7"><div class="empty"><p>Brak gwarancji</p></div></td></tr>';
   navTo('insurer-detail');
 }
-
-// ── RISK MODEL (OCENA RYZYKA) LOGIC ──
-function calculateRiskModel() {
-  const val = id => Number(document.getElementById(id).value) || 0;
-  
-  const assets = val('r-assets');
-  const currentAssets = val('r-curr-assets');
-  const inventory = val('r-inv');
-  const receivables = val('r-rec');
-  const cash = val('r-cash');
-  const equity = val('r-equity');
-  const retainedEarnings = val('r-ret-earn');
-  const totalLiab = val('r-tot-liab');
-  const longTermLiab = val('r-lt-liab');
-  const shortTermLiab = val('r-st-liab');
-  const tradePayables = val('r-trade-pay');
-  const revenue = val('r-rev');
-  const ebit = val('r-ebit');
-  const da = val('r-da');
-  const ocf_T = val('r-ocf1');
-  const ocf_T1 = val('r-ocf2');
-
-  const currentRatio = shortTermLiab !== 0 ? currentAssets / shortTermLiab : 0;
-  const ebitda = ebit + da;
-  const netDebt = longTermLiab + shortTermLiab - tradePayables - cash;
-  const netDebtEbitda = ebitda > 0 ? netDebt / ebitda : (netDebt <= 0 ? 0 : 999);
-  
-  let zScore = 0;
-  if (assets > 0) {
-    const x1 = (currentAssets - shortTermLiab) / assets;
-    const x2 = retainedEarnings / assets;
-    const x3 = ebit / assets;
-    const x4 = totalLiab > 0 ? equity / totalLiab : 0;
-    zScore = 3.25 + (6.56 * x1) + (3.26 * x2) + (6.72 * x3) + (1.05 * x4);
-  }
-
-  // Punktacja
-  let pLiq = 1;
-  if (currentRatio > 1.5) pLiq = 5; else if (currentRatio > 1.2) pLiq = 4; else if (currentRatio > 1.0) pLiq = 3; else if (currentRatio > 0.8) pLiq = 2;
-  
-  let pLev = 1;
-  if (netDebtEbitda < 1) pLev = 5; else if (netDebtEbitda < 2.5) pLev = 4; else if (netDebtEbitda < 3.5) pLev = 3; else if (netDebtEbitda < 4.5) pLev = 2;
-
-  const score = (pLiq * 0.6) + (pLev * 0.4);
-
-  // Red flags
-  const flags = {
-    equityLost: assets > 0 && equity < (assets * 0.1),
-    cashBurn: ocf_T < 0 && ocf_T1 < 0,
-    illiquid: currentRatio > 0 && currentRatio < 1.0,
-    overleveraged: netDebtEbitda > 4.5,
-    bankruptcyRisk: zScore > 0 && zScore < 1.1
-  };
-  const hasCrit = flags.equityLost || flags.bankruptcyRisk;
-
-  // Wyrok
-  let rating = "-", decision = "Wprowadź dane", state = "empty";
-  if (assets > 0) {
-    if (hasCrit || equity < 0) { rating = "D / Śmieciowy"; decision = "ODRZUĆ LIMIT"; state = "danger"; }
-    else if (score >= 4.5) { rating = "AAA"; decision = "AKCEPTUJ BEZ WARUNKÓW"; state = "success"; }
-    else if (score >= 4.0) { rating = "AA"; decision = "AKCEPTUJ"; state = "success"; }
-    else if (score >= 3.0) { rating = "BBB"; decision = "AKCEPTUJ"; state = "success"; }
-    else if (score >= 2.0) { rating = "BB"; decision = "ANALIZA POGŁĘBIONA"; state = "warning"; }
-    else { rating = "CCC"; decision = "WYSOKIE RYZYKO"; state = "danger"; }
-  }
-
-  // Update UI
-  document.getElementById('risk-kpi-cr').textContent = currentRatio.toFixed(2);
-  document.getElementById('risk-kpi-lev').textContent = netDebtEbitda === 999 ? "Brak" : netDebtEbitda.toFixed(2);
-  document.getElementById('risk-kpi-z').textContent = zScore.toFixed(2);
-
-  const card = document.getElementById('risk-decision-card');
-  const dText = document.getElementById('risk-decision-text');
-  const rText = document.getElementById('risk-rating-text');
-  
-  dText.textContent = decision;
-  rText.textContent = rating;
-  
-  if(state === 'danger') {
-    card.style.background = 'oklch(from var(--color-error) l c h / 0.08)'; card.style.borderColor = 'var(--color-error)';
-    dText.style.color = 'var(--color-error)'; rText.style.color = 'var(--color-error)';
-  } else if (state === 'success') {
-    card.style.background = 'oklch(from var(--color-success) l c h / 0.08)'; card.style.borderColor = 'var(--color-success)';
-    dText.style.color = 'var(--color-success)'; rText.style.color = 'var(--color-success)';
-  } else if (state === 'warning') {
-    card.style.background = 'oklch(from var(--color-warning) l c h / 0.08)'; card.style.borderColor = 'var(--color-warning)';
-    dText.style.color = 'var(--color-warning)'; rText.style.color = 'var(--color-warning)';
-  } else {
-    card.style.background = 'var(--color-surface)'; card.style.borderColor = 'var(--color-border)';
-    dText.style.color = 'var(--color-text-faint)'; rText.style.color = 'var(--color-text-faint)';
-  }
-
-  // Update flags
-  const updateFlag = (id, isTriggered, isWarning = false) => {
-    const el = document.getElementById(id);
-    const icon = el.querySelector('i');
-    if (isTriggered) {
-      el.style.background = isWarning ? 'oklch(from var(--color-warning) l c h / 0.08)' : 'oklch(from var(--color-error) l c h / 0.08)';
-      icon.setAttribute('data-lucide', isWarning ? 'alert-triangle' : 'x-circle');
-      icon.style.color = isWarning ? 'var(--color-warning)' : 'var(--color-error)';
-    } else {
-      el.style.background = 'transparent';
-      icon.setAttribute('data-lucide', 'check-circle');
-      icon.style.color = 'var(--color-success)';
-    }
-  };
-
-  updateFlag('flag-eq', flags.equityLost);
-  updateFlag('flag-liq', flags.illiquid);
-  updateFlag('flag-cash', flags.cashBurn);
-  updateFlag('flag-lev', flags.overleveraged, true);
-  
-  const zCard = document.getElementById('risk-kpi-z-card');
-  if(flags.bankruptcyRisk) { zCard.style.borderColor = 'var(--color-error)'; zCard.style.background = 'oklch(from var(--color-error) l c h / 0.05)'; }
-  else { zCard.style.borderColor = 'var(--color-border)'; zCard.style.background = 'var(--color-surface)'; }
-
-  lucide.createIcons();
-}
-
-document.querySelectorAll('#page-ocena input').forEach(input => {
-  input.addEventListener('input', calculateRiskModel);
-});
-
-document.getElementById('btn-risk-sample').addEventListener('click', () => {
-  document.getElementById('r-assets').value = 1200000;
-  document.getElementById('r-curr-assets').value = 750000;
-  document.getElementById('r-inv').value = 250000;
-  document.getElementById('r-rec').value = 350000;
-  document.getElementById('r-cash').value = 150000;
-  document.getElementById('r-equity').value = 450000;
-  document.getElementById('r-ret-earn').value = 200000;
-  document.getElementById('r-tot-liab').value = 750000;
-  document.getElementById('r-lt-liab').value = 350000;
-  document.getElementById('r-st-liab').value = 400000;
-  document.getElementById('r-trade-pay').value = 200000;
-  document.getElementById('r-rev').value = 1800000;
-  document.getElementById('r-ebit').value = 200000;
-  document.getElementById('r-da').value = 60000;
-  document.getElementById('r-ocf1').value = 160000;
-  document.getElementById('r-ocf2').value = 120000;
-  calculateRiskModel();
-});
 
 // ── loadTuDict on init ──
 (async()=>{await loadTuDict();})();
