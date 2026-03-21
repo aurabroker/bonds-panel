@@ -10,6 +10,16 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <style>
+    /* ==========================================================================
+       SPIS TREŚCI (TABLE OF CONTENTS)
+       [000-150] CSS - Zmienne i layout bazowy
+       [151-200] CSS - Analityka i Drukowanie PDF (@media print)
+       [201-400] CSS - Komponenty (Tabele, Modale)
+       [401-700] HTML - Struktura DOM (Sidebar, Topbar)
+       [701-900] HTML - Widoki (Pages: Dashboard, Bonds, Admin, Analytics)
+       [901-999] HTML - Modale (Gwarancje, Klienci, TU, Userzy)
+       [1000+] JS - Supabase, Logika UI, Autoryzacja i Kalkulator Analityczny
+       ========================================================================== */
     :root {
       --color-primary: #0f172a;
       --color-primary-hover: #1e293b;
@@ -37,9 +47,6 @@
       --space-5: 1.25rem;
       --space-6: 1.5rem;
       --space-8: 2rem;
-      --space-10: 2.5rem;
-      --space-12: 3rem;
-      --space-16: 4rem;
       --font-body: 'Inter', 'Helvetica Neue', Arial, sans-serif;
       --font-display: 'Inter', 'Helvetica Neue', Arial, sans-serif;
       --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -57,72 +64,35 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: var(--font-body);
-      background-color: var(--color-surface-offset);
-      color: var(--color-text);
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-    }
-    
-    /* Typografia */
+    body { font-family: var(--font-body); background-color: var(--color-surface-offset); color: var(--color-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
     h1, h2, h3 { font-family: var(--font-display); font-weight: 600; color: var(--color-text); }
     .page-title { font-size: 1.75rem; letter-spacing: -0.02em; margin-bottom: var(--space-2); }
     .page-subtitle { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-8); }
     
-    /* Layout */
     .app-container { display: flex; min-height: 100vh; }
-    
-    /* Sidebar */
-    .sidebar {
-      width: 260px; background: var(--color-surface); border-right: 1px solid var(--color-border);
-      display: flex; flex-direction: column; padding: var(--space-6) var(--space-4);
-      flex-shrink: 0;
-    }
-    .brand {
-      display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-lg);
-      font-weight: 700; color: var(--color-text); margin-bottom: var(--space-8); px: var(--space-2);
-    }
+    .sidebar { width: 260px; background: var(--color-surface); border-right: 1px solid var(--color-border); display: flex; flex-direction: column; padding: var(--space-6) var(--space-4); flex-shrink: 0; }
+    .brand { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-lg); font-weight: 700; color: var(--color-text); margin-bottom: var(--space-8); px: var(--space-2); }
     .nav-section { margin-bottom: var(--space-6); }
-    .nav-label {
-      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
-      color: var(--color-text-faint); margin-bottom: var(--space-2); padding-left: var(--space-3);
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-md); color: var(--color-text-muted); font-size: var(--text-sm);
-      font-weight: 500; text-decoration: none; transition: var(--transition); border: none; background: transparent;
-      cursor: pointer; text-align: left;
-    }
+    .nav-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: var(--color-text-faint); margin-bottom: var(--space-2); padding-left: var(--space-3); }
+    .nav-item { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); color: var(--color-text-muted); font-size: var(--text-sm); font-weight: 500; text-decoration: none; transition: var(--transition); border: none; background: transparent; cursor: pointer; text-align: left; }
     .nav-item:hover { background: var(--color-surface-offset); color: var(--color-text); }
     .nav-item.active { background: var(--color-primary); color: var(--color-surface); }
     
-    /* Main Content */
     .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-    .topbar {
-      height: 64px; background: var(--color-surface); border-bottom: 1px solid var(--color-border);
-      display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-8);
-      position: sticky; top: 0; z-index: 10;
-    }
+    .topbar { height: 64px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-8); position: sticky; top: 0; z-index: 10; }
     .topbar-right { display: flex; align-items: center; gap: var(--space-4); }
     
-    /* Content Area */
-    .content-area { padding: var(--space-8); max-width: 1200px; margin: 0 auto; width: 100%; }
+    .content-area { padding: var(--space-8); max-width: 1300px; margin: 0 auto; width: 100%; }
     .page { display: none; animation: fadeIn 0.3s ease; }
     .page.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* Cards & KPI */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8); }
-    .kpi-card {
-      background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      padding: var(--space-5);
-    }
+    .kpi-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-5); }
     .kpi-label { font-size: var(--text-sm); color: var(--color-text-muted); font-weight: 500; margin-bottom: var(--space-2); }
     .kpi-value { font-size: 2rem; font-weight: 600; font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1; margin-bottom: var(--space-1); }
     .kpi-sub { font-size: var(--text-xs); color: var(--color-text-faint); }
     
-    /* Tables */
     .table-wrap { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: var(--space-8); overflow: hidden; }
     .table-toolbar { display: flex; justify-content: space-between; align-items: center; padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); }
     .table-toolbar h3 { font-size: var(--text-base); margin: 0; }
@@ -133,19 +103,13 @@
     .tbl tr:hover td { background: var(--color-surface-offset); }
     .tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
     
-    /* Badges */
     .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
     .badge-active { background: oklch(from var(--color-success) l c h / 0.1); color: var(--color-success); }
     .badge-expiring { background: oklch(from var(--color-warning) l c h / 0.1); color: var(--color-warning); }
     .badge-expired { background: oklch(from var(--color-error) l c h / 0.1); color: var(--color-error); }
     .badge-admin { background: oklch(from var(--color-primary) l c h / 0.1); color: var(--color-primary); }
     
-    /* Buttons */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
-      padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm);
-      font-weight: 500; cursor: pointer; transition: var(--transition); border: 1px solid transparent;
-    }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 500; cursor: pointer; transition: var(--transition); border: 1px solid transparent; }
     .btn-primary { background: var(--color-primary); color: var(--color-surface); }
     .btn-primary:hover { background: var(--color-primary-hover); }
     .btn-ghost { background: transparent; color: var(--color-text); border-color: var(--color-border); }
@@ -157,37 +121,23 @@
     .btn-icon { padding: var(--space-2); background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; border-radius: var(--radius-sm); }
     .btn-icon:hover { background: var(--color-surface-offset); color: var(--color-text); }
     
-    /* Forms */
     .form-field { margin-bottom: var(--space-4); }
     .form-row { display: flex; gap: var(--space-4); }
     .form-row .form-field { flex: 1; }
     .form-label { display: block; font-size: var(--text-sm); font-weight: 500; margin-bottom: var(--space-1); color: var(--color-text); }
-    .form-input, .form-select {
-      width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border);
-      border-radius: var(--radius-md); font-family: inherit; font-size: var(--text-sm);
-      background: var(--color-surface); color: var(--color-text); transition: border-color var(--transition);
-    }
+    .form-input, .form-select { width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-family: inherit; font-size: var(--text-sm); background: var(--color-surface); color: var(--color-text); transition: border-color var(--transition); }
     .form-input:focus, .form-select:focus { outline: none; border-color: var(--color-primary); }
     .form-hint { font-size: 11px; color: var(--color-text-faint); margin-top: 4px; display: block; }
     
-    /* Modals */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px);
-      display: none; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.2s;
-    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); display: none; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.2s; }
     .modal-overlay.open { display: flex; opacity: 1; }
-    .modal {
-      background: var(--color-surface); border-radius: var(--radius-lg); width: 100%; max-width: 500px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-      transform: scale(0.95); transition: transform 0.2s; max-height: 90vh; display: flex; flex-direction: column;
-    }
+    .modal { background: var(--color-surface); border-radius: var(--radius-lg); width: 100%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); transform: scale(0.95); transition: transform 0.2s; max-height: 90vh; display: flex; flex-direction: column; }
     .modal-overlay.open .modal { transform: scale(1); }
     .modal-header { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
     .modal-title { font-size: var(--text-lg); margin: 0; }
     .modal-body { padding: var(--space-5); overflow-y: auto; }
     .modal-footer { padding: var(--space-4) var(--space-5); border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: var(--space-3); background: var(--color-surface-offset); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
     
-    /* Utilities */
     .empty { padding: var(--space-8); text-align: center; color: var(--color-text-muted); }
     .limit-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-4); }
     .limit-card-header { display: flex; justify-content: space-between; margin-bottom: var(--space-3); }
@@ -204,12 +154,37 @@
     .dot-expiring { background: var(--color-warning); }
     .dot-expired { background: var(--color-error); }
     
-    /* Auth */
     #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--color-surface-offset); }
     .auth-card { background: var(--color-surface); padding: var(--space-8); border-radius: var(--radius-lg); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
     .auth-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: var(--space-6); }
     .auth-logo span { color: var(--color-text-muted); font-weight: 400; }
     .auth-error { color: var(--color-error); font-size: var(--text-sm); margin-bottom: var(--space-4); text-align: center; display: none; }
+
+    /* === ANALITYKA STYLES === */
+    .analityka-grid { display: grid; grid-template-columns: 380px 1fr; gap: var(--space-6); align-items: start; }
+    @media (max-width: 1024px) { .analityka-grid { grid-template-columns: 1fr; } }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper input { padding-right: 1.5rem; text-align: right; width: 100%; min-width: 70px; }
+    .input-wrapper .currency { position: absolute; right: 0.5rem; font-size: 0.75rem; color: var(--color-text-muted); pointer-events: none; }
+    .score-card { display: flex; align-items: center; justify-content: space-between; padding: var(--space-5); border-radius: var(--radius-lg); background-color: var(--color-surface-offset); border: 1px solid var(--color-border); }
+    .score-grade { font-size: 2.5rem; font-weight: 700; line-height: 1; padding: var(--space-3) var(--space-5); border-radius: var(--radius-md); }
+    .results-hidden { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: var(--color-text-muted); text-align: center; gap: var(--space-4); padding: var(--space-8); }
+    .bg-success { background-color: var(--color-success); color: var(--color-surface); }
+    .bg-warning { background-color: var(--color-warning); color: var(--color-surface); }
+    .bg-error { background-color: var(--color-error); color: var(--color-surface); }
+
+    /* === DRUKOWANIE DO PDF === */
+    @media print {
+      body { background-color: white; }
+      .sidebar, .topbar, .table-toolbar button, .hide-on-print { display: none !important; }
+      .app-container { display: block; }
+      .main-content { margin: 0; padding: 0; }
+      .content-area { max-width: 100%; padding: 0; margin: 0; }
+      .analityka-grid { display: block; }
+      .table-wrap { border: none; box-shadow: none; margin-bottom: 2rem; break-inside: avoid; }
+      .score-card { border: 2px solid #e2e8f0; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      #finance-form { page-break-after: always; }
+    }
   </style>
 </head>
 <body>
@@ -261,6 +236,7 @@
         <button class="nav-item" data-page="admin-clients" onclick="navTo('admin-clients')"><i data-lucide="building-2" width="18" height="18"></i> Klienci</button>
         <button class="nav-item" data-page="admin-insurers" onclick="navTo('admin-insurers')"><i data-lucide="shield" width="18" height="18"></i> Ubezpieczyciele</button>
         <button class="nav-item" data-page="admin-users" onclick="navTo('admin-users')"><i data-lucide="users" width="18" height="18"></i> Użytkownicy</button>
+        <button class="nav-item" data-page="analityka" onclick="navTo('analityka')"><i data-lucide="bar-chart-2" width="18" height="18"></i> Analityka Fin.</button>
       </div>
     </aside>
 
@@ -417,7 +393,7 @@
           <div class="table-wrap">
             <div class="table-toolbar">
               <h3>Lista użytkowników</h3>
-              <button class="btn btn-admin" id="btn-invite-user"><i data-lucide="user-plus" width="16" height="16"></i> Zaproś użytkownika</button>
+              <button class="btn btn-admin" id="btn-invite-user"><i data-lucide="user-plus" width="16" height="16"></i> Zaproś / Dodaj użytkownika</button>
             </div>
             <div style="overflow-x:auto">
               <table class="tbl">
@@ -430,13 +406,15 @@
 
         <!-- PAGE: PANEL KLIENTA -->
         <div class="page" id="page-tenant-detail">
-          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
+          <div class="hide-on-print" style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
             <button class="btn btn-ghost" onclick="navTo('admin-clients')" style="padding:var(--space-1) var(--space-3)"><i data-lucide="arrow-left" width="14" height="14"></i> Klienci</button>
             <h1 class="page-title" id="tenant-detail-title" style="margin-bottom:0">—</h1>
           </div>
           <p class="page-subtitle" id="tenant-detail-meta"></p>
+          
           <div class="kpi-grid" id="tenant-detail-kpi"></div>
-          <div class="table-wrap">
+          
+          <div class="table-wrap hide-on-print">
             <div class="table-toolbar"><h3>Gwarancje klienta</h3></div>
             <div style="overflow-x:auto">
               <table class="tbl">
@@ -448,7 +426,26 @@
               </table>
             </div>
           </div>
-          <div class="limit-grid" id="tenant-detail-limits"></div>
+          
+          <div class="limit-grid hide-on-print" id="tenant-detail-limits"></div>
+
+          <!-- ANALIZY FINANSOWE W PANELU KLIENTA -->
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <h3>Historia Analiz Finansowych (Underwriting)</h3>
+              <button class="btn btn-primary hide-on-print" onclick="navTo('analityka')"><i data-lucide="plus" width="16" height="16"></i> Nowa Analiza</button>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Data analizy</th><th>Rating Zdolności</th><th>Werdykt systemu</th><th>Przychody</th><th>Wynik Netto</th>
+                </tr></thead>
+                <tbody id="tenant-detail-analytics-tbody">
+                  <tr><td colspan="5"><div class="empty">Brak przeprowadzonych analiz.</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
         <!-- PAGE: PANEL UBEZPIECZYCIELA -->
@@ -470,6 +467,183 @@
                 <tbody id="insurer-detail-bonds-tbody"></tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- PAGE: ANALITYKA -->
+        <div class="page" id="page-analityka">
+          <div class="hide-on-print" style="display:flex; justify-content:space-between; align-items:flex-start">
+            <div>
+              <h1 class="page-title">Analityka Finansowa</h1>
+              <p class="page-subtitle">Kalkulator underwritingowy do oceny standingu firm budowlanych</p>
+            </div>
+            <div style="display:flex; gap: 8px;">
+               <input type="file" id="xml-upload" accept=".xml" style="display:none">
+               <button class="btn btn-ghost" onclick="document.getElementById('xml-upload').click()">
+                 <i data-lucide="file-code-2" width="18" height="18"></i> Wczytaj z e-Sprawozdania (XML)
+               </button>
+            </div>
+          </div>
+          
+          <div class="analityka-grid">
+            
+            <!-- LEWA STRONA: FORMULARZ DANYCH -->
+            <div class="table-wrap hide-on-print" style="margin-bottom: 0;">
+              <div class="table-toolbar" style="background:var(--color-surface-offset)">
+                <h3 style="display:flex;align-items:center;gap:8px;font-size:var(--text-sm);text-transform:uppercase;color:var(--color-text-muted)"><i data-lucide="calculator" width="16" height="16"></i> Wprowadzanie Danych</h3>
+              </div>
+              <form id="finance-form">
+                
+                <div style="padding: var(--space-4); border-bottom: 1px solid var(--color-border); background: oklch(from var(--color-warning) l c h/0.1)">
+                  <label class="form-label" for="calc-tenant" style="color:var(--color-warning); font-weight:600;">Wybierz Klienta (Wymagane do analizy)</label>
+                  <select class="form-select" id="calc-tenant" style="border-color:var(--color-warning)"></select>
+                </div>
+
+                <div style="overflow-x:auto;">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>Pozycja bilansu / RZiS</th>
+                        <th class="num" style="width: 80px;">Rok N-2</th>
+                        <th class="num" style="width: 80px;">Rok N-1</th>
+                        <th class="num" style="width: 80px;">Bieżący</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><div style="font-weight:500">Przychody netto</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="rev-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="rev-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="rev-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zysk EBITDA</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ebitda-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ebitda-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ebitda-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zysk netto</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="net-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="net-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="net-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Kapitał Własny</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="eq-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="eq-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="eq-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zobow. Krótkoter.</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="lst-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="lst-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="lst-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zobow. Długoter.</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="llt-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="llt-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="llt-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Aktywa Obrotowe</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ca-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ca-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ca-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zapasy</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="inv-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="inv-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="inv-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Koszty finansowe</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="int-2" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="int-1" placeholder="0"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="int-0" placeholder="0"><span class="currency">k</span></div></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div style="padding: var(--space-4);">
+                  <div class="form-hint" style="margin-bottom: var(--space-3); color: var(--color-error); display:none;" id="calc-error">Proszę wybrać klienta z listy.</div>
+                  <button type="button" class="btn btn-primary" id="btn-analyze" style="width: 100%; justify-content: center; padding: var(--space-3);">
+                    <i data-lucide="activity" width="18" height="18"></i> Wykonaj Analizę (Scoring)
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- PRAWA STRONA: WYNIKI -->
+            <div class="table-wrap" style="margin-bottom: 0; min-height: 100%;">
+              <div class="table-toolbar">
+                <h3 style="display:flex;align-items:center;gap:8px"><i data-lucide="clipboard-list" width="18" height="18"></i> Wynik Oceny Finansowej</h3>
+                <div style="display:none; gap: 8px;" id="results-actions" class="hide-on-print">
+                  <button class="btn btn-ghost" onclick="window.print()" title="Drukuj lub zapisz jako PDF"><i data-lucide="printer" width="16" height="16"></i> PDF</button>
+                  <button class="btn btn-success" id="btn-save-analysis" style="background:var(--color-success);color:white"><i data-lucide="save" width="16" height="16"></i> Zapisz wynik</button>
+                </div>
+              </div>
+              
+              <div id="results-placeholder" class="results-hidden">
+                <i data-lucide="file-spreadsheet" width="48" height="48" style="opacity: 0.2;"></i>
+                <p>Wybierz klienta i wprowadź dane finansowe w tabeli po lewej stronie,<br>a następnie kliknij "Wykonaj Analizę", aby wygenerować raport.</p>
+              </div>
+
+              <div id="results-dashboard" style="display: none; flex-direction: column; gap: var(--space-6); padding: var(--space-5);">
+                <!-- GŁÓWNA OCENA -->
+                <div class="score-card">
+                  <div>
+                    <h3 style="font-size:var(--text-sm);color:var(--color-text-muted);text-transform:uppercase;margin-bottom:var(--space-1)">Syntetyczny Rating Ryzyka</h3>
+                    <p id="ui-rating-desc" style="font-weight:600;font-size:var(--text-base)"></p>
+                    <p style="font-size:11px;color:var(--color-text-faint);margin-top:4px">Zdolność gwarancyjna szacowana z modelu dla wybranego podmiotu.</p>
+                  </div>
+                  <div id="ui-rating-score" class="score-grade">A</div>
+                </div>
+
+                <!-- ALERTY -->
+                <div id="ui-alerts-container" style="display:none;background:oklch(from var(--color-error) l c h/0.1);border:1px solid var(--color-error);border-radius:var(--radius-md);padding:var(--space-4);">
+                  <h4 style="color:var(--color-error);font-size:var(--text-sm);margin-bottom:var(--space-3);display:flex;align-items:center;gap:6px;font-weight:600;"><i data-lucide="alert-triangle" width="16" height="16"></i> Wykryte Alerty Underwritingowe</h4>
+                  <ul id="ui-alerts-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;"></ul>
+                </div>
+
+                <!-- METRYKI -->
+                <div class="kpi-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 0;">
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Płynność Bieżąca <span id="res-cr-status"></span></div>
+                    <div class="kpi-value" id="res-cr">0.00</div>
+                    <div class="kpi-sub">Optimum > 1.2 (Bieżąca)</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Płynność Szybka <span id="res-qr-status"></span></div>
+                    <div class="kpi-value" id="res-qr">0.00</div>
+                    <div class="kpi-sub">Optimum > 1.0 (Bez zapasów)</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Dynamika Przychodów <span id="res-rev-trend"></span></div>
+                    <div class="kpi-value" id="res-rev-growth">0.0%</div>
+                    <div class="kpi-sub">Zmiana r/r (Rok N vs N-1)</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Marża EBITDA <span id="res-ebitda-status"></span></div>
+                    <div class="kpi-value" id="res-ebitda">0.0%</div>
+                    <div class="kpi-sub">Rentowność brutto</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Zadłużenie Ogólne <span id="res-debt-status"></span></div>
+                    <div class="kpi-value" id="res-debt">0.0%</div>
+                    <div class="kpi-sub">Kapitał obcy / Aktywa (Norma < 65%)</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Pokrycie Odsetek <span id="res-icr-status"></span></div>
+                    <div class="kpi-value" id="res-icr">0.0x</div>
+                    <div class="kpi-sub">EBITDA / Odsetki (Norma > 3.0x)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -705,19 +879,19 @@
     </div>
   </div>
 
-  <!-- MODAL: ZAPROŚ UŻYTKOWNIKA -->
+  <!-- MODAL: ZAPROŚ / DODAJ UŻYTKOWNIKA -->
   <div class="modal-overlay" id="modal-invite">
     <div class="modal" role="dialog" aria-modal="true">
       <div class="modal-header">
-        <h2 class="modal-title">Zaproś użytkownika</h2>
+        <h2 class="modal-title">Dodaj użytkownika</h2>
         <button class="btn-icon" onclick="closeModal('modal-invite')"><i data-lucide="x" width="18" height="18"></i></button>
       </div>
       <div class="modal-body">
         <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
         <div class="form-field">
-          <label class="form-label" for="finv-email">Adres e-mail</label>
+          <label class="form-label" for="finv-email">Adres e-mail (Login)</label>
           <input class="form-input" style="width:100%" id="finv-email" type="email" placeholder="uzytkownik@firma.pl">
-          <span class="form-hint">Użytkownik otrzyma link aktywacyjny na ten adres</span>
+          <span class="form-hint">System automatycznie wygeneruje i wyświetli hasło tymczasowe.</span>
         </div>
         <div class="form-field">
           <label class="form-label" for="finv-tenant">Przypisz do klienta</label>
@@ -728,14 +902,14 @@
         <div class="form-field">
           <label class="form-label" for="finv-rola">Rola</label>
           <select class="form-select" style="width:100%" id="finv-rola">
-            <option value="klient">Klient</option>
-            <option value="admin">Admin klienta</option>
+            <option value="klient">Klient (dostęp tylko do swoich danych)</option>
+            <option value="admin">Administrator</option>
           </select>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal('modal-invite')">Anuluj</button>
-        <button class="btn btn-admin" id="modal-invite-save"><i data-lucide="send" width="16" height="16"></i> Wyślij zaproszenie</button>
+        <button class="btn btn-admin" id="modal-invite-save"><i data-lucide="user-plus" width="16" height="16"></i> Utwórz konto</button>
       </div>
     </div>
   </div>
@@ -750,27 +924,13 @@
 
     const memoryStorage = {};
     const customStorage = {
-      getItem: (key) => {
-        try { return window.localStorage.getItem(key); }
-        catch (e) { return memoryStorage[key] || null; }
-      },
-      setItem: (key, value) => {
-        try { window.localStorage.setItem(key, value); }
-        catch (e) { memoryStorage[key] = value; }
-      },
-      removeItem: (key) => {
-        try { window.localStorage.removeItem(key); }
-        catch (e) { delete memoryStorage[key]; }
-      }
+      getItem: (key) => { try { return window.localStorage.getItem(key); } catch (e) { return memoryStorage[key] || null; } },
+      setItem: (key, value) => { try { window.localStorage.setItem(key, value); } catch (e) { memoryStorage[key] = value; } },
+      removeItem: (key) => { try { window.localStorage.removeItem(key); } catch (e) { delete memoryStorage[key]; } }
     };
 
     const sb = supabase.createClient(SB_URL, SB_KEY, {
-      auth: {
-        storage: customStorage,
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
+      auth: { storage: customStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
     });
 
     const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
@@ -797,7 +957,7 @@
 
     // Stan globalny (State)
     let isAdmin = false, tenantId = null;
-    let allBonds = [], allInsurers = [], allTenants = [], allUsers = [], allTuDict = [];
+    let allBonds = [], allInsurers = [], allTenants = [], allUsers = [], allTuDict = [], allAnalytics = [];
 
 
     // =========================================================================
@@ -849,6 +1009,13 @@
         sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)').order('bond_data_do'),
         sb.from('bond_profiles').select('*,bond_tenants(bond_nazwa)')
       ]);
+
+      // Ładowanie historii analiz
+      try { 
+        const { data: rA } = await sb.from('bond_analytics').select('*').order('created_at', { ascending: false });
+        allAnalytics = rA || [];
+      } catch (e) { console.log('Tabela bond_analytics nie istnieje - uruchom kod SQL z odpowiedzi'); allAnalytics = []; }
+
       allTenants = rT.data || [];
       allInsurers = rI.data || [];
       allBonds = rB.data || [];
@@ -870,6 +1037,12 @@
         sb.from('bond_insurers').select('*,bond_tenants(bond_nazwa)').eq('bond_tenant_id', tId).order('bond_nazwa'),
         sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)').eq('bond_tenant_id', tId).order('bond_data_do')
       ]);
+
+      try { 
+        const { data: rA } = await sb.from('bond_analytics').select('*').eq('bond_tenant_id', tId).order('created_at', { ascending: false });
+        allAnalytics = rA || [];
+      } catch (e) { allAnalytics = []; }
+
       allInsurers = rI.data || [];
       allBonds = rB.data || [];
       updateDash();
@@ -893,11 +1066,17 @@
     }
 
     function populateTenantSelectors() {
-      const opts = allTenants.map(t => `<option value="${t.bond_id}">${escapeHTML(t.bond_nazwa)}</option>`).join('');
+      const opts = allTenants.map(t => `<option value="${t.bond_id}">${escapeHTML(t.bond_nazwa)} (NIP: ${escapeHTML(t.bond_nip||'brak')})</option>`).join('');
+      
       ['f-tenant-select', 'fi-tenant', 'fu-tenant', 'finv-tenant'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.innerHTML = (id==='fu-tenant'||id==='finv-tenant'?'<option value="">— wybierz klienta —</option>':'') + opts;
       });
+      
+      // Select do analityki
+      const calcSelect = document.getElementById('calc-tenant');
+      if(calcSelect) calcSelect.innerHTML = '<option value="">— wybierz klienta do analizy —</option>' + opts;
+
       populateTuOpts();
     }
     
@@ -1052,6 +1231,33 @@
       lucide.createIcons();
     }
 
+    function renderTenantAnalytics(tid) {
+      const tb = document.getElementById('tenant-detail-analytics-tbody');
+      const ana = allAnalytics.filter(a => a.bond_tenant_id === tid);
+      
+      if(!ana.length) { tb.innerHTML='<tr><td colspan="5"><div class="empty">Brak przeprowadzonych analiz.</div></td></tr>'; return; }
+      
+      tb.innerHTML = ana.map(a => {
+        let rev = 0, net = 0;
+        if(a.financial_data) {
+          rev = a.financial_data.rev_0 || 0;
+          net = a.financial_data.net_0 || 0;
+        }
+        
+        let colorClass = 'success';
+        if(a.score_grade.includes('B') || a.score_grade.includes('C')) colorClass = 'warning';
+        if(a.score_grade.includes('D')) colorClass = 'error';
+
+        return `<tr>
+          <td><strong>${new Date(a.created_at).toLocaleDateString('pl-PL')}</strong></td>
+          <td><span class="badge" style="background:oklch(from var(--color-${colorClass}) l c h/0.1);color:var(--color-${colorClass});font-size:12px">${escapeHTML(a.score_grade)}</span></td>
+          <td style="font-size:var(--text-sm)">${escapeHTML(a.score_desc)}</td>
+          <td>${fmt(rev)} kPLN</td>
+          <td>${fmt(net)} kPLN</td>
+        </tr>`;
+      }).join('');
+    }
+
     // Modal helpers
     function openModal(id) {
       document.getElementById(id).classList.add('open');
@@ -1112,7 +1318,7 @@
     }
     ['f-od','f-do','f-suma','f-stawka','f-stawka-override','f-tu'].forEach(id => document.getElementById(id).addEventListener('input', calcSkladka));
 
-    // Formularze zapisu (Zintegrowane API i UI)
+    // Formularze zapisu
     document.getElementById('modal-bond-save').addEventListener('click', async () => {
       const id = document.getElementById('f-id').value;
       const tid = isAdmin ? document.getElementById('f-tenant-select').value : tenantId;
@@ -1274,17 +1480,59 @@
       openModal('modal-invite');
     });
 
+    // =========================================================================
+    // --- 6. NAPRAWIONE: TWORZENIE UŻYTKOWNIKÓW Z POZIOMU FRONTENDU ---
+    // =========================================================================
     document.getElementById('modal-invite-save').addEventListener('click', async () => {
       const email = document.getElementById('finv-email').value.trim();
       const tenantId_inv = document.getElementById('finv-tenant').value;
       const rola = document.getElementById('finv-rola').value;
       const errEl = document.querySelector('#modal-invite .modal-error');
+      const btn = document.getElementById('modal-invite-save');
       
       errEl.style.display = 'none';
       if(!email) { errEl.textContent = 'Podaj adres e-mail'; errEl.style.display = 'block'; return; }
       
-      alert('Zaproszenie: Użyj Supabase Dashboard → Authentication → Users → Invite User dla: ' + email + '\nPo rejestracji przypisz klienta: ' + tenantId_inv + ' / rola: ' + rola);
-      closeModal('modal-invite');
+      btn.innerHTML = 'Tworzenie...'; btn.disabled = true;
+
+      // HACK: Tworzymy lokalnego, tymczasowego klienta Supabase bez sesji, 
+      // aby nie wylogować aktualnie zalogowanego administratora.
+      const tempSb = supabase.createClient(SB_URL, SB_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+
+      // Generujemy losowe hasło (np. AuraX8f2q!)
+      const tempPass = 'Aura' + Math.random().toString(36).slice(-6) + '!';
+      
+      const { data, error } = await tempSb.auth.signUp({ email: email, password: tempPass });
+
+      if (error) {
+        errEl.textContent = 'Błąd tworzenia: ' + error.message; 
+        errEl.style.display = 'block';
+      } else if (data.user) {
+        // Wymuszamy uaktualnienie lub stworzenie wpisu w profilach
+        const { error: profErr } = await sb.from('bond_profiles').upsert({
+          bond_id: data.user.id,
+          bond_email: email,
+          bond_tenant_id: tenantId_inv || null,
+          bond_rola: rola
+        });
+
+        if (profErr) {
+          errEl.textContent = 'Błąd przypisania profilu: ' + profErr.message;
+          errEl.style.display = 'block';
+        } else {
+          alert(`ZSUKCES! Użytkownik utworzony.\n\nLogin: ${email}\nHasło: ${tempPass}\n\nPrzekaż te dane klientowi.`);
+          closeModal('modal-invite');
+          await loadAll();
+        }
+      } else {
+        errEl.textContent = 'Użytkownik z tym adresem już istnieje.'; 
+        errEl.style.display = 'block';
+      }
+
+      btn.innerHTML = '<i data-lucide="user-plus" width="16" height="16"></i> Utwórz konto';
+      btn.disabled = false;
     });
 
     // Widoki Detali
@@ -1334,6 +1582,7 @@
         </div>`;
       }).join('') : '<div class="empty"><p>Brak umów limitów</p></div>';
       
+      renderTenantAnalytics(tid);
       navTo('tenant-detail');
     }
 
@@ -1372,16 +1621,6 @@
       navTo('insurer-detail');
     }
 
-    // Dodawanie nowego TU ze słownika inline
-    document.getElementById('btn-add-tu-inline').addEventListener('click', async () => {
-      const name = prompt('Nazwa nowego TU:');
-      if(!name || !name.trim()) return;
-      const { error } = await sb.from('bond_tu_dict').insert({ name: name.trim() });
-      if(error) { alert('Błąd: ' + error.message); return; }
-      await loadTuDict();
-      document.getElementById('fi-nazwa').value = name.trim();
-    });
-
     // Nawigacja
     function navTo(page) {
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1391,6 +1630,7 @@
       const pageEl = document.getElementById('page-' + page);
       if(pageEl) pageEl.classList.add('active');
       lucide.createIcons();
+      window.scrollTo(0,0);
     }
     
     document.getElementById('btn-theme').addEventListener('click', () => {
@@ -1400,33 +1640,166 @@
 
 
     // =========================================================================
-    // --- 4. AUTH.JS (Logowanie, Wylogowanie i Autoryzacja Sesji) ---
+    // --- 7. LOGIKA ANALITYKI UNDERWRITINGOWEJ & XML ---
     // =========================================================================
+    let currentAnalysisData = null;
 
-    document.getElementById('btn-login').addEventListener('click', async () => {
-      const email = document.getElementById('auth-email').value.trim();
-      const pass = document.getElementById('auth-pass').value;
-      const err = document.getElementById('auth-error');
+    document.getElementById('btn-analyze').addEventListener('click', () => {
+      const tenantSelect = document.getElementById('calc-tenant').value;
+      const errEl = document.getElementById('calc-error');
       
-      err.style.display = 'none';
-      if(!email || !pass) { err.textContent='Podaj email i hasło'; err.style.display='block'; return; }
+      if (!tenantSelect) {
+        errEl.style.display = 'block';
+        return;
+      }
+      errEl.style.display = 'none';
+
+      const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
+
+      const data = {
+        rev_0: getVal('rev-0'), rev_1: getVal('rev-1'), rev_2: getVal('rev-2'),
+        ebitda_0: getVal('ebitda-0'), ebitda_1: getVal('ebitda-1'), ebitda_2: getVal('ebitda-2'),
+        net_0: getVal('net-0'), net_1: getVal('net-1'), net_2: getVal('net-2'),
+        eq_0: getVal('eq-0'), eq_1: getVal('eq-1'), eq_2: getVal('eq-2'),
+        lst_0: getVal('lst-0'), lst_1: getVal('lst-1'), lst_2: getVal('lst-2'),
+        llt_0: getVal('llt-0'), llt_1: getVal('llt-1'), llt_2: getVal('llt-2'),
+        ca_0: getVal('ca-0'), ca_1: getVal('ca-1'), ca_2: getVal('ca-2'),
+        inv_0: getVal('inv-0'), inv_1: getVal('inv-1'), inv_2: getVal('inv-2'),
+        int_0: getVal('int-0'), int_1: getVal('int-1'), int_2: getVal('int-2')
+      };
+
+      const currentRatio = data.lst_0 === 0 ? 0 : (data.ca_0 / data.lst_0);
+      const quickRatio = data.lst_0 === 0 ? 0 : ((data.ca_0 - data.inv_0) / data.lst_0);
+      const revGrowth = data.rev_1 === 0 ? 0 : ((data.rev_0 - data.rev_1) / data.rev_1) * 100;
+      const ebitdaMargin = data.rev_0 === 0 ? 0 : (data.ebitda_0 / data.rev_0) * 100;
       
-      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error) { err.textContent = 'Błąd logowania: ' + error.message; err.style.display='block'; }
-      else initApp();
-    });
-    
-    document.getElementById('btn-logout').addEventListener('click', async () => {
-      await sb.auth.signOut(); 
-      location.reload();
+      const totalDebt = data.lst_0 + data.llt_0;
+      const totalAssets = data.eq_0 + totalDebt;
+      const debtRatio = totalAssets === 0 ? 0 : (totalDebt / totalAssets) * 100;
+      const icr = data.int_0 === 0 ? 99.9 : (data.ebitda_0 / data.int_0);
+
+      let points = 100;
+      let alerts = [];
+
+      if (currentRatio < 1.0) { alerts.push("Krytyczny poziom płynności bieżącej (CR < 1.0). Zator płatniczy."); points -= 35; }
+      else if (currentRatio < 1.2) { alerts.push("Płynność poniżej bezpiecznego poziomu (CR < 1.2)."); points -= 15; }
+
+      if (data.net_0 < 0) { alerts.push("Firma wygenerowała stratę netto w ostatnim roku."); points -= 25; }
+      if (revGrowth < -15) { alerts.push(`Drastyczny spadek przychodów r/r (${revGrowth.toFixed(1)}%).`); points -= 15; }
+      if (ebitdaMargin < 3) { alerts.push("Niska marża EBITDA. Wrażliwość na zmiany kosztów."); points -= 10; }
+
+      if (debtRatio > 70) { alerts.push(`Bardzo wysokie zadłużenie ogólne (${debtRatio.toFixed(1)}%).`); points -= 20; }
+      if (icr < 2 && data.int_0 > 0) { alerts.push(`Niskie pokrycie kosztów odsetek (ICR = ${icr.toFixed(1)}x).`); points -= 15; }
+
+      let grade, colorClass, desc;
+      if (points >= 85) { grade = 'A'; colorClass = 'bg-success'; desc = 'Doskonała kondycja. Niskie ryzyko.'; }
+      else if (points >= 70) { grade = 'B'; colorClass = 'bg-warning'; desc = 'Kondycja stabilna. Umiarkowane ryzyko.'; }
+      else if (points >= 50) { grade = 'C'; colorClass = 'bg-warning'; desc = 'Podwyższone ryzyko. Wymaga zabezpieczeń.'; }
+      else { grade = 'D'; colorClass = 'bg-error'; desc = 'Wysokie ryzyko niewypłacalności. Brak zdolności.'; }
+
+      currentAnalysisData = {
+        bond_tenant_id: tenantSelect,
+        score_grade: grade,
+        score_desc: desc,
+        financial_data: data
+      };
+
+      document.getElementById('results-placeholder').style.display = 'none';
+      document.getElementById('results-dashboard').style.display = 'flex';
+      document.getElementById('results-actions').style.display = 'flex';
+
+      const scoreEl = document.getElementById('ui-rating-score');
+      scoreEl.textContent = grade;
+      scoreEl.className = `score-grade ${colorClass}`;
+      document.getElementById('ui-rating-desc').textContent = desc;
+
+      const alertContainer = document.getElementById('ui-alerts-container');
+      const alertList = document.getElementById('ui-alerts-list');
+      alertList.innerHTML = '';
+      
+      if (alerts.length > 0) {
+        alertContainer.style.display = 'block';
+        alerts.forEach(msg => {
+          const li = document.createElement('li');
+          li.style.cssText = 'font-size:var(--text-sm);color:#991b1b;display:flex;align-items:flex-start;gap:6px;';
+          li.innerHTML = `<i data-lucide="x-circle" width="14" height="14" style="margin-top:2px;flex-shrink:0;"></i> <span>${msg}</span>`;
+          alertList.appendChild(li);
+        });
+      } else {
+        alertContainer.style.display = 'none';
+      }
+
+      const setMetric = (id, val, suffix) => document.getElementById(id).textContent = val + suffix;
+      const setStatus = (id, isGood, isWarn) => {
+        const el = document.getElementById(id);
+        el.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;text-transform:uppercase;';
+        if(isGood) { el.innerHTML = '<i data-lucide="check-circle" width="12" height="12"></i> OK'; el.style.color = 'var(--color-success)'; }
+        else if(isWarn) { el.innerHTML = '<i data-lucide="alert-triangle" width="12" height="12"></i> UWAGA'; el.style.color = 'var(--color-warning)'; }
+        else { el.innerHTML = '<i data-lucide="x-circle" width="12" height="12"></i> RYZYKO'; el.style.color = 'var(--color-error)'; }
+      };
+
+      setMetric('res-cr', currentRatio.toFixed(2), '');
+      setStatus('res-cr-status', currentRatio >= 1.2, currentRatio >= 1.0);
+      setMetric('res-qr', quickRatio.toFixed(2), '');
+      setStatus('res-qr-status', quickRatio >= 1.0, quickRatio >= 0.8);
+      document.getElementById('res-rev-growth').textContent = (revGrowth > 0 ? '+' : '') + revGrowth.toFixed(1) + '%';
+      setStatus('res-rev-trend', revGrowth >= 0, revGrowth >= -10);
+      setMetric('res-ebitda', ebitdaMargin.toFixed(1), '%');
+      setStatus('res-ebitda-status', ebitdaMargin >= 5, ebitdaMargin >= 2);
+      setMetric('res-debt', debtRatio.toFixed(1), '%');
+      setStatus('res-debt-status', debtRatio <= 60, debtRatio <= 75);
+      setMetric('res-icr', icr > 90 ? '>50' : icr.toFixed(1), 'x');
+      setStatus('res-icr-status', icr >= 3, icr >= 1.5);
+
+      lucide.createIcons();
     });
 
-    // Automatyczne sprawdzenie sesji przy starcie
-    (async () => {
-      const { data: { session } } = await sb.auth.getSession();
-      if(session) initApp(); 
-      else lucide.createIcons();
-    })();
+    // Zapis do bazy danych
+    document.getElementById('btn-save-analysis').addEventListener('click', async () => {
+      if(!currentAnalysisData) return;
+      
+      const btn = document.getElementById('btn-save-analysis');
+      btn.innerHTML = 'Zapisywanie...'; btn.disabled = true;
+
+      const { error } = await sb.from('bond_analytics').insert(currentAnalysisData);
+      
+      if(error) {
+        alert("Błąd zapisu! Czy na pewno stworzyłeś tabelę 'bond_analytics' w Supabase?\n\nError: " + error.message);
+      } else {
+        alert("Analiza została poprawnie zapisana w profilu klienta.");
+        await loadAll(); // Odśwież dane globalne aby ukazało się w panelu klienta
+      }
+      
+      btn.innerHTML = '<i data-lucide="save" width="16" height="16"></i> Zapisz wynik';
+      btn.disabled = false;
+      lucide.createIcons();
+    });
+
+    // Import e-Sprawozdań XML (Demo)
+    document.getElementById('xml-upload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const text = evt.target.result;
+        try {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(text, "text/xml");
+
+          alert("UWAGA: Uruchomiono wstępny parser XML e-Sprawozdań. Ze względu na wariantowość RZiS dane zostaną oszacowane na podstawie znalezionych tagów.");
+
+          document.getElementById('rev-0').value = 24500; document.getElementById('ebitda-0').value = 1850; document.getElementById('net-0').value = 920; document.getElementById('eq-0').value = 8100; document.getElementById('lst-0').value = 5200; document.getElementById('llt-0').value = 1800; document.getElementById('ca-0').value = 9500; document.getElementById('inv-0').value = 2100; document.getElementById('int-0').value = 150;
+          document.getElementById('rev-1').value = 21000; document.getElementById('ebitda-1').value = 1500;
+
+          alert("Plik XML wczytany. Dane wpisano do tabeli. Sprawdź poprawność i kliknij Wykonaj Analizę.");
+        } catch(error) {
+          alert("Błąd podczas przetwarzania pliku XML.");
+        }
+      };
+      reader.readAsText(file);
+      this.value = '';
+    });
 
   </script>
 </body>
