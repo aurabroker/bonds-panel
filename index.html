@@ -741,7 +741,10 @@
   </div>
 
   <script>
-    // ── Supabase Init with customStorage fallback ──
+    // =========================================================================
+    // --- 1. SETUP & UTILS (Konfiguracja Supabase, Stan i Pomocniki) ---
+    // =========================================================================
+
     const SB_URL = 'https://kukvgsjrmrqtzhkszzum.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY';
 
@@ -770,7 +773,6 @@
       }
     });
 
-    // ── Helpers ──
     const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
     const fmt = n => n==null?'—':Number(n).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
     const dateDiff = (a,b) => Math.round((new Date(b)-new Date(a))/(1000*60*60*24));
@@ -793,28 +795,25 @@
       return '<span class="badge badge-active">Aktywna</span>';
     };
 
-    // ── Global State ──
+    // Stan globalny (State)
     let isAdmin = false, tenantId = null;
     let allBonds = [], allInsurers = [], allTenants = [], allUsers = [], allTuDict = [];
 
-    // ── Loaders ──
+
+    // =========================================================================
+    // --- 2. API.JS (Pobieranie i Zapis Danych do Bazy) ---
+    // =========================================================================
+
     async function loadTuDict() {
       const { data } = await sb.from('bond_tu_dict').select('id,name').eq('is_active', true).order('name');
       allTuDict = data || [];
       populateTuSelect();
     }
 
-    function populateTuSelect() {
-      const sel = document.getElementById('fi-nazwa');
-      if(!sel) return;
-      const cur = sel.value;
-      sel.innerHTML = '<option value="">— wybierz TU —</option>' + allTuDict.map(t => `<option value="${escapeHTML(t.name)}">${escapeHTML(t.name)}</option>`).join('');
-      if(cur) sel.value = cur;
-    }
-
     async function initApp() {
       const { data: { session } } = await sb.auth.getSession();
       if(!session) return;
+      
       document.getElementById('auth-screen').style.display = 'none';
       document.getElementById('app').style.display = 'flex';
       
@@ -880,6 +879,19 @@
       renderSkladki(allBonds);
     }
 
+
+    // =========================================================================
+    // --- 3. UI.JS (Interfejs, Renderowanie Tabel, Event Listenery) ---
+    // =========================================================================
+
+    function populateTuSelect() {
+      const sel = document.getElementById('fi-nazwa');
+      if(!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— wybierz TU —</option>' + allTuDict.map(t => `<option value="${escapeHTML(t.name)}">${escapeHTML(t.name)}</option>`).join('');
+      if(cur) sel.value = cur;
+    }
+
     function populateTenantSelectors() {
       const opts = allTenants.map(t => `<option value="${t.bond_id}">${escapeHTML(t.bond_nazwa)}</option>`).join('');
       ['f-tenant-select', 'fi-tenant', 'fu-tenant', 'finv-tenant'].forEach(id => {
@@ -895,7 +907,6 @@
       sel.innerHTML = '<option value="">— poza limitami —</option>' + ins.map(i => `<option value="${i.bond_id}">${escapeHTML(i.bond_nazwa)} (UL: ${escapeHTML(i.bond_ul_nr || 'brak')})</option>`).join('');
     }
 
-    // ── Renders ──
     function updateDash() {
       const active = allBonds.filter(b => bondStatus(b) !== 'expired');
       const expiring = allBonds.filter(b => bondStatus(b) === 'expiring');
@@ -1041,7 +1052,7 @@
       lucide.createIcons();
     }
 
-    // ── Interaction & Modals ──
+    // Modal helpers
     function openModal(id) {
       document.getElementById(id).classList.add('open');
       if(id === 'modal-bond' && !document.getElementById('f-id').value) {
@@ -1052,6 +1063,7 @@
         populateTuOpts();
       }
     }
+    
     function closeModal(id) {
       document.getElementById(id).classList.remove('open');
       if(id === 'modal-bond') document.getElementById('f-id').value = '';
@@ -1069,6 +1081,7 @@
       const el = document.querySelector('#' + modalId + ' .modal-error');
       if(el) { el.textContent = msg; el.style.display = 'block'; }
     }
+    
     function hideModalErrors(modalId) {
       const el = document.querySelector('#' + modalId + ' .modal-error');
       if(el) el.style.display = 'none';
@@ -1099,6 +1112,7 @@
     }
     ['f-od','f-do','f-suma','f-stawka','f-stawka-override','f-tu'].forEach(id => document.getElementById(id).addEventListener('input', calcSkladka));
 
+    // Formularze zapisu (Zintegrowane API i UI)
     document.getElementById('modal-bond-save').addEventListener('click', async () => {
       const id = document.getElementById('f-id').value;
       const tid = isAdmin ? document.getElementById('f-tenant-select').value : tenantId;
@@ -1156,7 +1170,6 @@
       if(isAdmin) await loadAll(); else await loadBonds(tenantId);
     }
 
-    // Modal - Klienci
     document.getElementById('modal-client-save').addEventListener('click', async () => {
       const id = document.getElementById('fc-id').value;
       const payload = {
@@ -1194,7 +1207,6 @@
       await loadAll();
     }
 
-    // Modal - Ubezpieczyciele
     document.getElementById('modal-insurer-save').addEventListener('click', async () => {
       const id = document.getElementById('fi-id').value;
       const payload = {
@@ -1238,7 +1250,6 @@
       await loadAll();
     }
 
-    // Modal - User Assignment
     function assignUser(uid, tId, role) {
       document.getElementById('fu-id').value = uid;
       document.getElementById('fu-email').textContent = uid;
@@ -1259,7 +1270,6 @@
       closeModal('modal-user-assign'); await loadAll();
     });
 
-    // ── Invite user ──
     document.getElementById('btn-invite-user').addEventListener('click', () => {
       openModal('modal-invite');
     });
@@ -1277,7 +1287,7 @@
       closeModal('modal-invite');
     });
 
-    // ── Panel Klienta (Detal) ──
+    // Widoki Detali
     function openTenantDetail(tid) {
       const t = allTenants.find(x => x.bond_id === tid); if(!t) return;
       const bonds = allBonds.filter(b => b.bond_tenant_id === tid);
@@ -1327,7 +1337,6 @@
       navTo('tenant-detail');
     }
 
-    // ── Panel Ubezpieczyciela (Detal) ──
     function openInsurerDetail(iid) {
       const ins = allInsurers.find(x => x.bond_id === iid); if(!ins) return;
       const bonds = allBonds.filter(b => b.bond_insurer_id === iid);
@@ -1363,39 +1372,7 @@
       navTo('insurer-detail');
     }
 
-    // ── Logowanie & Start ──
-    document.getElementById('btn-login').addEventListener('click', async () => {
-      const email = document.getElementById('auth-email').value.trim();
-      const pass = document.getElementById('auth-pass').value;
-      const err = document.getElementById('auth-error');
-      err.style.display = 'none';
-      if(!email || !pass) { err.textContent='Podaj email i hasło'; err.style.display='block'; return; }
-      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-      if(error) { err.textContent = 'Błąd logowania: ' + error.message; err.style.display='block'; }
-      else initApp();
-    });
-    
-    document.getElementById('btn-logout').addEventListener('click', async () => {
-      await sb.auth.signOut(); location.reload();
-    });
-    
-    document.getElementById('btn-theme').addEventListener('click', () => {
-      const b = document.body;
-      b.dataset.theme = b.dataset.theme === 'dark' ? 'light' : 'dark';
-    });
-
-    // ── navTo helper ──
-    function navTo(page) {
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      const navEl = document.querySelector('[data-page="' + page + '"]');
-      if(navEl) navEl.classList.add('active');
-      const pageEl = document.getElementById('page-' + page);
-      if(pageEl) pageEl.classList.add('active');
-      lucide.createIcons();
-    }
-
-    // Dodawanie nowego TU ze słownika
+    // Dodawanie nowego TU ze słownika inline
     document.getElementById('btn-add-tu-inline').addEventListener('click', async () => {
       const name = prompt('Nazwa nowego TU:');
       if(!name || !name.trim()) return;
@@ -1405,9 +1382,50 @@
       document.getElementById('fi-nazwa').value = name.trim();
     });
 
+    // Nawigacja
+    function navTo(page) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const navEl = document.querySelector('[data-page="' + page + '"]');
+      if(navEl) navEl.classList.add('active');
+      const pageEl = document.getElementById('page-' + page);
+      if(pageEl) pageEl.classList.add('active');
+      lucide.createIcons();
+    }
+    
+    document.getElementById('btn-theme').addEventListener('click', () => {
+      const b = document.body;
+      b.dataset.theme = b.dataset.theme === 'dark' ? 'light' : 'dark';
+    });
+
+
+    // =========================================================================
+    // --- 4. AUTH.JS (Logowanie, Wylogowanie i Autoryzacja Sesji) ---
+    // =========================================================================
+
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-pass').value;
+      const err = document.getElementById('auth-error');
+      
+      err.style.display = 'none';
+      if(!email || !pass) { err.textContent='Podaj email i hasło'; err.style.display='block'; return; }
+      
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if(error) { err.textContent = 'Błąd logowania: ' + error.message; err.style.display='block'; }
+      else initApp();
+    });
+    
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      await sb.auth.signOut(); 
+      location.reload();
+    });
+
+    // Automatyczne sprawdzenie sesji przy starcie
     (async () => {
       const { data: { session } } = await sb.auth.getSession();
-      if(session) initApp(); else lucide.createIcons();
+      if(session) initApp(); 
+      else lucide.createIcons();
     })();
 
   </script>
