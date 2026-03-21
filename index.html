@@ -194,15 +194,20 @@
     <div class="auth-card">
       <div class="auth-logo">Gwarancje<span>.PRO</span></div>
       <div class="auth-error" id="auth-error"></div>
-      <div class="form-field">
-        <label class="form-label" for="auth-email">Email</label>
-        <input class="form-input" id="auth-email" type="email" placeholder="adres@email.com">
-      </div>
-      <div class="form-field">
-        <label class="form-label" for="auth-pass">Hasło</label>
-        <input class="form-input" id="auth-pass" type="password" placeholder="••••••••">
-      </div>
-      <button class="btn btn-primary" id="btn-login" style="width: 100%; margin-top: var(--space-2)">Zaloguj się</button>
+      
+      <!-- FORMULARZ LOGOWANIA (NAPRAWIONY DLA MENEDŻERÓW HASEŁ I KLAWISZA ENTER) -->
+      <form id="login-form">
+        <div class="form-field">
+          <label class="form-label" for="auth-email">Email</label>
+          <input class="form-input" id="auth-email" type="email" placeholder="adres@email.com" autocomplete="username" required>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="auth-pass">Hasło</label>
+          <input class="form-input" id="auth-pass" type="password" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn-login" style="width: 100%; margin-top: var(--space-2)">Zaloguj się</button>
+      </form>
+      
     </div>
   </div>
 
@@ -1522,7 +1527,7 @@
           errEl.textContent = 'Błąd przypisania profilu: ' + profErr.message;
           errEl.style.display = 'block';
         } else {
-          alert(`ZSUKCES! Użytkownik utworzony.\n\nLogin: ${email}\nHasło: ${tempPass}\n\nPrzekaż te dane klientowi.`);
+          alert(`SUKCES! Użytkownik utworzony.\n\nLogin: ${email}\nHasło: ${tempPass}\n\nPrzekaż te dane klientowi.`);
           closeModal('modal-invite');
           await loadAll();
         }
@@ -1640,7 +1645,47 @@
 
 
     // =========================================================================
-    // --- 7. LOGIKA ANALITYKI UNDERWRITINGOWEJ & XML ---
+    // --- 8. AUTH.JS (Logowanie Formularzem) ---
+    // =========================================================================
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault(); // Zapobiega przeładowaniu
+      
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-pass').value;
+      const err = document.getElementById('auth-error');
+      const btn = document.getElementById('btn-login');
+      
+      err.style.display = 'none';
+      btn.innerHTML = 'Logowanie...';
+      btn.disabled = true;
+
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      
+      if(error) { 
+        err.textContent = 'Błąd logowania: ' + error.message; 
+        err.style.display='block'; 
+        btn.innerHTML = 'Zaloguj się';
+        btn.disabled = false;
+      }
+      else {
+        initApp();
+      }
+    });
+    
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      await sb.auth.signOut(); 
+      location.reload();
+    });
+
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if(session) initApp(); 
+      else lucide.createIcons();
+    })();
+
+    // =========================================================================
+    // --- 9. LOGIKA ANALITYKI UNDERWRITINGOWEJ & XML ---
     // =========================================================================
     let currentAnalysisData = null;
 
