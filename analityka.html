@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gwarancje.PRO - Panel Analityczny Underwritingu</title>
+
+    <!-- Chosen Palette: Slate & Blue (Aura Consulting / Gwarancje.PRO standards) -->
+    <!-- Application Structure Plan: The application uses a dashboard structure optimized for underwriting tasks. It features a top control bar to select the applicant company, followed by a tabbed interface. The tabs logically separate the analysis into: 1. Podsumowanie (Executive Summary & Scoring for quick go/no-go decisions), 2. Płynność i Zadłużenie (Key risk areas for construction bonds), 3. Rentowność i Operacje (Performance over time), 4. Portfel i Gwarancje (Construction-specific backlog risk). This structure allows the analyst to get an immediate overview and then drill down into specific financial risk categories without losing context. -->
+    <!-- Visualization & Content Choices: 
+         1. Goal: Inform -> Company Score & RAG Metrics -> Presentation: Large prominent text and color-coded cards (Red/Amber/Green) -> Interaction: Dynamic update based on company selection -> Justification: Underwriters need instant awareness of critical risks. Method: HTML/Tailwind.
+         2. Goal: Change/Trend -> Revenue vs Profitability -> Presentation: Bar/Line combo chart -> Interaction: Tooltips, updates with company -> Justification: Shows growth vs margin stability over time. Method: Chart.js Canvas.
+         3. Goal: Structure -> Assets vs Liabilities -> Presentation: Doughnut charts -> Interaction: Tooltips -> Justification: Quick visual check of capitalization and debt reliance. Method: Chart.js Canvas.
+         4. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Unicode used for icons. -->
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f172a',
+                        'primary-hover': '#1e293b',
+                        surface: '#ffffff',
+                        'surface-offset': '#f8fafc',
+                        border: '#e2e8f0',
+                        text: '#0f172a',
+                        'text-muted': '#64748b',
+                        'text-faint': '#94a3b8',
+                        danger: '#ef4444',
+                        warning: '#f59e0b',
+                        success: '#10b981',
+                        brand: '#2563eb'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            background-color: var(--color-surface-offset, #f8fafc);
+            color: var(--color-text, #0f172a);
+        }
+
+        /* Strict Chart Container Styling as per requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%; /* Adapts to grid cell */
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .chart-container-small {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 250px;
+        }
+
+        /* Custom Scrollbar for clean look */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .tab-btn.active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- Top Navigation / Header -->
+    <header class="bg-primary text-white border-b border-slate-700 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl" aria-hidden="true">🛡️</span>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide">Gwarancje.PRO</h1>
+                    <p class="text-xs text-slate-400 uppercase tracking-widest">Underwriting Finansowy</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="flex flex-col items-end">
+                    <label for="companySelect" class="text-xs text-slate-400 mb-1">Analizowany podmiot:</label>
+                    <select id="companySelect" class="bg-primary-hover border border-slate-600 text-white text-sm rounded px-3 py-1 focus:outline-none focus:border-brand transition-colors">
+                        <option value="budex">Budex Sp. z o.o. (NIP: 1234567890)</option>
+                        <option value="infrastruktura">Infrastruktura S.A. (NIP: 0987654321)</option>
+                    </select>
+                </div>
+                <button class="bg-brand hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors shadow-sm">
+                    🖨️ Generuj Raport
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 w-full max-w-7xl mx-auto">
+        
+        <!-- Application Context Intro -->
+        <div class="mb-6 bg-blue-50 border-l-4 border-brand p-4 rounded shadow-sm">
+            <h2 class="text-lg font-bold text-primary mb-1">Oceny Zdolności Gwarancyjnej</h2>
+            <p class="text-sm text-text-muted">
+                Narzędzie to służy do zaawansowanej analizy sprawozdań finansowych firm budowlanych ubiegających się o limity gwarancyjne. 
+                Prezentuje syntetyczną ocenę ryzyka (Scoring), analizę trendów (Przychody, EBITDA) oraz kluczowe wskaźniki płynności i zadłużenia, 
+                które są krytyczne dla weryfikacji zdolności firmy do realizacji kontraktów i pokrycia ewentualnych roszczeń.
+            </p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-6 border-b border-border mb-6">
+            <button class="tab-btn active pb-3 text-sm font-medium text-text-muted hover:text-text transition-colors" data-tab="tab-summary">
+                📊 Podsumowanie
+            </button>
+            <button class="tab-btn pb-3 text-sm font-medium text-text-muted hover:text-text transition-colors" data-tab="tab-liquidity">
+                💧 Płynność i Zadłużenie
+            </button>
+            <button class="tab-btn pb-3 text-sm font-medium text-text-muted hover:text-text transition-colors" data-tab="tab-profitability">
+                📈 Rentowność i Wyniki
+            </button>
+        </nav>
+
+        <!-- TAB 1: Podsumowanie -->
+        <section id="tab-summary" class="tab-content active">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold text-primary">Ocena Syntetyczna i Główne Ryzyka</h3>
+                <p class="text-sm text-text-muted">Widok ten zapewnia szybką informację o ogólnym standingu finansowym podmiotu. Algorytm wylicza rating na podstawie kluczowych wskaźników z ostatniego zamkniętego roku obrotowego. Zwróć szczególną uwagę na sekcję automatycznych alertów underwritingowych.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Scoring Card -->
+                <div class="bg-surface rounded-lg shadow-sm border border-border p-6 flex flex-col justify-center items-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-brand"></div>
+                    <span class="text-sm font-semibold text-text-muted uppercase tracking-wider mb-2">Rating Gwarancyjny</span>
+                    <div id="ui-rating-score" class="text-6xl font-black text-primary mb-2">A-</div>
+                    <div id="ui-rating-desc" class="text-sm font-medium text-success bg-green-50 px-3 py-1 rounded-full">Niskie Ryzyko</div>
+                    <p class="text-xs text-text-faint text-center mt-4 border-t border-border pt-3">
+                        Zdolność do obsługi limitów kontraktowych jest oceniana jako stabilna.
+                    </p>
+                </div>
+
+                <!-- KPI Cards -->
+                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-surface rounded-lg shadow-sm border border-border p-4">
+                        <span class="text-xs text-text-muted font-medium uppercase">Przychody Netto (Ost. rok)</span>
+                        <div class="text-2xl font-bold text-primary mt-1" id="ui-kpi-revenue">0 mln PLN</div>
+                        <div class="text-xs font-medium mt-1 flex items-center" id="ui-kpi-revenue-trend">
+                            <span class="text-success mr-1">↗</span> <span class="text-success">0% r/r</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-surface rounded-lg shadow-sm border border-border p-4">
+                        <span class="text-xs text-text-muted font-medium uppercase">Zysk Netto (Ost. rok)</span>
+                        <div class="text-2xl font-bold text-primary mt-1" id="ui-kpi-netprofit">0 mln PLN</div>
+                        <div class="text-xs font-medium mt-1 flex items-center" id="ui-kpi-netprofit-trend">
+                            <span class="text-danger mr-1">↘</span> <span class="text-danger">0% r/r</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-surface rounded-lg shadow-sm border border-border p-4">
+                        <span class="text-xs text-text-muted font-medium uppercase">Kapitał Własny</span>
+                        <div class="text-2xl font-bold text-primary mt-1" id="ui-kpi-equity">0 mln PLN</div>
+                        <div class="text-xs text-text-faint mt-1">Gwarancja pokrycia roszczeń</div>
+                    </div>
+
+                    <div class="bg-surface rounded-lg shadow-sm border border-border p-4">
+                        <span class="text-xs text-text-muted font-medium uppercase">Wskaźnik Bieżący Płynności</span>
+                        <div class="text-2xl font-bold text-primary mt-1 flex items-baseline gap-2">
+                            <span id="ui-kpi-cr">0.00</span>
+                            <span class="text-sm font-normal text-text-muted">optimum > 1.2</span>
+                        </div>
+                        <div class="text-xs mt-1 font-medium" id="ui-kpi-cr-status">...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts & Main Chart -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1 flex flex-col gap-4">
+                    <div class="bg-surface rounded-lg shadow-sm border border-border p-5 h-full">
+                        <h4 class="font-bold text-primary mb-4 flex items-center">
+                            <span class="mr-2">⚠️</span> Alerty Underwritingowe
+                        </h4>
+                        <ul id="ui-alerts-list" class="space-y-3">
+                            <!-- Populated by JS -->
+                        </ul>
+                        <div id="ui-alerts-empty" class="hidden text-sm text-text-muted italic text-center py-4">
+                            Brak istotnych zagrożeń dla tego podmiotu.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-surface rounded-lg shadow-sm border border-border p-5">
+                    <h4 class="font-bold text-primary mb-1">Dynamika Przychodów i Wyniku EBITDA</h4>
+                    <p class="text-xs text-text-muted mb-4">Wizualizacja długoterminowego trendu w celu oceny stabilności biznesowej firmy budowlanej.</p>
+                    <div class="chart-container">
+                        <canvas id="chart-summary"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: Płynność i Zadłużenie -->
+        <section id="tab-liquidity" class="tab-content">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold text-primary">Struktura Płynności i Poziom Zadłużenia</h3>
+                <p class="text-sm text-text-muted">Branża budowlana charakteryzuje się wysokim zapotrzebowaniem na kapitał obrotowy. Poniższe wykresy i wskaźniki pozwalają ocenić, czy firma posiada wystarczające zasoby płynne do regulowania krótkoterminowych zobowiązań podwykonawców, oraz jak bardzo opiera się na finansowaniu dłużnym zewnętrznym.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-surface rounded-lg shadow-sm border border-border p-5">
+                    <h4 class="font-bold text-primary mb-1">Wskaźniki Płynności (Trend 5-letni)</h4>
+                    <p class="text-xs text-text-muted mb-4">CR (Bieżąca) powyżej 1.2 to standard. QR (Szybka) wyklucza zapasy/produkcję w toku.</p>
+                    <div class="chart-container">
+                        <canvas id="chart-liquidity"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-surface rounded-lg shadow-sm border border-border p-5">
+                    <h4 class="font-bold text-primary mb-1">Struktura Finansowania (Ostatni rok)</h4>
+                    <p class="text-xs text-text-muted mb-4">Zestawienie kapitałów własnych z zobowiązaniami (dźwignia finansowa).</p>
+                    <div class="chart-container-small">
+                        <canvas id="chart-debt-structure"></canvas>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <span class="block text-xs text-text-muted">Zadłużenie Ogólne</span>
+                            <strong class="text-lg text-primary" id="ui-metric-dr">0%</strong>
+                            <span class="block text-[10px] text-text-faint">(Norma: < 65%)</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs text-text-muted">Pokrycie Odsetek (ICR)</span>
+                            <strong class="text-lg text-primary" id="ui-metric-icr">0.0x</strong>
+                            <span class="block text-[10px] text-text-faint">(Norma: > 3.0x)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Rentowność -->
+        <section id="tab-profitability" class="tab-content">
+            <div class="mb-4">
+                <h3 class="text-xl font-bold text-primary">Analiza Rentowności i Marż</h3>
+                <p class="text-sm text-text-muted">Niskie marże to standard w budownictwie (często 2-5%), jednak ich wysoka zmienność (wolatility) może wskazywać na problemy z wyceną kontraktów lub zarządzaniem kosztami na budowach. Stabilna marża EBITDA jest kluczowa dla bezpiecznego underwritingu.</p>
+            </div>
+
+            <div class="bg-surface rounded-lg shadow-sm border border-border p-5 mb-6">
+                <h4 class="font-bold text-primary mb-1">Marże: Brutto, EBITDA i Netto</h4>
+                <p class="text-xs text-text-muted mb-4">Procentowy udział wyników na poszczególnych poziomach w stosunku do przychodów ze sprzedaży.</p>
+                <div class="chart-container">
+                    <canvas id="chart-profitability"></canvas>
+                </div>
+            </div>
+
+            <!-- Detailed Table View -->
+            <div class="bg-surface rounded-lg shadow-sm border border-border overflow-hidden">
+                <div class="px-5 py-3 border-b border-border bg-slate-50">
+                    <h4 class="font-bold text-primary text-sm">Szczegółowe dane finansowe (tys. PLN)</h4>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-slate-50 text-text-muted text-xs uppercase">
+                            <tr>
+                                <th class="px-5 py-3 border-b border-border">Pozycja RZiS</th>
+                                <th class="px-5 py-3 border-b border-border text-right" id="th-year-4">2019</th>
+                                <th class="px-5 py-3 border-b border-border text-right" id="th-year-3">2020</th>
+                                <th class="px-5 py-3 border-b border-border text-right" id="th-year-2">2021</th>
+                                <th class="px-5 py-3 border-b border-border text-right" id="th-year-1">2022</th>
+                                <th class="px-5 py-3 border-b border-border text-right font-bold text-primary" id="th-year-0">2023</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ui-financial-table" class="divide-y divide-border">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Application Logic -->
+    <script>
+        // ==========================================
+        // 1. DATA STORE (Mock Data for 2 Companies)
+        // ==========================================
+        const db = {
+            budex: {
+                name: "Budex Sp. z o.o.",
+                years: ["2019", "2020", "2021", "2022", "2023"],
+                financials: {
+                    revenue: [120500, 135000, 150200, 142000, 168000], // in kPLN
+                    ebitda: [8500, 9200, 11500, 7800, 12400],
+                    netProfit: [5200, 6100, 8300, 4100, 7800],
+                    equity: [25000, 31100, 39400, 43500, 51300],
+                    liabilitiesST: [45000, 52000, 58000, 65000, 71000],
+                    liabilitiesLT: [12000, 10500, 9000, 15000, 13000],
+                    currentAssets: [58000, 65000, 76000, 79000, 95000],
+                    inventory: [15000, 18000, 22000, 25000, 28000], // Zapasy i produkcja w toku
+                    interestExpense: [800, 750, 700, 1200, 1800]
+                }
+            },
+            infrastruktura: {
+                name: "Infrastruktura S.A.",
+                years: ["2019", "2020", "2021", "2022", "2023"],
+                financials: {
+                    revenue: [350000, 320000, 290000, 310000, 280000],
+                    ebitda: [25000, 18000, 12000, 15000, 8000],
+                    netProfit: [16000, 11000, 5000, 7500, 1200],
+                    equity: [85000, 96000, 101000, 108500, 109700],
+                    liabilitiesST: [150000, 165000, 180000, 175000, 190000],
+                    liabilitiesLT: [40000, 35000, 30000, 25000, 45000],
+                    currentAssets: [165000, 170000, 185000, 190000, 195000],
+                    inventory: [50000, 60000, 75000, 85000, 95000],
+                    interestExpense: [2500, 2200, 1800, 2000, 4500]
+                }
+            }
+        };
+
+        // ==========================================
+        // 2. STATE MANAGEMENT & CALCULATIONS
+        // ==========================================
+        let currentState = {
+            companyId: 'budex',
+            data: null,
+            charts: {}
+        };
+
+        function calculateMetrics(data) {
+            const f = data.financials;
+            const lastIdx = f.revenue.length - 1;
+            const prevIdx = lastIdx - 1;
+
+            // Current Year
+            const rev = f.revenue[lastIdx];
+            const revPrev = f.revenue[prevIdx];
+            const revGrowth = ((rev - revPrev) / revPrev) * 100;
+
+            const net = f.netProfit[lastIdx];
+            const netPrev = f.netProfit[prevIdx];
+            const netGrowth = ((net - netPrev) / Math.abs(netPrev)) * 100;
+
+            const eq = f.equity[lastIdx];
+            
+            // Liquidity
+            const currentRatio = f.currentAssets.map((ca, i) => ca / f.liabilitiesST[i]);
+            const quickRatio = f.currentAssets.map((ca, i) => (ca - f.inventory[i]) / f.liabilitiesST[i]);
+            
+            // Debt
+            const totalDebt = f.liabilitiesST[lastIdx] + f.liabilitiesLT[lastIdx];
+            const totalAssets = eq + totalDebt;
+            const debtRatio = (totalDebt / totalAssets) * 100;
+            
+            // Interest Coverage Ratio (EBITDA / Interest)
+            const icr = f.ebitda[lastIdx] / f.interestExpense[lastIdx];
+
+            // Profitability
+            const ros = f.netProfit.map((np, i) => (np / f.revenue[i]) * 100);
+            const ebitdaMargin = f.ebitda.map((eb, i) => (eb / f.revenue[i]) * 100);
+
+            return {
+                rev, revGrowth,
+                net, netGrowth,
+                eq,
+                currentRatio,
+                quickRatio,
+                debtRatio,
+                icr,
+                ros,
+                ebitdaMargin,
+                totalDebt
+            };
+        }
+
+        function generateScoreAndAlerts(metrics) {
+            let alerts = [];
+            let scorePts = 100;
+            const lastCR = metrics.currentRatio[metrics.currentRatio.length - 1];
+
+            // Liquidity Check
+            if (lastCR < 1.0) { alerts.push("Krytyczna płynność bieżąca (CR < 1.0). Ryzyko zatorów płatniczych."); scorePts -= 30; }
+            else if (lastCR < 1.2) { alerts.push("Płynność bieżąca poniżej bezpiecznego poziomu branżowego 1.2."); scorePts -= 15; }
+
+            // Growth Check
+            if (metrics.revGrowth < -10) { alerts.push(`Spadek przychodów o ${Math.abs(metrics.revGrowth).toFixed(1)}% r/r.`); scorePts -= 10; }
+            if (metrics.net < 0) { alerts.push("Spółka wygenerowała stratę netto w ostatnim roku."); scorePts -= 25; }
+
+            // Debt Check
+            if (metrics.debtRatio > 70) { alerts.push(`Bardzo wysoki wskaźnik ogólnego zadłużenia (${metrics.debtRatio.toFixed(1)}%).`); scorePts -= 20; }
+            if (metrics.icr < 2.0) { alerts.push(`Niskie pokrycie odsetek zyskiem EBITDA (ICR = ${metrics.icr.toFixed(1)}x).`); scorePts -= 15; }
+
+            // Margins Check
+            const lastEBITDAMargin = metrics.ebitdaMargin[metrics.ebitdaMargin.length - 1];
+            if (lastEBITDAMargin < 3.0) { alerts.push(`Niska marża EBITDA (${lastEBITDAMargin.toFixed(1)}%). Wrażliwość na wzrost kosztów budowy.`); scorePts -= 10; }
+
+            // Assign Grade
+            let grade = 'C';
+            let desc = 'Wysokie Ryzyko';
+            let colorClass = 'text-danger bg-red-50';
+            let letterClass = 'text-danger';
+
+            if (scorePts >= 85) { grade = 'A'; desc = 'Niskie Ryzyko'; colorClass = 'text-success bg-green-50'; letterClass = 'text-success'; }
+            else if (scorePts >= 75) { grade = 'A-'; desc = 'Niskie/Umiarkowane Ryzyko'; colorClass = 'text-success bg-green-50'; letterClass = 'text-success'; }
+            else if (scorePts >= 60) { grade = 'B+'; desc = 'Umiarkowane Ryzyko'; colorClass = 'text-warning bg-yellow-50'; letterClass = 'text-warning'; }
+            else if (scorePts >= 45) { grade = 'B'; desc = 'Podwyższone Ryzyko'; colorClass = 'text-warning bg-yellow-50'; letterClass = 'text-warning'; }
+
+            return { alerts, grade, desc, colorClass, letterClass };
+        }
+
+        // ==========================================
+        // 3. UI UPDATERS
+        // ==========================================
+        const formatMoney = (val) => (val / 1000).toFixed(1) + ' mln PLN';
+        const formatPercent = (val) => val.toFixed(1) + '%';
+        const formatFloat = (val) => val.toFixed(2);
+
+        function updateUI() {
+            const data = currentState.data;
+            const m = calculateMetrics(data);
+            const scoreData = generateScoreAndAlerts(m);
+
+            // Update Tab 1 KPIs
+            document.getElementById('ui-kpi-revenue').textContent = formatMoney(m.rev);
+            document.getElementById('ui-kpi-equity').textContent = formatMoney(m.eq);
+            document.getElementById('ui-kpi-netprofit').textContent = formatMoney(m.net);
+            
+            const revTrendEl = document.getElementById('ui-kpi-revenue-trend');
+            revTrendEl.innerHTML = m.revGrowth >= 0 
+                ? `<span class="text-success font-bold mr-1">↑</span> <span class="text-success">${formatPercent(m.revGrowth)} r/r</span>`
+                : `<span class="text-danger font-bold mr-1">↓</span> <span class="text-danger">${formatPercent(m.revGrowth)} r/r</span>`;
+
+            const netTrendEl = document.getElementById('ui-kpi-netprofit-trend');
+            netTrendEl.innerHTML = m.netGrowth >= 0 
+                ? `<span class="text-success font-bold mr-1">↑</span> <span class="text-success">${formatPercent(m.netGrowth)} r/r</span>`
+                : `<span class="text-danger font-bold mr-1">↓</span> <span class="text-danger">${formatPercent(m.netGrowth)} r/r</span>`;
+
+            const lastCR = m.currentRatio[m.currentRatio.length - 1];
+            document.getElementById('ui-kpi-cr').textContent = formatFloat(lastCR);
+            const crStatusEl = document.getElementById('ui-kpi-cr-status');
+            if(lastCR >= 1.2) { crStatusEl.textContent = 'Poziom bezpieczny'; crStatusEl.className = 'text-xs mt-1 font-medium text-success'; }
+            else if(lastCR >= 1.0) { crStatusEl.textContent = 'Wymaga uwagi'; crStatusEl.className = 'text-xs mt-1 font-medium text-warning'; }
+            else { crStatusEl.textContent = 'Zagrożenie płynności'; crStatusEl.className = 'text-xs mt-1 font-medium text-danger'; }
+
+            // Update Score Card
+            const scoreEl = document.getElementById('ui-rating-score');
+            const descEl = document.getElementById('ui-rating-desc');
+            scoreEl.textContent = scoreData.grade;
+            scoreEl.className = `text-6xl font-black mb-2 ${scoreData.letterClass}`;
+            descEl.textContent = scoreData.desc;
+            descEl.className = `text-sm font-medium px-3 py-1 rounded-full ${scoreData.colorClass}`;
+
+            // Update Alerts
+            const alertsList = document.getElementById('ui-alerts-list');
+            const emptyAlerts = document.getElementById('ui-alerts-empty');
+            alertsList.innerHTML = '';
+            
+            if(scoreData.alerts.length === 0) {
+                alertsList.classList.add('hidden');
+                emptyAlerts.classList.remove('hidden');
+            } else {
+                alertsList.classList.remove('hidden');
+                emptyAlerts.classList.add('hidden');
+                scoreData.alerts.forEach(alertText => {
+                    const li = document.createElement('li');
+                    li.className = 'text-sm text-slate-700 flex items-start bg-red-50 p-3 rounded border border-red-100';
+                    li.innerHTML = `<span class="text-danger mr-2 mt-0.5">•</span> <span>${alertText}</span>`;
+                    alertsList.appendChild(li);
+                });
+            }
+
+            // Update Tab 2 Metrics
+            document.getElementById('ui-metric-dr').textContent = formatPercent(m.debtRatio);
+            document.getElementById('ui-metric-dr').className = m.debtRatio > 65 ? 'text-lg text-danger font-bold' : 'text-lg text-success font-bold';
+            
+            document.getElementById('ui-metric-icr').textContent = formatFloat(m.icr) + 'x';
+            document.getElementById('ui-metric-icr').className = m.icr < 3.0 ? 'text-lg text-warning font-bold' : 'text-lg text-success font-bold';
+
+            // Populate Detailed Table
+            const tbody = document.getElementById('ui-financial-table');
+            tbody.innerHTML = '';
+            const labels = ['Przychody ze sprzedaży', 'EBITDA', 'Zysk Netto', 'Kapitał Własny', 'Zobowiązania Krótkoterminowe'];
+            const keys = ['revenue', 'ebitda', 'netProfit', 'equity', 'liabilitiesST'];
+            
+            keys.forEach((key, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors';
+                let rowHtml = `<td class="px-5 py-3 border-b border-border font-medium text-slate-700">${labels[idx]}</td>`;
+                data.financials[key].forEach((val, i) => {
+                    const isLast = i === data.financials[key].length - 1;
+                    const cellClass = isLast ? 'font-bold text-primary bg-blue-50/30' : 'text-text-muted';
+                    // Format number with spaces
+                    const formatted = val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                    rowHtml += `<td class="px-5 py-3 border-b border-border text-right ${cellClass}">${formatted}</td>`;
+                });
+                tr.innerHTML = rowHtml;
+                tbody.appendChild(tr);
+            });
+
+            // Update Charts
+            renderCharts(data, m);
+        }
+
+        // ==========================================
+        // 4. CHART RENDERING (Chart.js)
+        // ==========================================
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.scale.grid.color = '#e2e8f0';
+
+        function renderCharts(data, m) {
+            const years = data.years;
+
+            // 1. Chart Summary (Revenue vs EBITDA)
+            const ctxSummary = document.getElementById('chart-summary').getContext('2d');
+            if(currentState.charts.summary) currentState.charts.summary.destroy();
+            currentState.charts.summary = new Chart(ctxSummary, {
+                type: 'bar',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'EBITDA (tys. PLN)',
+                            data: data.financials.ebitda,
+                            type: 'line',
+                            borderColor: '#f59e0b',
+                            backgroundColor: '#f59e0b',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Przychody (tys. PLN)',
+                            data: data.financials.revenue,
+                            backgroundColor: '#2563eb',
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+                        tooltip: { backgroundColor: '#0f172a', titleFont: { size: 13 }, bodyFont: { size: 13 }, padding: 10 }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Przychody' } },
+                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'EBITDA' } }
+                    }
+                }
+            });
+
+            // 2. Chart Liquidity Trends
+            const ctxLiq = document.getElementById('chart-liquidity').getContext('2d');
+            if(currentState.charts.liquidity) currentState.charts.liquidity.destroy();
+            currentState.charts.liquidity = new Chart(ctxLiq, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Wskaźnik Bieżący (CR)',
+                            data: m.currentRatio,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Wskaźnik Szybki (QR)',
+                            data: m.quickRatio,
+                            borderColor: '#10b981',
+                            backgroundColor: 'transparent',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        annotation: { // Conceptual line, drawn manually via Chart.js plugin normally, mimicking via scale config
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            suggestedMax: 2.5,
+                            grid: { color: (context) => context.tick.value === 1.2 ? '#ef4444' : '#e2e8f0', lineWidth: (context) => context.tick.value === 1.2 ? 2 : 1 }
+                        }
+                    }
+                }
+            });
+
+            // 3. Chart Debt Structure (Doughnut)
+            const ctxDebt = document.getElementById('chart-debt-structure').getContext('2d');
+            if(currentState.charts.debt) currentState.charts.debt.destroy();
+            
+            const lastEq = data.financials.equity[data.financials.equity.length - 1];
+            const lastSt = data.financials.liabilitiesST[data.financials.liabilitiesST.length - 1];
+            const lastLt = data.financials.liabilitiesLT[data.financials.liabilitiesLT.length - 1];
+
+            currentState.charts.debt = new Chart(ctxDebt, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Kapitał Własny', 'Zobow. Krótkoterminowe', 'Zobow. Długoterminowe'],
+                    datasets: [{
+                        data: [lastEq, lastSt, lastLt],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) { label += ': '; }
+                                    const total = context.chart._metasets[context.datasetIndex].total;
+                                    const value = context.raw;
+                                    const percentage = Math.round((value / total) * 100) + '%';
+                                    label += new Intl.NumberFormat('pl-PL').format(value) + ' kPLN (' + percentage + ')';
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 4. Chart Profitability Margins
+            const ctxProf = document.getElementById('chart-profitability').getContext('2d');
+            if(currentState.charts.profitability) currentState.charts.profitability.destroy();
+            currentState.charts.profitability = new Chart(ctxProf, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Marża EBITDA (%)',
+                            data: m.ebitdaMargin,
+                            borderColor: '#8b5cf6',
+                            backgroundColor: '#8b5cf6',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 5
+                        },
+                        {
+                            label: 'Marża Netto (ROS) (%)',
+                            data: m.ros,
+                            borderColor: '#3b82f6',
+                            backgroundColor: '#3b82f6',
+                            borderWidth: 2,
+                            borderDash: [3, 3],
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%` } }
+                    },
+                    scales: {
+                        y: { title: { display: true, text: 'Wartość %' }, suggestedMin: -5, suggestedMax: 15 }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // 5. INITIALIZATION & EVENTS
+        // ==========================================
+        function initApp() {
+            // Bind company selector
+            const select = document.getElementById('companySelect');
+            select.addEventListener('change', (e) => {
+                currentState.companyId = e.target.value;
+                currentState.data = db[currentState.companyId];
+                updateUI();
+            });
+
+            // Bind tabs
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active from all
+                    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active', 'text-brand', 'border-b-2', 'border-brand'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active to clicked
+                    tab.classList.add('active');
+                    const targetId = tab.getAttribute('data-tab');
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+
+            // Initial load
+            currentState.data = db[currentState.companyId];
+            updateUI();
+        }
+
+        // Run when DOM is ready
+        document.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+</html>
