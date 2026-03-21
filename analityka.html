@@ -1,752 +1,1703 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gwarancje.PRO - Panel Analityczny Underwritingu</title>
-
-    <!-- Chosen Palette: Slate & Blue (Aura Consulting / Gwarancje.PRO standards) -->
-    <!-- Application Structure Plan: The application uses a dashboard structure optimized for underwriting tasks. It features a top control bar to select the applicant company, followed by a tabbed interface. The tabs logically separate the analysis into: 1. Podsumowanie (Executive Summary & Scoring for quick go/no-go decisions), 2. Płynność i Zadłużenie (Key risk areas for construction bonds), 3. Rentowność i Operacje (Performance over time), 4. Portfel i Gwarancje (Construction-specific backlog risk). This structure allows the analyst to get an immediate overview and then drill down into specific financial risk categories without losing context. -->
-    <!-- Visualization & Content Choices: 
-         1. Goal: Inform -> Company Score & RAG Metrics -> Presentation: Large prominent text and color-coded cards (Red/Amber/Green) -> Interaction: Dynamic update based on company selection -> Justification: Underwriters need instant awareness of critical risks. Method: HTML/Tailwind.
-         2. Goal: Change/Trend -> Revenue vs Profitability -> Presentation: Bar/Line combo chart -> Interaction: Tooltips, updates with company -> Justification: Shows growth vs margin stability over time. Method: Chart.js Canvas.
-         3. Goal: Structure -> Assets vs Liabilities -> Presentation: Doughnut charts -> Interaction: Tooltips -> Justification: Quick visual check of capitalization and debt reliance. Method: Chart.js Canvas.
-         4. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Unicode used for icons. -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gwarancje.PRO — Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300..700;1,300..700&subset=latin-ext&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    :root {
+      --color-primary: #0f172a;
+      --color-primary-hover: #1e293b;
+      --color-surface: #ffffff;
+      --color-surface-offset: #f8fafc;
+      --color-border: #e2e8f0;
+      --color-text: #0f172a;
+      --color-text-muted: #64748b;
+      --color-text-faint: #94a3b8;
+      --color-error: #ef4444;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --text-xs: 0.75rem;
+      --text-sm: 0.875rem;
+      --text-base: 1rem;
+      --text-lg: 1.125rem;
+      --text-xl: 1.25rem;
+      --space-1: .25rem;
+      --space-2: .5rem;
+      --space-3: .75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      --font-body: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      --font-display: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    [data-theme="dark"] {
+      --color-primary: #f8fafc;
+      --color-primary-hover: #e2e8f0;
+      --color-surface: #0f172a;
+      --color-surface-offset: #1e293b;
+      --color-border: #334155;
+      --color-text: #f8fafc;
+      --color-text-muted: #94a3b8;
+      --color-text-faint: #64748b;
+    }
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#0f172a',
-                        'primary-hover': '#1e293b',
-                        surface: '#ffffff',
-                        'surface-offset': '#f8fafc',
-                        border: '#e2e8f0',
-                        text: '#0f172a',
-                        'text-muted': '#64748b',
-                        'text-faint': '#94a3b8',
-                        danger: '#ef4444',
-                        warning: '#f59e0b',
-                        success: '#10b981',
-                        brand: '#2563eb'
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            background-color: var(--color-surface-offset, #f8fafc);
-            color: var(--color-text, #0f172a);
-        }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--color-surface-offset);
+      color: var(--color-text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* Typografia */
+    h1, h2, h3 { font-family: var(--font-display); font-weight: 600; color: var(--color-text); }
+    .page-title { font-size: 1.75rem; letter-spacing: -0.02em; margin-bottom: var(--space-2); }
+    .page-subtitle { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-8); }
+    
+    /* Layout */
+    .app-container { display: flex; min-height: 100vh; }
+    
+    /* Sidebar */
+    .sidebar {
+      width: 260px; background: var(--color-surface); border-right: 1px solid var(--color-border);
+      display: flex; flex-direction: column; padding: var(--space-6) var(--space-4);
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-lg);
+      font-weight: 700; color: var(--color-text); margin-bottom: var(--space-8); px: var(--space-2);
+    }
+    .nav-section { margin-bottom: var(--space-6); }
+    .nav-label {
+      font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+      color: var(--color-text-faint); margin-bottom: var(--space-2); padding-left: var(--space-3);
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-md); color: var(--color-text-muted); font-size: var(--text-sm);
+      font-weight: 500; text-decoration: none; transition: var(--transition); border: none; background: transparent;
+      cursor: pointer; text-align: left;
+    }
+    .nav-item:hover { background: var(--color-surface-offset); color: var(--color-text); }
+    .nav-item.active { background: var(--color-primary); color: var(--color-surface); }
+    
+    /* Main Content */
+    .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar {
+      height: 64px; background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-8);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar-right { display: flex; align-items: center; gap: var(--space-4); }
+    
+    /* Content Area */
+    .content-area { padding: var(--space-8); max-width: 1200px; margin: 0 auto; width: 100%; }
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Cards & KPI */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8); }
+    .kpi-card {
+      background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      padding: var(--space-5);
+    }
+    .kpi-label { font-size: var(--text-sm); color: var(--color-text-muted); font-weight: 500; margin-bottom: var(--space-2); }
+    .kpi-value { font-size: 2rem; font-weight: 600; font-family: var(--font-display); letter-spacing: -0.02em; line-height: 1; margin-bottom: var(--space-1); }
+    .kpi-sub { font-size: var(--text-xs); color: var(--color-text-faint); }
+    
+    /* Tables */
+    .table-wrap { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: var(--space-8); overflow: hidden; }
+    .table-toolbar { display: flex; justify-content: space-between; align-items: center; padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); }
+    .table-toolbar h3 { font-size: var(--text-base); margin: 0; }
+    .tbl { width: 100%; border-collapse: collapse; text-align: left; }
+    .tbl th, .tbl td { padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-border); font-size: var(--text-sm); }
+    .tbl th { background: var(--color-surface-offset); font-weight: 600; color: var(--color-text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: var(--color-surface-offset); }
+    .tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
+    
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .badge-active { background: oklch(from var(--color-success) l c h / 0.1); color: var(--color-success); }
+    .badge-expiring { background: oklch(from var(--color-warning) l c h / 0.1); color: var(--color-warning); }
+    .badge-expired { background: oklch(from var(--color-error) l c h / 0.1); color: var(--color-error); }
+    .badge-admin { background: oklch(from var(--color-primary) l c h / 0.1); color: var(--color-primary); }
+    
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+      padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm);
+      font-weight: 500; cursor: pointer; transition: var(--transition); border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--color-primary); color: var(--color-surface); }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-ghost { background: transparent; color: var(--color-text); border-color: var(--color-border); }
+    .btn-ghost:hover { background: var(--color-surface-offset); }
+    .btn-danger { background: oklch(from var(--color-error) l c h / 0.1); color: var(--color-error); }
+    .btn-danger:hover { background: oklch(from var(--color-error) l c h / 0.2); }
+    .btn-admin { background: #6366f1; color: white; }
+    .btn-admin:hover { background: #4f46e5; }
+    .btn-icon { padding: var(--space-2); background: transparent; border: none; color: var(--color-text-muted); cursor: pointer; border-radius: var(--radius-sm); }
+    .btn-icon:hover { background: var(--color-surface-offset); color: var(--color-text); }
+    
+    /* Forms */
+    .form-field { margin-bottom: var(--space-4); }
+    .form-row { display: flex; gap: var(--space-4); }
+    .form-row .form-field { flex: 1; }
+    .form-label { display: block; font-size: var(--text-sm); font-weight: 500; margin-bottom: var(--space-1); color: var(--color-text); }
+    .form-input, .form-select {
+      width: 100%; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); font-family: inherit; font-size: var(--text-sm);
+      background: var(--color-surface); color: var(--color-text); transition: border-color var(--transition);
+    }
+    .form-input:focus, .form-select:focus { outline: none; border-color: var(--color-primary); }
+    .form-hint { font-size: 11px; color: var(--color-text-faint); margin-top: 4px; display: block; }
+    
+    /* Modals */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px);
+      display: none; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { display: flex; opacity: 1; }
+    .modal {
+      background: var(--color-surface); border-radius: var(--radius-lg); width: 100%; max-width: 500px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      transform: scale(0.95); transition: transform 0.2s; max-height: 90vh; display: flex; flex-direction: column;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: var(--text-lg); margin: 0; }
+    .modal-body { padding: var(--space-5); overflow-y: auto; }
+    .modal-footer { padding: var(--space-4) var(--space-5); border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: var(--space-3); background: var(--color-surface-offset); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+    
+    /* Utilities */
+    .empty { padding: var(--space-8); text-align: center; color: var(--color-text-muted); }
+    .limit-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-4); }
+    .limit-card-header { display: flex; justify-content: space-between; margin-bottom: var(--space-3); }
+    .limit-tu-name { font-weight: 600; font-size: var(--text-base); }
+    .limit-bar-track { height: 8px; background: var(--color-surface-offset); border-radius: 4px; overflow: hidden; margin-bottom: var(--space-2); }
+    .limit-bar-fill { height: 100%; background: var(--color-success); border-radius: 4px; transition: width 0.3s ease; }
+    .limit-bar-fill.warn { background: var(--color-warning); }
+    .limit-bar-fill.danger { background: var(--color-error); }
+    .limit-nums { display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--color-text-muted); }
+    .timeline-item { display: flex; gap: var(--space-3); padding-bottom: var(--space-4); border-left: 2px solid var(--color-border); margin-left: var(--space-2); padding-left: var(--space-4); position: relative; }
+    .timeline-item:last-child { border-left-color: transparent; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-border); position: absolute; left: -6px; top: 4px; }
+    .dot-active { background: var(--color-success); }
+    .dot-expiring { background: var(--color-warning); }
+    .dot-expired { background: var(--color-error); }
+    
+    /* Auth */
+    #auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--color-surface-offset); }
+    .auth-card { background: var(--color-surface); padding: var(--space-8); border-radius: var(--radius-lg); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+    .auth-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: var(--space-6); }
+    .auth-logo span { color: var(--color-text-muted); font-weight: 400; }
+    .auth-error { color: var(--color-error); font-size: var(--text-sm); margin-bottom: var(--space-4); text-align: center; display: none; }
 
-        /* Strict Chart Container Styling as per requirements */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 100%; /* Adapts to grid cell */
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-            max-height: 400px;
-        }
+    /* === ANALITYKA STYLES === */
+    .analityka-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); align-items: start; }
+    @media (max-width: 1024px) { .analityka-grid { grid-template-columns: 1fr; } }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper input { padding-right: 1.5rem; text-align: right; width: 100%; min-width: 70px; }
+    .input-wrapper .currency { position: absolute; right: 0.5rem; font-size: 0.75rem; color: var(--color-text-muted); pointer-events: none; }
+    .score-card { display: flex; align-items: center; justify-content: space-between; padding: var(--space-5); border-radius: var(--radius-lg); background-color: var(--color-surface-offset); border: 1px solid var(--color-border); }
+    .score-grade { font-size: 2.5rem; font-weight: 700; line-height: 1; padding: var(--space-3) var(--space-5); border-radius: var(--radius-md); }
+    .results-hidden { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: var(--color-text-muted); text-align: center; gap: var(--space-4); padding: var(--space-8); }
+    .bg-success { background-color: var(--color-success); color: var(--color-surface); }
+    .bg-warning { background-color: var(--color-warning); color: var(--color-surface); }
+    .bg-error { background-color: var(--color-error); color: var(--color-surface); }
 
-        .chart-container-small {
-            position: relative;
-            width: 100%;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 250px;
-            max-height: 250px;
-        }
-
-        /* Custom Scrollbar for clean look */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        .tab-btn.active {
-            border-bottom: 2px solid #2563eb;
-            color: #2563eb;
-            font-weight: 600;
-        }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+  </style>
 </head>
-<body class="font-sans antialiased h-screen flex flex-col overflow-hidden">
+<body>
 
-    <!-- Top Navigation / Header -->
-    <header class="bg-primary text-white border-b border-slate-700 shrink-0">
-        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <span class="text-2xl" aria-hidden="true">🛡️</span>
-                <div>
-                    <h1 class="font-bold text-lg leading-tight tracking-wide">Gwarancje.PRO</h1>
-                    <p class="text-xs text-slate-400 uppercase tracking-widest">Underwriting Finansowy</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center space-x-4">
-                <div class="flex flex-col items-end">
-                    <label for="companySelect" class="text-xs text-slate-400 mb-1">Analizowany podmiot:</label>
-                    <select id="companySelect" class="bg-primary-hover border border-slate-600 text-white text-sm rounded px-3 py-1 focus:outline-none focus:border-brand transition-colors">
-                        <option value="budex">Budex Sp. z o.o. (NIP: 1234567890)</option>
-                        <option value="infrastruktura">Infrastruktura S.A. (NIP: 0987654321)</option>
-                    </select>
-                </div>
-                <button class="bg-brand hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors shadow-sm">
-                    🖨️ Generuj Raport
-                </button>
-            </div>
+  <!-- Ekran Logowania -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">Gwarancje<span>.PRO</span></div>
+      <div class="auth-error" id="auth-error"></div>
+      <div class="form-field">
+        <label class="form-label" for="auth-email">Email</label>
+        <input class="form-input" id="auth-email" type="email" placeholder="adres@email.com">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="auth-pass">Hasło</label>
+        <input class="form-input" id="auth-pass" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" id="btn-login" style="width: 100%; margin-top: var(--space-2)">Zaloguj się</button>
+    </div>
+  </div>
+
+  <!-- Główna Aplikacja -->
+  <div id="app" class="app-container" style="display:none">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="3" width="10" height="10" rx="2" fill="var(--color-primary)"/>
+          <rect x="15" y="3" width="6" height="10" rx="2" fill="var(--color-primary)" opacity=".5"/>
+          <rect x="3" y="15" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".5"/>
+          <rect x="15" y="15" width="10" height="10" rx="2" fill="var(--color-primary)" opacity=".9"/>
+        </svg>
+        Gwarancje<span>.PRO</span>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Przegląd</div>
+        <button class="nav-item active" data-page="dashboard" onclick="navTo('dashboard')"><i data-lucide="layout-dashboard" width="18" height="18"></i> Pulpit</button>
+        <button class="nav-item" data-page="bonds" onclick="navTo('bonds')"><i data-lucide="file-text" width="18" height="18"></i> Rejestr Gwarancji</button>
+        <button class="nav-item" data-page="limits" onclick="navTo('limits')"><i data-lucide="pie-chart" width="18" height="18"></i> Limity TU</button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Zestawienia</div>
+        <button class="nav-item" data-page="terminarz" onclick="navTo('terminarz')"><i data-lucide="calendar" width="18" height="18"></i> Terminarz</button>
+        <button class="nav-item" data-page="skladki" onclick="navTo('skladki')"><i data-lucide="calculator" width="18" height="18"></i> Składki</button>
+      </div>
+      <div class="nav-section" id="nav-admin" style="display:none">
+        <div class="nav-label" style="color:var(--color-warning)">Administracja</div>
+        <button class="nav-item" data-page="admin-clients" onclick="navTo('admin-clients')"><i data-lucide="building-2" width="18" height="18"></i> Klienci</button>
+        <button class="nav-item" data-page="admin-insurers" onclick="navTo('admin-insurers')"><i data-lucide="shield" width="18" height="18"></i> Ubezpieczyciele</button>
+        <button class="nav-item" data-page="admin-users" onclick="navTo('admin-users')"><i data-lucide="users" width="18" height="18"></i> Użytkownicy</button>
+        <button class="nav-item" data-page="analityka" onclick="navTo('analityka')"><i data-lucide="bar-chart-2" width="18" height="18"></i> Analityka Fin.</button>
+      </div>
+    </aside>
+
+    <div class="main-content">
+      
+      <!-- Topbar -->
+      <header class="topbar">
+        <div></div>
+        <div class="topbar-right">
+          <span id="topbar-badge"></span>
+          <button class="btn btn-ghost" id="btn-theme" title="Zmień motyw"><i data-lucide="moon" width="18" height="18"></i></button>
+          <button class="btn btn-ghost" id="btn-logout" title="Wyloguj"><i data-lucide="log-out" width="18" height="18"></i></button>
         </div>
-    </header>
+      </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 w-full max-w-7xl mx-auto">
+      <main class="content-area">
         
-        <!-- Application Context Intro -->
-        <div class="mb-6 bg-blue-50 border-l-4 border-brand p-4 rounded shadow-sm">
-            <h2 class="text-lg font-bold text-primary mb-1">Oceny Zdolności Gwarancyjnej</h2>
-            <p class="text-sm text-text-muted">
-                Narzędzie to służy do zaawansowanej analizy sprawozdań finansowych firm budowlanych ubiegających się o limity gwarancyjne. 
-                Prezentuje syntetyczną ocenę ryzyka (Scoring), analizę trendów (Przychody, EBITDA) oraz kluczowe wskaźniki płynności i zadłużenia, 
-                które są krytyczne dla weryfikacji zdolności firmy do realizacji kontraktów i pokrycia ewentualnych roszczeń.
-            </p>
+        <!-- PAGE: DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+          <h1 class="page-title">Pulpit</h1>
+          <p class="page-subtitle">Podsumowanie portfela gwarancji</p>
+          <div class="kpi-grid" id="kpi-container"></div>
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:var(--space-8)">
+            <div>
+              <div class="table-wrap">
+                <div class="table-toolbar">
+                  <h3>Ostatnio dodane gwarancje</h3>
+                  <button class="btn btn-primary" onclick="openModal('modal-bond')"><i data-lucide="plus" width="16" height="16"></i> Nowa gwarancja</button>
+                </div>
+                <div style="overflow-x:auto">
+                  <table class="tbl">
+                    <thead><tr><th>Nr</th><th>Rodzaj</th><th>Kontrakt</th><th class="num">Suma</th><th>Status</th></tr></thead>
+                    <tbody id="dash-bonds-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="table-wrap" style="padding:var(--space-5)">
+                <h3 style="margin-bottom:var(--space-4);font-size:var(--text-base)">Najbliższe wygaśnięcia</h3>
+                <div id="dash-timeline"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="flex space-x-6 border-b border-border mb-6">
-            <button class="tab-btn active pb-3 text-sm font-medium text-text-muted hover:text-text transition-colors" data-tab="tab-summary">
-                📊 Podsumowanie
-            </button>
-            <button class="tab-btn pb-3 text-sm font-medium text-text-muted hover:text-text transition-colors" data-tab="tab-liquidity">
-                💧 Płynność i Zadłużenie
-            </button>
-            <button class="tab-btn pb-3 text-sm font-medium text-text-muted hover:text-text transition-colors" data-tab="tab-profitability">
-                📈 Rentowność i Wyniki
-            </button>
-        </nav>
-
-        <!-- TAB 1: Podsumowanie -->
-        <section id="tab-summary" class="tab-content active">
-            <div class="mb-4">
-                <h3 class="text-xl font-bold text-primary">Ocena Syntetyczna i Główne Ryzyka</h3>
-                <p class="text-sm text-text-muted">Widok ten zapewnia szybką informację o ogólnym standingu finansowym podmiotu. Algorytm wylicza rating na podstawie kluczowych wskaźników z ostatniego zamkniętego roku obrotowego. Zwróć szczególną uwagę na sekcję automatycznych alertów underwritingowych.</p>
+        <!-- PAGE: REJESTR GWARANCJI -->
+        <div class="page" id="page-bonds">
+          <h1 class="page-title">Rejestr Gwarancji</h1>
+          <p class="page-subtitle">Wszystkie gwarancje w portfelu</p>
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <h3>Pełna lista</h3>
+              <button class="btn btn-primary" onclick="openModal('modal-bond')"><i data-lucide="plus" width="16" height="16"></i> Nowa gwarancja</button>
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Scoring Card -->
-                <div class="bg-surface rounded-lg shadow-sm border border-border p-6 flex flex-col justify-center items-center relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-brand"></div>
-                    <span class="text-sm font-semibold text-text-muted uppercase tracking-wider mb-2">Rating Gwarancyjny</span>
-                    <div id="ui-rating-score" class="text-6xl font-black text-primary mb-2">A-</div>
-                    <div id="ui-rating-desc" class="text-sm font-medium text-success bg-green-50 px-3 py-1 rounded-full">Niskie Ryzyko</div>
-                    <p class="text-xs text-text-faint text-center mt-4 border-t border-border pt-3">
-                        Zdolność do obsługi limitów kontraktowych jest oceniana jako stabilna.
-                    </p>
-                </div>
-
-                <!-- KPI Cards -->
-                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="bg-surface rounded-lg shadow-sm border border-border p-4">
-                        <span class="text-xs text-text-muted font-medium uppercase">Przychody Netto (Ost. rok)</span>
-                        <div class="text-2xl font-bold text-primary mt-1" id="ui-kpi-revenue">0 mln PLN</div>
-                        <div class="text-xs font-medium mt-1 flex items-center" id="ui-kpi-revenue-trend">
-                            <span class="text-success mr-1">↗</span> <span class="text-success">0% r/r</span>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-surface rounded-lg shadow-sm border border-border p-4">
-                        <span class="text-xs text-text-muted font-medium uppercase">Zysk Netto (Ost. rok)</span>
-                        <div class="text-2xl font-bold text-primary mt-1" id="ui-kpi-netprofit">0 mln PLN</div>
-                        <div class="text-xs font-medium mt-1 flex items-center" id="ui-kpi-netprofit-trend">
-                            <span class="text-danger mr-1">↘</span> <span class="text-danger">0% r/r</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-surface rounded-lg shadow-sm border border-border p-4">
-                        <span class="text-xs text-text-muted font-medium uppercase">Kapitał Własny</span>
-                        <div class="text-2xl font-bold text-primary mt-1" id="ui-kpi-equity">0 mln PLN</div>
-                        <div class="text-xs text-text-faint mt-1">Gwarancja pokrycia roszczeń</div>
-                    </div>
-
-                    <div class="bg-surface rounded-lg shadow-sm border border-border p-4">
-                        <span class="text-xs text-text-muted font-medium uppercase">Wskaźnik Bieżący Płynności</span>
-                        <div class="text-2xl font-bold text-primary mt-1 flex items-baseline gap-2">
-                            <span id="ui-kpi-cr">0.00</span>
-                            <span class="text-sm font-normal text-text-muted">optimum > 1.2</span>
-                        </div>
-                        <div class="text-xs mt-1 font-medium" id="ui-kpi-cr-status">...</div>
-                    </div>
-                </div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Nr gwarancji</th><th>Rodzaj</th><th>Kontrakt / Beneficjent</th>
+                  <th>TU</th><th>Okres</th><th class="num">Suma</th><th class="num">Składka</th><th>Status</th><th></th>
+                </tr></thead>
+                <tbody id="bonds-tbody"></tbody>
+              </table>
             </div>
+          </div>
+        </div>
 
-            <!-- Alerts & Main Chart -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-1 flex flex-col gap-4">
-                    <div class="bg-surface rounded-lg shadow-sm border border-border p-5 h-full">
-                        <h4 class="font-bold text-primary mb-4 flex items-center">
-                            <span class="mr-2">⚠️</span> Alerty Underwritingowe
-                        </h4>
-                        <ul id="ui-alerts-list" class="space-y-3">
-                            <!-- Populated by JS -->
-                        </ul>
-                        <div id="ui-alerts-empty" class="hidden text-sm text-text-muted italic text-center py-4">
-                            Brak istotnych zagrożeń dla tego podmiotu.
-                        </div>
-                    </div>
-                </div>
+        <!-- PAGE: LIMITY -->
+        <div class="page" id="page-limits">
+          <h1 class="page-title">Limity Ubezpieczeniowe</h1>
+          <p class="page-subtitle">Wykorzystanie umów limitów (UL)</p>
+          <div style="max-width:800px" id="limits-container"></div>
+        </div>
 
-                <div class="lg:col-span-2 bg-surface rounded-lg shadow-sm border border-border p-5">
-                    <h4 class="font-bold text-primary mb-1">Dynamika Przychodów i Wyniku EBITDA</h4>
-                    <p class="text-xs text-text-muted mb-4">Wizualizacja długoterminowego trendu w celu oceny stabilności biznesowej firmy budowlanej.</p>
-                    <div class="chart-container">
-                        <canvas id="chart-summary"></canvas>
-                    </div>
-                </div>
+        <!-- PAGE: TERMINARZ -->
+        <div class="page" id="page-terminarz">
+          <h1 class="page-title">Terminarz</h1>
+          <p class="page-subtitle">Gwarancje posortowane wg daty zakończenia</p>
+          <div class="table-wrap">
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Nr</th><th>Kontrakt / Beneficjent</th><th>Rodzaj</th><th>TU</th><th>Od</th><th>Do</th><th class="num">Suma</th>
+                </tr></thead>
+                <tbody id="terminarz-tbody"></tbody>
+              </table>
             </div>
-        </section>
+          </div>
+        </div>
 
-        <!-- TAB 2: Płynność i Zadłużenie -->
-        <section id="tab-liquidity" class="tab-content">
-            <div class="mb-4">
-                <h3 class="text-xl font-bold text-primary">Struktura Płynności i Poziom Zadłużenia</h3>
-                <p class="text-sm text-text-muted">Branża budowlana charakteryzuje się wysokim zapotrzebowaniem na kapitał obrotowy. Poniższe wykresy i wskaźniki pozwalają ocenić, czy firma posiada wystarczające zasoby płynne do regulowania krótkoterminowych zobowiązań podwykonawców, oraz jak bardzo opiera się na finansowaniu dłużnym zewnętrznym.</p>
+        <!-- PAGE: SKŁADKI -->
+        <div class="page" id="page-skladki">
+          <h1 class="page-title">Zestawienie Składek</h1>
+          <p class="page-subtitle">Koszty obsługi gwarancji</p>
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-label">Łączny koszt składek</div><div class="kpi-value" id="skladki-total">0 PLN</div></div>
+          </div>
+          <div class="table-wrap">
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Nr</th><th>Kontrakt</th><th>Rodzaj</th><th class="num">Dni</th><th class="num">Stawka</th><th class="num">Suma</th><th class="num">Składka (PLN)</th>
+                </tr></thead>
+                <tbody id="skladki-tbody"></tbody>
+              </table>
             </div>
+          </div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div class="bg-surface rounded-lg shadow-sm border border-border p-5">
-                    <h4 class="font-bold text-primary mb-1">Wskaźniki Płynności (Trend 5-letni)</h4>
-                    <p class="text-xs text-text-muted mb-4">CR (Bieżąca) powyżej 1.2 to standard. QR (Szybka) wyklucza zapasy/produkcję w toku.</p>
-                    <div class="chart-container">
-                        <canvas id="chart-liquidity"></canvas>
-                    </div>
-                </div>
-
-                <div class="bg-surface rounded-lg shadow-sm border border-border p-5">
-                    <h4 class="font-bold text-primary mb-1">Struktura Finansowania (Ostatni rok)</h4>
-                    <p class="text-xs text-text-muted mb-4">Zestawienie kapitałów własnych z zobowiązaniami (dźwignia finansowa).</p>
-                    <div class="chart-container-small">
-                        <canvas id="chart-debt-structure"></canvas>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-border grid grid-cols-2 gap-4 text-center">
-                        <div>
-                            <span class="block text-xs text-text-muted">Zadłużenie Ogólne</span>
-                            <strong class="text-lg text-primary" id="ui-metric-dr">0%</strong>
-                            <span class="block text-[10px] text-text-faint">(Norma: < 65%)</span>
-                        </div>
-                        <div>
-                            <span class="block text-xs text-text-muted">Pokrycie Odsetek (ICR)</span>
-                            <strong class="text-lg text-primary" id="ui-metric-icr">0.0x</strong>
-                            <span class="block text-[10px] text-text-faint">(Norma: > 3.0x)</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- PAGE: ADMIN - KLIENCI -->
+        <div class="page" id="page-admin-clients">
+          <h1 class="page-title">Klienci</h1>
+          <p class="page-subtitle">Zarządzanie firmami korzystającymi z systemu</p>
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <h3>Lista klientów</h3>
+              <button class="btn btn-admin" onclick="openModal('modal-client')"><i data-lucide="plus" width="16" height="16"></i> Dodaj klienta</button>
             </div>
-        </section>
-
-        <!-- TAB 3: Rentowność -->
-        <section id="tab-profitability" class="tab-content">
-            <div class="mb-4">
-                <h3 class="text-xl font-bold text-primary">Analiza Rentowności i Marż</h3>
-                <p class="text-sm text-text-muted">Niskie marże to standard w budownictwie (często 2-5%), jednak ich wysoka zmienność (wolatility) może wskazywać na problemy z wyceną kontraktów lub zarządzaniem kosztami na budowach. Stabilna marża EBITDA jest kluczowa dla bezpiecznego underwritingu.</p>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Firma</th><th>NIP / REGON</th><th class="num">Gwarancje</th><th class="num">Suma zaangażowana</th><th>Wygasające</th><th></th>
+                </tr></thead>
+                <tbody id="clients-tbody"></tbody>
+              </table>
             </div>
+          </div>
+        </div>
 
-            <div class="bg-surface rounded-lg shadow-sm border border-border p-5 mb-6">
-                <h4 class="font-bold text-primary mb-1">Marże: Brutto, EBITDA i Netto</h4>
-                <p class="text-xs text-text-muted mb-4">Procentowy udział wyników na poszczególnych poziomach w stosunku do przychodów ze sprzedaży.</p>
-                <div class="chart-container">
-                    <canvas id="chart-profitability"></canvas>
-                </div>
+        <!-- PAGE: ADMIN - UBEZPIECZYCIELE -->
+        <div class="page" id="page-admin-insurers">
+          <h1 class="page-title">Ubezpieczyciele i UL</h1>
+          <p class="page-subtitle">Słownik TU i zdefiniowane umowy limitów per klient</p>
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <h3>Lista TU i Umów Limitów</h3>
+              <button class="btn btn-admin" onclick="openModal('modal-insurer')"><i data-lucide="plus" width="16" height="16"></i> Dodaj wpis</button>
             </div>
-
-            <!-- Detailed Table View -->
-            <div class="bg-surface rounded-lg shadow-sm border border-border overflow-hidden">
-                <div class="px-5 py-3 border-b border-border bg-slate-50">
-                    <h4 class="font-bold text-primary text-sm">Szczegółowe dane finansowe (tys. PLN)</h4>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-50 text-text-muted text-xs uppercase">
-                            <tr>
-                                <th class="px-5 py-3 border-b border-border">Pozycja RZiS</th>
-                                <th class="px-5 py-3 border-b border-border text-right" id="th-year-4">2019</th>
-                                <th class="px-5 py-3 border-b border-border text-right" id="th-year-3">2020</th>
-                                <th class="px-5 py-3 border-b border-border text-right" id="th-year-2">2021</th>
-                                <th class="px-5 py-3 border-b border-border text-right" id="th-year-1">2022</th>
-                                <th class="px-5 py-3 border-b border-border text-right font-bold text-primary" id="th-year-0">2023</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ui-financial-table" class="divide-y divide-border">
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>TU</th><th>Klient</th><th class="num">Limit UL</th><th class="num">Stawka bazowa</th><th class="num">Składka min.</th><th>Nr UL</th><th>Okres UL</th><th></th>
+                </tr></thead>
+                <tbody id="insurers-tbody"></tbody>
+              </table>
             </div>
-        </section>
+          </div>
+        </div>
 
-    </main>
+        <!-- PAGE: ADMIN - UŻYTKOWNICY -->
+        <div class="page" id="page-admin-users">
+          <h1 class="page-title">Użytkownicy</h1>
+          <p class="page-subtitle">Przypisanie kont do firm klientów</p>
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <h3>Lista użytkowników</h3>
+              <button class="btn btn-admin" id="btn-invite-user"><i data-lucide="user-plus" width="16" height="16"></i> Zaproś użytkownika</button>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr><th>Email / ID użytkownika</th><th>Klient</th><th>Rola</th><th></th></tr></thead>
+                <tbody id="users-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
-    <!-- Application Logic -->
-    <script>
-        // ==========================================
-        // 1. DATA STORE (Mock Data for 2 Companies)
-        // ==========================================
-        const db = {
-            budex: {
-                name: "Budex Sp. z o.o.",
-                years: ["2019", "2020", "2021", "2022", "2023"],
-                financials: {
-                    revenue: [120500, 135000, 150200, 142000, 168000], // in kPLN
-                    ebitda: [8500, 9200, 11500, 7800, 12400],
-                    netProfit: [5200, 6100, 8300, 4100, 7800],
-                    equity: [25000, 31100, 39400, 43500, 51300],
-                    liabilitiesST: [45000, 52000, 58000, 65000, 71000],
-                    liabilitiesLT: [12000, 10500, 9000, 15000, 13000],
-                    currentAssets: [58000, 65000, 76000, 79000, 95000],
-                    inventory: [15000, 18000, 22000, 25000, 28000], // Zapasy i produkcja w toku
-                    interestExpense: [800, 750, 700, 1200, 1800]
-                }
-            },
-            infrastruktura: {
-                name: "Infrastruktura S.A.",
-                years: ["2019", "2020", "2021", "2022", "2023"],
-                financials: {
-                    revenue: [350000, 320000, 290000, 310000, 280000],
-                    ebitda: [25000, 18000, 12000, 15000, 8000],
-                    netProfit: [16000, 11000, 5000, 7500, 1200],
-                    equity: [85000, 96000, 101000, 108500, 109700],
-                    liabilitiesST: [150000, 165000, 180000, 175000, 190000],
-                    liabilitiesLT: [40000, 35000, 30000, 25000, 45000],
-                    currentAssets: [165000, 170000, 185000, 190000, 195000],
-                    inventory: [50000, 60000, 75000, 85000, 95000],
-                    interestExpense: [2500, 2200, 1800, 2000, 4500]
-                }
-            }
-        };
+        <!-- PAGE: PANEL KLIENTA -->
+        <div class="page" id="page-tenant-detail">
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
+            <button class="btn btn-ghost" onclick="navTo('admin-clients')" style="padding:var(--space-1) var(--space-3)"><i data-lucide="arrow-left" width="14" height="14"></i> Klienci</button>
+            <h1 class="page-title" id="tenant-detail-title" style="margin-bottom:0">—</h1>
+          </div>
+          <p class="page-subtitle" id="tenant-detail-meta"></p>
+          <div class="kpi-grid" id="tenant-detail-kpi"></div>
+          <div class="table-wrap">
+            <div class="table-toolbar"><h3>Gwarancje klienta</h3></div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Nr</th><th>Rodzaj</th><th>Kontrakt / Beneficjent</th>
+                  <th>TU</th><th>Okres</th><th class="num">Suma</th><th class="num">Składka</th><th>Status</th>
+                </tr></thead>
+                <tbody id="tenant-detail-bonds-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="limit-grid" id="tenant-detail-limits"></div>
+        </div>
 
-        // ==========================================
-        // 2. STATE MANAGEMENT & CALCULATIONS
-        // ==========================================
-        let currentState = {
-            companyId: 'budex',
-            data: null,
-            charts: {}
-        };
+        <!-- PAGE: PANEL UBEZPIECZYCIELA -->
+        <div class="page" id="page-insurer-detail">
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
+            <button class="btn btn-ghost" onclick="navTo('admin-insurers')" style="padding:var(--space-1) var(--space-3)"><i data-lucide="arrow-left" width="14" height="14"></i> Ubezpieczyciele</button>
+            <h1 class="page-title" id="insurer-detail-title" style="margin-bottom:0">—</h1>
+          </div>
+          <p class="page-subtitle" id="insurer-detail-meta"></p>
+          <div class="kpi-grid" id="insurer-detail-kpi"></div>
+          <div class="table-wrap">
+            <div class="table-toolbar"><h3>Gwarancje w ramach tej UL</h3></div>
+            <div style="overflow-x:auto">
+              <table class="tbl">
+                <thead><tr>
+                  <th>Nr</th><th>Rodzaj</th><th>Kontrakt / Beneficjent</th>
+                  <th>Okres</th><th class="num">Suma</th><th class="num">Składka</th><th>Status</th>
+                </tr></thead>
+                <tbody id="insurer-detail-bonds-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
-        function calculateMetrics(data) {
-            const f = data.financials;
-            const lastIdx = f.revenue.length - 1;
-            const prevIdx = lastIdx - 1;
-
-            // Current Year
-            const rev = f.revenue[lastIdx];
-            const revPrev = f.revenue[prevIdx];
-            const revGrowth = ((rev - revPrev) / revPrev) * 100;
-
-            const net = f.netProfit[lastIdx];
-            const netPrev = f.netProfit[prevIdx];
-            const netGrowth = ((net - netPrev) / Math.abs(netPrev)) * 100;
-
-            const eq = f.equity[lastIdx];
+        <!-- PAGE: ANALITYKA -->
+        <div class="page" id="page-analityka">
+          <h1 class="page-title">Analityka Finansowa</h1>
+          <p class="page-subtitle">Kalkulator underwritingowy do oceny standingu firm budowlanych</p>
+          
+          <div class="analityka-grid">
             
-            // Liquidity
-            const currentRatio = f.currentAssets.map((ca, i) => ca / f.liabilitiesST[i]);
-            const quickRatio = f.currentAssets.map((ca, i) => (ca - f.inventory[i]) / f.liabilitiesST[i]);
-            
-            // Debt
-            const totalDebt = f.liabilitiesST[lastIdx] + f.liabilitiesLT[lastIdx];
-            const totalAssets = eq + totalDebt;
-            const debtRatio = (totalDebt / totalAssets) * 100;
-            
-            // Interest Coverage Ratio (EBITDA / Interest)
-            const icr = f.ebitda[lastIdx] / f.interestExpense[lastIdx];
+            <!-- LEWA STRONA: FORMULARZ DANYCH -->
+            <div class="table-wrap" style="margin-bottom: 0;">
+              <div class="table-toolbar">
+                <h3 style="display:flex;align-items:center;gap:8px"><i data-lucide="calculator" width="18" height="18"></i> Dane Finansowe (tys. PLN)</h3>
+              </div>
+              <form id="finance-form">
+                <div style="overflow-x:auto;">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>Pozycja bilansu / RZiS</th>
+                        <th class="num" style="width: 100px;">Rok N-2</th>
+                        <th class="num" style="width: 100px;">Rok N-1</th>
+                        <th class="num" style="width: 100px;">Bieżący (N)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><div style="font-weight:500">Przychody netto ze sprzedaży</div><div style="font-size:11px;color:var(--color-text-faint)">Podstawa oceny skali działalności</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="rev-2" value="12000"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="rev-1" value="14500"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="rev-0" value="16000"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zysk EBITDA</div><div style="font-size:11px;color:var(--color-text-faint)">Zysk operacyjny + amortyzacja</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ebitda-2" value="950"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ebitda-1" value="1100"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ebitda-0" value="1350"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zysk (strata) netto</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="net-2" value="450"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="net-1" value="620"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="net-0" value="810"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Kapitał Własny</div><div style="font-size:11px;color:var(--color-text-faint)">Zdolność do absorpcji strat</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="eq-2" value="4500"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="eq-1" value="5120"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="eq-0" value="5930"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zobowiązania Krótkoterminowe</div><div style="font-size:11px;color:var(--color-text-faint)">Zapadające w ciągu 12 mies.</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="lst-2" value="6000"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="lst-1" value="6800"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="lst-0" value="7200"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zobowiązania Długoterminowe</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="llt-2" value="1500"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="llt-1" value="1200"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="llt-0" value="1000"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Aktywa Obrotowe</div><div style="font-size:11px;color:var(--color-text-faint)">Zasoby płynne firmy</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ca-2" value="7500"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ca-1" value="8200"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="ca-0" value="9500"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Zapasy</div><div style="font-size:11px;color:var(--color-text-faint)">W tym produkcja w toku</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="inv-2" value="1200"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="inv-1" value="1500"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="inv-0" value="1800"><span class="currency">k</span></div></td>
+                      </tr>
+                      <tr>
+                        <td><div style="font-weight:500">Koszty finansowe (Odsetki)</div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="int-2" value="120"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="int-1" value="110"><span class="currency">k</span></div></td>
+                        <td><div class="input-wrapper"><input type="number" class="form-input" id="int-0" value="95"><span class="currency">k</span></div></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div style="padding: var(--space-5);">
+                  <button type="button" class="btn btn-primary" id="btn-analyze" style="width: 100%; justify-content: center; padding: var(--space-3);">
+                    <i data-lucide="bar-chart-2" width="18" height="18"></i> Generuj Analizę Underwritingową
+                  </button>
+                </div>
+              </form>
+            </div>
 
-            // Profitability
-            const ros = f.netProfit.map((np, i) => (np / f.revenue[i]) * 100);
-            const ebitdaMargin = f.ebitda.map((eb, i) => (eb / f.revenue[i]) * 100);
+            <!-- PRAWA STRONA: WYNIKI -->
+            <div class="table-wrap" style="margin-bottom: 0; min-height: 100%;">
+              <div class="table-toolbar">
+                <h3 style="display:flex;align-items:center;gap:8px"><i data-lucide="clipboard-list" width="18" height="18"></i> Wynik Oceny Finansowej</h3>
+              </div>
+              
+              <div id="results-placeholder" class="results-hidden">
+                <i data-lucide="file-spreadsheet" width="48" height="48" style="opacity: 0.2;"></i>
+                <p>Wprowadź dane finansowe w tabeli po lewej stronie<br>i kliknij "Generuj Analizę", aby zobaczyć wyniki.</p>
+              </div>
 
-            return {
-                rev, revGrowth,
-                net, netGrowth,
-                eq,
-                currentRatio,
-                quickRatio,
-                debtRatio,
-                icr,
-                ros,
-                ebitdaMargin,
-                totalDebt
-            };
+              <div id="results-dashboard" style="display: none; flex-direction: column; gap: var(--space-6); padding: var(--space-5);">
+                <!-- GŁÓWNA OCENA -->
+                <div class="score-card">
+                  <div>
+                    <h3 style="font-size:var(--text-sm);color:var(--color-text-muted);text-transform:uppercase;margin-bottom:var(--space-1)">Syntetyczny Rating Ryzyka</h3>
+                    <p id="ui-rating-desc" style="font-weight:600;font-size:var(--text-base)"></p>
+                    <p style="font-size:11px;color:var(--color-text-faint);margin-top:4px">Zdolność gwarancyjna szacowana z modelu.</p>
+                  </div>
+                  <div id="ui-rating-score" class="score-grade">A</div>
+                </div>
+
+                <!-- ALERTY -->
+                <div id="ui-alerts-container" style="display:none;background:oklch(from var(--color-error) l c h/0.1);border:1px solid var(--color-error);border-radius:var(--radius-md);padding:var(--space-4);">
+                  <h4 style="color:var(--color-error);font-size:var(--text-sm);margin-bottom:var(--space-3);display:flex;align-items:center;gap:6px;font-weight:600;"><i data-lucide="alert-triangle" width="16" height="16"></i> Wykryte Alerty Underwritingowe</h4>
+                  <ul id="ui-alerts-list" style="list-style:none;display:flex;flex-direction:column;gap:8px;"></ul>
+                </div>
+
+                <!-- METRYKI -->
+                <div class="kpi-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 0;">
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Płynność Bieżąca <span id="res-cr-status"></span></div>
+                    <div class="kpi-value" id="res-cr">0.00</div>
+                    <div class="kpi-sub">Optimum > 1.2 (Bieżąca)</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Płynność Szybka <span id="res-qr-status"></span></div>
+                    <div class="kpi-value" id="res-qr">0.00</div>
+                    <div class="kpi-sub">Optimum > 1.0 (Bez zapasów)</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Dynamika Przychodów <span id="res-rev-trend"></span></div>
+                    <div class="kpi-value" id="res-rev-growth">0.0%</div>
+                    <div class="kpi-sub">Zmiana r/r (Rok N vs N-1)</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Marża EBITDA <span id="res-ebitda-status"></span></div>
+                    <div class="kpi-value" id="res-ebitda">0.0%</div>
+                    <div class="kpi-sub">Rentowność brutto</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Zadłużenie Ogólne <span id="res-debt-status"></span></div>
+                    <div class="kpi-value" id="res-debt">0.0%</div>
+                    <div class="kpi-sub">Kapitał obcy / Aktywa (Norma < 65%)</div>
+                  </div>
+                  <div class="kpi-card">
+                    <div class="kpi-label" style="display:flex;justify-content:space-between">Pokrycie Odsetek <span id="res-icr-status"></span></div>
+                    <div class="kpi-value" id="res-icr">0.0x</div>
+                    <div class="kpi-sub">EBITDA / Odsetki (Norma > 3.0x)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: GWARANCJA -->
+  <div class="modal-overlay" id="modal-bond">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-bond-title">Nowa gwarancja</h2>
+        <button class="btn-icon" onclick="closeModal('modal-bond')"><i data-lucide="x" width="18" height="18"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+        <input type="hidden" id="f-id">
+        <div id="f-tenant-row" class="form-field" style="display:none">
+          <label class="form-label">Klient</label>
+          <select class="form-select" style="width:100%" id="f-tenant-select"></select>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="f-nr">Nr gwarancji</label>
+            <input class="form-input" id="f-nr" type="text" placeholder="G/2023/...">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="f-rodzaj">Rodzaj</label>
+            <select class="form-select" id="f-rodzaj">
+              <option value="wadialna">Wadialna</option>
+              <option value="nalezyte_wykonanie">Należyte wykonanie</option>
+              <option value="usunięcie_wad">Usunięcie wad</option>
+              <option value="zwrot_zaliczki">Zwrot zaliczki</option>
+              <option value="mieszana">Mieszana (NW + UW)</option>
+              <option value="inna">Inna</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="f-kontrakt">Przedmiot gwarancji / Kontrakt</label>
+          <input class="form-input" id="f-kontrakt" type="text" placeholder="Budowa odcinka...">
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="f-beneficjent">Beneficjent (dla kogo)</label>
+          <input class="form-input" id="f-beneficjent" type="text" placeholder="Gmina...">
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="f-inwestor">Inwestor (opcjonalnie)</label>
+            <input class="form-input" id="f-inwestor" type="text" placeholder="GDDKiA...">
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="f-tu">Ubezpieczyciel / Umowa Limitu</label>
+          <select class="form-select" id="f-tu">
+            <option value="">— poza limitami —</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="f-od">Data od</label>
+            <input class="form-input" id="f-od" type="date">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="f-do">Data do</label>
+            <input class="form-input" id="f-do" type="date">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="f-suma">Suma gwarancyjna (PLN)</label>
+            <input class="form-input" id="f-suma" type="number" step="0.01">
+          </div>
+          <div class="form-field" style="display:flex;align-items:flex-end;gap:8px">
+            <div style="flex:1">
+              <label class="form-label" for="f-stawka">Stawka (%) - opcjonalnie</label>
+              <input class="form-input" id="f-stawka" type="number" step="0.01">
+            </div>
+            <label style="display:flex;align-items:center;gap:4px;font-size:11px;padding-bottom:10px;cursor:pointer"><input type="checkbox" id="f-stawka-override"> Indyw.</label>
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="f-skladka">Składka przypisana (PLN)</label>
+          <input class="form-input" id="f-skladka" type="number" step="0.01">
+          <span class="form-hint" id="f-skladka-hint">Zostanie wyliczona automatycznie z limitu, jeśli nie podano własnej.</span>
+        </div>
+        <div class="form-field">
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--text-sm);cursor:pointer">
+            <input type="checkbox" id="f-bez-limitu"> Ta gwarancja nie obciąża limitu (np. z depozytem)
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-bond')">Anuluj</button>
+        <button class="btn btn-primary" id="modal-bond-save"><i data-lucide="save" width="16" height="16"></i> Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KLIENT -->
+  <div class="modal-overlay" id="modal-client">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-client-title">Nowy klient</h2>
+        <button class="btn-icon" onclick="closeModal('modal-client')"><i data-lucide="x" width="18" height="18"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+        <input type="hidden" id="fc-id">
+        <div class="form-field">
+          <label class="form-label" for="fc-nazwa">Nazwa firmy</label>
+          <input class="form-input" style="width:100%" id="fc-nazwa" type="text" placeholder="np. Budimex S.A.">
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="fc-nip">NIP</label>
+            <input class="form-input" style="width:100%" id="fc-nip" type="text" placeholder="np. 5260251167">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="fc-regon">REGON</label>
+            <input class="form-input" style="width:100%" id="fc-regon" type="text" placeholder="np. 010246540">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="fc-krs">KRS <span style="font-weight:400;text-transform:none">(opcjonalnie)</span></label>
+            <input class="form-input" style="width:100%" id="fc-krs" type="text" placeholder="np. 0000001554">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="fc-slug">Slug</label>
+            <input class="form-input" style="width:100%" id="fc-slug" type="text" placeholder="np. budimex">
+            <span class="form-hint">Małe litery, bez spacji</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-client')">Anuluj</button>
+        <button class="btn btn-admin" id="modal-client-save"><i data-lucide="save" width="16" height="16"></i> Zapisz klienta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: UBEZPIECZYCIEL (TU / UL) -->
+  <div class="modal-overlay" id="modal-insurer">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-insurer-title">Nowy ubezpieczyciel / umowa limitu</h2>
+        <button class="btn-icon" onclick="closeModal('modal-insurer')"><i data-lucide="x" width="18" height="18"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+        <input type="hidden" id="fi-id">
+        <div class="form-field">
+          <label class="form-label" for="fi-tenant">Klient</label>
+          <select class="form-select" style="width:100%" id="fi-tenant"></select>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="fi-nazwa">Nazwa TU</label>
+          <div style="display:flex;gap:var(--space-2);align-items:center">
+            <select class="form-select" style="flex:1" id="fi-nazwa"><option value="">— wybierz TU —</option></select>
+            <button class="btn btn-ghost" type="button" id="btn-add-tu-inline" title="Dodaj nowe TU do słownika" style="white-space:nowrap;flex-shrink:0">+ Nowe TU</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="fi-ul-nr">Nr umowy limitu (UL)</label>
+            <input class="form-input" style="width:100%" id="fi-ul-nr" type="text">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="fi-limit">Kwota limitu (PLN)</label>
+            <input class="form-input" style="width:100%" id="fi-limit" type="number" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="fi-ul-od">Data od (UL)</label>
+            <input class="form-input" style="width:100%" id="fi-ul-od" type="date">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="fi-ul-do">Data do (UL)</label>
+            <input class="form-input" style="width:100%" id="fi-ul-do" type="date">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label" for="fi-stawka">Stawka bazowa (%)</label>
+            <input class="form-input" style="width:100%" id="fi-stawka" type="number" step="0.01">
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="fi-skladka-min">Składka minimalna (PLN)</label>
+            <input class="form-input" style="width:100%" id="fi-skladka-min" type="number" step="0.01">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-insurer')">Anuluj</button>
+        <button class="btn btn-admin" id="modal-insurer-save"><i data-lucide="save" width="16" height="16"></i> Zapisz wpis</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRZYPISZ USERA -->
+  <div class="modal-overlay" id="modal-user-assign">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title">Przypisz klienta do użytkownika</h2>
+        <button class="btn-icon" onclick="closeModal('modal-user-assign')"><i data-lucide="x" width="18" height="18"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+        <input type="hidden" id="fu-id">
+        <div class="form-field">
+          <label class="form-label">User ID</label>
+          <div id="fu-email" style="font-size:var(--text-sm);font-weight:600;padding:var(--space-2) 0;word-break:break-all"></div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="fu-tenant">Wybierz klienta z listy</label>
+          <select class="form-select" style="width:100%" id="fu-tenant"></select>
+          <span class="form-hint">Zostaw puste aby odpiąć klienta</span>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="fu-rola">Rola</label>
+          <select class="form-select" style="width:100%" id="fu-rola">
+            <option value="klient">Klient (Widzi tylko swoje)</option>
+            <option value="admin">Admin (Zarządzanie systemem)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-user-assign')">Anuluj</button>
+        <button class="btn btn-admin" id="modal-user-save"><i data-lucide="save" width="16" height="16"></i> Zapisz przypisanie</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ZAPROŚ UŻYTKOWNIKA -->
+  <div class="modal-overlay" id="modal-invite">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title">Zaproś użytkownika</h2>
+        <button class="btn-icon" onclick="closeModal('modal-invite')"><i data-lucide="x" width="18" height="18"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-error" style="display:none;background:oklch(from var(--color-error) l c h/0.1);color:var(--color-error);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);font-size:var(--text-sm);margin-bottom:var(--space-4)"></div>
+        <div class="form-field">
+          <label class="form-label" for="finv-email">Adres e-mail</label>
+          <input class="form-input" style="width:100%" id="finv-email" type="email" placeholder="uzytkownik@firma.pl">
+          <span class="form-hint">Użytkownik otrzyma link aktywacyjny na ten adres</span>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="finv-tenant">Przypisz do klienta</label>
+          <select class="form-select" style="width:100%" id="finv-tenant">
+            <option value="">— wybierz klienta —</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="finv-rola">Rola</label>
+          <select class="form-select" style="width:100%" id="finv-rola">
+            <option value="klient">Klient</option>
+            <option value="admin">Admin klienta</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-invite')">Anuluj</button>
+        <button class="btn btn-admin" id="modal-invite-save"><i data-lucide="send" width="16" height="16"></i> Wyślij zaproszenie</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // --- 1. SETUP & UTILS (Konfiguracja Supabase, Stan i Pomocniki) ---
+    // =========================================================================
+
+    const SB_URL = 'https://kukvgsjrmrqtzhkszzum.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt1a3Znc2pybXJxdHpoa3N6enVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5MTI0NzYsImV4cCI6MjA4ODQ4ODQ3Nn0.wOB-4CJTcRksSUY7WD7CXEccTKNxPIVF8AT8hczS5zY';
+
+    const memoryStorage = {};
+    const customStorage = {
+      getItem: (key) => {
+        try { return window.localStorage.getItem(key); }
+        catch (e) { return memoryStorage[key] || null; }
+      },
+      setItem: (key, value) => {
+        try { window.localStorage.setItem(key, value); }
+        catch (e) { memoryStorage[key] = value; }
+      },
+      removeItem: (key) => {
+        try { window.localStorage.removeItem(key); }
+        catch (e) { delete memoryStorage[key]; }
+      }
+    };
+
+    const sb = supabase.createClient(SB_URL, SB_KEY, {
+      auth: {
+        storage: customStorage,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    });
+
+    const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
+    const fmt = n => n==null?'—':Number(n).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const dateDiff = (a,b) => Math.round((new Date(b)-new Date(a))/(1000*60*60*24));
+    const today = () => new Date().toISOString().slice(0,10);
+
+    const rodzajBadge = r => {
+      const c = { 'wadialna':'primary', 'nalezyte_wykonanie':'success', 'usunięcie_wad':'warning', 'zwrot_zaliczki':'error', 'mieszana':'admin' }[r] || 'muted';
+      return `<span class="badge" style="background:var(--color-surface-offset);border:1px solid oklch(from var(--color-${c}) l c h/0.2);color:var(--color-${c})">${r.replace('_',' ')}</span>`;
+    };
+    const bondStatus = b => {
+      const d = dateDiff(today(), b.bond_data_do);
+      if(d < 0) return 'expired';
+      if(d <= 30) return 'expiring';
+      return 'active';
+    };
+    const statusBadge = b => {
+      const s = bondStatus(b);
+      if(s==='expired') return '<span class="badge badge-expired">Wygasła</span>';
+      if(s==='expiring') return '<span class="badge badge-expiring">Wygasa</span>';
+      return '<span class="badge badge-active">Aktywna</span>';
+    };
+
+    // Stan globalny (State)
+    let isAdmin = false, tenantId = null;
+    let allBonds = [], allInsurers = [], allTenants = [], allUsers = [], allTuDict = [];
+
+
+    // =========================================================================
+    // --- 2. API.JS (Pobieranie i Zapis Danych do Bazy) ---
+    // =========================================================================
+
+    async function loadTuDict() {
+      const { data } = await sb.from('bond_tu_dict').select('id,name').eq('is_active', true).order('name');
+      allTuDict = data || [];
+      populateTuSelect();
+    }
+
+    async function initApp() {
+      const { data: { session } } = await sb.auth.getSession();
+      if(!session) return;
+      
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      
+      await loadTuDict();
+      
+      const { data: profile } = await sb.from('bond_profiles')
+        .select('bond_tenant_id,bond_is_admin,bond_rola,bond_tenants(bond_nazwa,bond_slug)')
+        .eq('bond_id', session.user.id).single();
+      
+      isAdmin = profile?.bond_rola === 'admin';
+      tenantId = profile?.bond_tenant_id;
+      
+      document.getElementById('topbar-badge').innerHTML = isAdmin
+        ? '<span class="badge badge-admin">Administrator</span>'
+        : `<span class="badge badge-active">${escapeHTML(profile?.bond_tenants?.bond_nazwa || 'Klient')}</span>`;
+      
+      if(isAdmin) {
+        document.getElementById('nav-admin').style.display = 'block';
+        document.getElementById('f-tenant-row').style.display = 'block';
+        await loadAll();
+      } else if(tenantId) {
+        await loadBonds(tenantId);
+      } else {
+        alert('Twoje konto nie jest przypisane do żadnej firmy. Skontaktuj się z administratorem.');
+      }
+      lucide.createIcons();
+    }
+
+    async function loadAll() {
+      const [rT, rI, rB, rU] = await Promise.all([
+        sb.from('bond_tenants').select('*').order('bond_nazwa'),
+        sb.from('bond_insurers').select('*,bond_tenants(bond_nazwa)').order('bond_nazwa'),
+        sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)').order('bond_data_do'),
+        sb.from('bond_profiles').select('*,bond_tenants(bond_nazwa)')
+      ]);
+      allTenants = rT.data || [];
+      allInsurers = rI.data || [];
+      allBonds = rB.data || [];
+      allUsers = rU.data || [];
+      
+      populateTenantSelectors();
+      updateDash();
+      renderBonds(allBonds);
+      renderLimits(allInsurers, allBonds);
+      renderTerminarz(allBonds);
+      renderSkladki(allBonds);
+      renderClients();
+      renderInsurers();
+      renderUsers();
+    }
+
+    async function loadBonds(tId) {
+      const [rI, rB] = await Promise.all([
+        sb.from('bond_insurers').select('*,bond_tenants(bond_nazwa)').eq('bond_tenant_id', tId).order('bond_nazwa'),
+        sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)').eq('bond_tenant_id', tId).order('bond_data_do')
+      ]);
+      allInsurers = rI.data || [];
+      allBonds = rB.data || [];
+      updateDash();
+      renderBonds(allBonds);
+      renderLimits(allInsurers, allBonds);
+      renderTerminarz(allBonds);
+      renderSkladki(allBonds);
+    }
+
+
+    // =========================================================================
+    // --- 3. UI.JS (Interfejs, Renderowanie Tabel, Event Listenery) ---
+    // =========================================================================
+
+    function populateTuSelect() {
+      const sel = document.getElementById('fi-nazwa');
+      if(!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— wybierz TU —</option>' + allTuDict.map(t => `<option value="${escapeHTML(t.name)}">${escapeHTML(t.name)}</option>`).join('');
+      if(cur) sel.value = cur;
+    }
+
+    function populateTenantSelectors() {
+      const opts = allTenants.map(t => `<option value="${t.bond_id}">${escapeHTML(t.bond_nazwa)}</option>`).join('');
+      ['f-tenant-select', 'fi-tenant', 'fu-tenant', 'finv-tenant'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = (id==='fu-tenant'||id==='finv-tenant'?'<option value="">— wybierz klienta —</option>':'') + opts;
+      });
+      populateTuOpts();
+    }
+    
+    function populateTuOpts() {
+      const sel = document.getElementById('f-tu');
+      const ins = isAdmin ? allInsurers : allInsurers.filter(i => i.bond_tenant_id === tenantId);
+      sel.innerHTML = '<option value="">— poza limitami —</option>' + ins.map(i => `<option value="${i.bond_id}">${escapeHTML(i.bond_nazwa)} (UL: ${escapeHTML(i.bond_ul_nr || 'brak')})</option>`).join('');
+    }
+
+    function updateDash() {
+      const active = allBonds.filter(b => bondStatus(b) !== 'expired');
+      const expiring = allBonds.filter(b => bondStatus(b) === 'expiring');
+      const suma = active.reduce((s, b) => s + (b.bond_suma || 0), 0);
+      document.getElementById('kpi-container').innerHTML = `
+        <div class="kpi-card"><div class="kpi-label">Aktywne gwarancje</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">${expiring.length} wygasające w 30 dni</div></div>
+        <div class="kpi-card"><div class="kpi-label">Suma zaangażowana</div><div class="kpi-value">${fmt(suma)}</div><div class="kpi-sub">PLN (aktywne)</div></div>
+        <div class="kpi-card"><div class="kpi-label">Umowy Limitów</div><div class="kpi-value">${allInsurers.length}</div><div class="kpi-sub">aktywnych polis UL</div></div>
+      `;
+      const recent = [...allBonds].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0,5);
+      document.getElementById('dash-bonds-tbody').innerHTML = recent.length ? recent.map(b => `<tr>
+        <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
+        <td>${rodzajBadge(b.bond_rodzaj)}</td>
+        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</td>
+        <td class="num">${fmt(b.bond_suma)}</td>
+        <td>${statusBadge(b)}</td>
+      </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--color-text-muted)">Brak danych</td></tr>';
+      
+      const tl = document.getElementById('dash-timeline');
+      const sorted = [...allBonds].filter(b => bondStatus(b) !== 'expired').sort((a,b) => a.bond_data_do.localeCompare(b.bond_data_do)).slice(0,6);
+      if(!sorted.length) tl.innerHTML = '<div class="empty">Brak gwarancji do wygaśnięcia</div>';
+      else tl.innerHTML = sorted.map(b => {
+        const s = bondStatus(b); const days = dateDiff(today(), b.bond_data_do);
+        const tenantInfo = isAdmin && b.bond_tenants ? ` <span class="badge badge-admin">${escapeHTML(b.bond_tenants.bond_nazwa)}</span>` : '';
+        return `<div class="timeline-item"><div class="dot dot-${s}"></div><div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--text-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}${tenantInfo}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${escapeHTML(b.bond_nr)} · ${escapeHTML(b.bond_insurers?.bond_nazwa||'—')} · ${rodzajBadge(b.bond_rodzaj)}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:var(--text-sm);font-weight:600">${escapeHTML(b.bond_data_do)}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${days} dni</div></div></div>`;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function renderBonds(list) {
+      const tb = document.getElementById('bonds-tbody');
+      if(!list.length) { tb.innerHTML = `<tr><td colspan="9"><div class="empty"><h3>Brak gwarancji</h3><p>Dodaj pierwszą gwarancję klikając przycisk powyżej</p></div></td></tr>`; lucide.createIcons(); return; }
+      tb.innerHTML = list.map(b => `<tr>
+        <td><strong>${escapeHTML(b.bond_nr)}</strong>${b.bond_bez_limitu?'<br><span style="font-size:10px;color:var(--color-text-faint)">poza UL</span>':''}${b.bond_stawka_override?'<br><span style="font-size:10px;color:var(--color-warning)">stawka negocj.</span>':''}</td>
+        <td>${rodzajBadge(b.bond_rodzaj)}</td>
+        <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${escapeHTML(b.bond_inwestor)||'—'}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">Ben: ${escapeHTML(b.bond_beneficjent)}</div>`:''}</td>
+        <td style="font-size:var(--text-xs)">${escapeHTML(b.bond_insurers?.bond_nazwa||'—')}</td>
+        <td style="font-size:var(--text-xs);white-space:nowrap">${escapeHTML(b.bond_data_od)}<br>${escapeHTML(b.bond_data_do)}</td>
+        <td class="num">${fmt(b.bond_suma)}</td>
+        <td class="num">${fmt(b.bond_skladka)}</td>
+        <td>${statusBadge(b)}</td>
+        <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editBond('${b.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteBond('${b.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
+      </tr>`).join('');
+      lucide.createIcons();
+    }
+
+    function renderLimits(insurers, bonds) {
+      const c = document.getElementById('limits-container');
+      if(!insurers.length) { c.innerHTML = '<div class="empty">Brak zdefiniowanych limitów TU</div>'; return; }
+      c.innerHTML = insurers.map(i => {
+        const active = bonds.filter(b => b.bond_insurer_id === i.bond_id && !b.bond_bez_limitu && bondStatus(b) !== 'expired');
+        const zaang = active.reduce((s,b) => s + (b.bond_suma || 0), 0);
+        const lim = i.bond_limit;
+        const wolny = lim != null ? lim - zaang : null;
+        const pct = lim ? Math.min(100, Math.round(zaang/lim*100)) : 0;
+        const fillClass = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
+        const tenantName = isAdmin && i.bond_tenants ? ` <span class="badge badge-admin">${escapeHTML(i.bond_tenants.bond_nazwa)}</span>` : '';
+        return `<div class="limit-card">
+          <div class="limit-card-header"><div class="limit-tu-name">${escapeHTML(i.bond_nazwa)}${tenantName}</div><span class="badge badge-active">${active.length} gwarancji</span></div>
+          ${lim != null ? `<div class="limit-bar-track"><div class="limit-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
+          <div class="limit-nums"><span>Zaangażowane: <strong>${fmt(zaang)}</strong></span><span>${pct}%</span></div>
+          <div class="limit-nums" style="margin-top:var(--space-2)"><span>Limit UL: ${fmt(lim)}</span><span style="color:${wolny<0?'var(--color-error)':'var(--color-success)'}">Wolne: ${fmt(wolny)}</span></div>` : `<div style="font-size:var(--text-xs);color:var(--color-text-faint);font-style:italic">Brak kwoty limitu (nieograniczony)</div>`}
+          ${i.bond_ul_nr ? `<div style="font-size:var(--text-xs);color:var(--color-text-faint);margin-top:var(--space-3)">UL nr: ${escapeHTML(i.bond_ul_nr)}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function renderTerminarz(bonds) {
+      document.getElementById('terminarz-tbody').innerHTML = [...bonds].sort((a,b) => a.bond_data_do.localeCompare(b.bond_data_do)).map(b => `<tr>
+        <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
+        <td style="max-width:180px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">${escapeHTML(b.bond_beneficjent)}</div>`:''}</td>
+        <td>${rodzajBadge(b.bond_rodzaj)}</td>
+        <td style="font-size:var(--text-xs)">${escapeHTML(b.bond_insurers?.bond_nazwa||'—')}</td>
+        <td style="font-size:var(--text-xs)">${escapeHTML(b.bond_data_od)}</td>
+        <td style="font-size:var(--text-xs);font-weight:600;color:${dateDiff(today(), b.bond_data_do)<=30?'var(--color-error)':'inherit'}">${escapeHTML(b.bond_data_do)}</td>
+        <td class="num">${fmt(b.bond_suma)}</td>
+      </tr>`).join('');
+    }
+
+    function renderSkladki(bonds) {
+      let total = 0;
+      document.getElementById('skladki-tbody').innerHTML = bonds.map(b => {
+        const dni = dateDiff(b.bond_data_od, b.bond_data_do);
+        const sk = b.bond_skladka || 0; total += sk;
+        return `<tr><td><strong>${escapeHTML(b.bond_nr)}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</td><td>${rodzajBadge(b.bond_rodzaj)}</td><td class="num">${dni}</td><td class="num">${b.bond_stawka!=null?b.bond_stawka+'%':'—'}</td><td class="num">${fmt(b.bond_suma)}</td><td class="num" style="font-weight:600">${fmt(sk)}</td></tr>`;
+      }).join('');
+      document.getElementById('skladki-total').textContent = fmt(total) + ' PLN';
+    }
+
+    function renderClients() {
+      const tb = document.getElementById('clients-tbody');
+      if(!allTenants.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><p>Brak klientów</p></div></td></tr>'; return; }
+      tb.innerHTML = allTenants.map(t => {
+        const tBonds = allBonds.filter(b => b.bond_tenant_id === t.bond_id);
+        const active = tBonds.filter(b => bondStatus(b) !== 'expired');
+        const expiring = tBonds.filter(b => bondStatus(b) === 'expiring');
+        const suma = active.reduce((s, b) => s + (b.bond_suma || 0), 0);
+        return `<tr>
+          <td><strong>${escapeHTML(t.bond_nazwa)}</strong><br><code style="font-size:10px;color:var(--color-text-faint)">${escapeHTML(t.bond_slug||'')}</code></td>
+          <td style="font-size:var(--text-xs)">${t.bond_nip?'NIP: '+escapeHTML(t.bond_nip):'—'}${t.bond_regon?'<br>REGON: '+escapeHTML(t.bond_regon):''}${t.bond_krs?'<br>KRS: '+escapeHTML(t.bond_krs):''}</td>
+          <td class="num">${tBonds.length}</td>
+          <td class="num">${fmt(suma)}</td>
+          <td>${expiring.length>0?`<span class="badge badge-expiring">${expiring.length} wygasające</span>`:'<span style="color:var(--color-text-faint);font-size:var(--text-xs)">—</span>'}</td>
+          <td style="white-space:nowrap;display:flex;gap:4px">
+            <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:11px" onclick="openTenantDetail('${t.bond_id}')"><i data-lucide="layout-dashboard" width="12" height="12"></i> Panel</button>
+            <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editClient('${t.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> 
+            <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteClient('${t.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button>
+          </td>
+        </tr>`;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function renderInsurers() {
+      const tb = document.getElementById('insurers-tbody');
+      if(!allInsurers.length) { tb.innerHTML='<tr><td colspan="8"><div class="empty"><p>Brak ubezpieczycieli</p></div></td></tr>'; return; }
+      tb.innerHTML = allInsurers.map(i => `<tr>
+        <td><strong>${escapeHTML(i.bond_nazwa)}</strong></td>
+        <td style="font-size:var(--text-xs)">${escapeHTML(i.bond_tenants?.bond_nazwa)||'—'}</td>
+        <td class="num">${fmt(i.bond_limit)}</td>
+        <td class="num">${i.bond_stawka_bazowa!=null?i.bond_stawka_bazowa+'%':'—'}</td>
+        <td class="num">${fmt(i.bond_skladka_min)}</td>
+        <td style="font-size:var(--text-xs)">${escapeHTML(i.bond_ul_nr)||'—'}</td>
+        <td style="font-size:var(--text-xs);white-space:nowrap">${escapeHTML(i.bond_ul_data_od||'')}${i.bond_ul_data_do?' → '+escapeHTML(i.bond_ul_data_do):''}</td>
+        <td style="white-space:nowrap;display:flex;gap:4px">
+          <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:11px" onclick="openInsurerDetail('${i.bond_id}')"><i data-lucide="layout-dashboard" width="12" height="12"></i> Panel</button>
+          <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editInsurer('${i.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> 
+          <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteInsurer('${i.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button>
+        </td>
+      </tr>`).join('');
+      lucide.createIcons();
+    }
+
+    function renderUsers() {
+      const tb = document.getElementById('users-tbody');
+      if(!allUsers.length) { tb.innerHTML='<tr><td colspan="4"><div class="empty"><p>Brak profili użytkowników</p></div></td></tr>'; return; }
+      tb.innerHTML = allUsers.map(u => `<tr>
+        <td><div style="font-weight:600;font-size:var(--text-sm)">${u.bond_email?'<span style="color:var(--color-primary)">@</span> '+escapeHTML(u.bond_email):''}</div><div style="font-size:10px;color:var(--color-text-faint);word-break:break-all">${u.bond_id}</div></td>
+        <td>${escapeHTML(u.bond_tenants?.bond_nazwa)||'<span style="color:var(--color-text-faint)">Nieprzypisany</span>'}</td>
+        <td><span class="badge ${u.bond_rola==='admin'?'badge-admin':'badge-active'}">${escapeHTML(u.bond_rola)||'klient'}</span></td>
+        <td><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:var(--text-xs)" onclick="assignUser('${u.bond_id}','${u.bond_tenant_id||''}','${escapeHTML(u.bond_rola)||'klient'}')"><i data-lucide="user-cog" width="14" height="14"></i> Przypisz</button></td>
+      </tr>`).join('');
+      lucide.createIcons();
+    }
+
+    // Modal helpers
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+      if(id === 'modal-bond' && !document.getElementById('f-id').value) {
+        document.querySelectorAll('#modal-bond input:not([type="checkbox"]), #modal-bond select').forEach(i => i.value='');
+        document.getElementById('f-bez-limitu').checked = false;
+        document.getElementById('f-stawka-override').checked = false;
+        if(isAdmin && allTenants.length > 0) document.getElementById('f-tenant-select').value = allTenants[0].bond_id;
+        populateTuOpts();
+      }
+    }
+    
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('open');
+      if(id === 'modal-bond') document.getElementById('f-id').value = '';
+      if(id === 'modal-client') document.getElementById('fc-id').value = '';
+      if(id === 'modal-insurer') document.getElementById('fi-id').value = '';
+      if(id === 'modal-user-assign') document.getElementById('fu-id').value = '';
+      hideModalErrors(id);
+    }
+    
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+      m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+    });
+
+    function showModalError(modalId, msg) {
+      const el = document.querySelector('#' + modalId + ' .modal-error');
+      if(el) { el.textContent = msg; el.style.display = 'block'; }
+    }
+    
+    function hideModalErrors(modalId) {
+      const el = document.querySelector('#' + modalId + ' .modal-error');
+      if(el) el.style.display = 'none';
+    }
+
+    function calcSkladka() {
+      const od = document.getElementById('f-od').value, dod = document.getElementById('f-do').value;
+      const suma = parseFloat(document.getElementById('f-suma').value) || 0;
+      let stawka = parseFloat(document.getElementById('f-stawka').value);
+      const isOverride = document.getElementById('f-stawka-override').checked;
+      
+      const tuId = document.getElementById('f-tu').value;
+      const ins = allInsurers.find(i => i.bond_id === tuId);
+      
+      if(!isOverride && ins && ins.bond_stawka_bazowa != null && isNaN(stawka)) {
+        stawka = ins.bond_stawka_bazowa;
+        document.getElementById('f-stawka').value = stawka;
+      }
+      
+      if(od && dod && suma > 0 && !isNaN(stawka)) {
+        const dni = dateDiff(od, dod);
+        if(dni > 0) {
+          let sk = suma * (stawka/100) * (dni/365);
+          if(!isOverride && ins && ins.bond_skladka_min != null && sk < ins.bond_skladka_min) sk = ins.bond_skladka_min;
+          document.getElementById('f-skladka').value = sk.toFixed(2);
         }
+      }
+    }
+    ['f-od','f-do','f-suma','f-stawka','f-stawka-override','f-tu'].forEach(id => document.getElementById(id).addEventListener('input', calcSkladka));
 
-        function generateScoreAndAlerts(metrics) {
-            let alerts = [];
-            let scorePts = 100;
-            const lastCR = metrics.currentRatio[metrics.currentRatio.length - 1];
+    // Formularze zapisu (Zintegrowane API i UI)
+    document.getElementById('modal-bond-save').addEventListener('click', async () => {
+      const id = document.getElementById('f-id').value;
+      const tid = isAdmin ? document.getElementById('f-tenant-select').value : tenantId;
+      const payload = {
+        bond_nr: document.getElementById('f-nr').value.trim() || 'Szkic',
+        bond_rodzaj: document.getElementById('f-rodzaj').value,
+        bond_kontrakt: document.getElementById('f-kontrakt').value.trim(),
+        bond_beneficjent: document.getElementById('f-beneficjent').value.trim() || null,
+        bond_inwestor: document.getElementById('f-inwestor').value.trim() || null,
+        bond_insurer_id: document.getElementById('f-tu').value || null,
+        bond_data_od: document.getElementById('f-od').value || null,
+        bond_data_do: document.getElementById('f-do').value || null,
+        bond_suma: parseFloat(document.getElementById('f-suma').value) || null,
+        bond_skladka: parseFloat(document.getElementById('f-skladka').value) || null,
+        bond_bez_limitu: document.getElementById('f-bez-limitu').checked,
+        bond_stawka: parseFloat(document.getElementById('f-stawka').value) || null,
+        bond_stawka_override: document.getElementById('f-stawka-override').checked,
+        bond_tenant_id: tid
+      };
+      
+      hideModalErrors('modal-bond');
+      let errB;
+      if(id) { const r = await sb.from('bond_bonds').update(payload).eq('bond_id', id); errB = r.error; }
+      else { const r = await sb.from('bond_bonds').insert(payload); errB = r.error; }
+      
+      if(errB) { showModalError('modal-bond', 'Błąd zapisu: ' + errB.message); return; }
+      closeModal('modal-bond');
+      if(isAdmin) await loadAll(); else await loadBonds(tenantId);
+    });
 
-            // Liquidity Check
-            if (lastCR < 1.0) { alerts.push("Krytyczna płynność bieżąca (CR < 1.0). Ryzyko zatorów płatniczych."); scorePts -= 30; }
-            else if (lastCR < 1.2) { alerts.push("Płynność bieżąca poniżej bezpiecznego poziomu branżowego 1.2."); scorePts -= 15; }
+    function editBond(id) {
+      const b = allBonds.find(x => x.bond_id === id); if(!b) return;
+      document.getElementById('modal-bond-title').textContent = 'Edytuj gwarancję';
+      document.getElementById('f-id').value = b.bond_id;
+      if(isAdmin && b.bond_tenant_id) document.getElementById('f-tenant-select').value = b.bond_tenant_id;
+      document.getElementById('f-nr').value = b.bond_nr || '';
+      document.getElementById('f-rodzaj').value = b.bond_rodzaj || 'inna';
+      document.getElementById('f-kontrakt').value = b.bond_kontrakt || '';
+      document.getElementById('f-beneficjent').value = b.bond_beneficjent || '';
+      document.getElementById('f-inwestor').value = b.bond_inwestor || '';
+      populateTuOpts(); document.getElementById('f-tu').value = b.bond_insurer_id || '';
+      document.getElementById('f-od').value = b.bond_data_od || '';
+      document.getElementById('f-do').value = b.bond_data_do || '';
+      document.getElementById('f-suma').value = b.bond_suma || '';
+      document.getElementById('f-skladka').value = b.bond_skladka || '';
+      document.getElementById('f-bez-limitu').checked = !!b.bond_bez_limitu;
+      document.getElementById('f-stawka').value = b.bond_stawka || '';
+      document.getElementById('f-stawka-override').checked = !!b.bond_stawka_override;
+      openModal('modal-bond');
+    }
 
-            // Growth Check
-            if (metrics.revGrowth < -10) { alerts.push(`Spadek przychodów o ${Math.abs(metrics.revGrowth).toFixed(1)}% r/r.`); scorePts -= 10; }
-            if (metrics.net < 0) { alerts.push("Spółka wygenerowała stratę netto w ostatnim roku."); scorePts -= 25; }
+    async function deleteBond(id) {
+      if(!confirm('Czy na pewno chcesz usunąć tę gwarancję?')) return;
+      await sb.from('bond_bonds').delete().eq('bond_id', id);
+      if(isAdmin) await loadAll(); else await loadBonds(tenantId);
+    }
 
-            // Debt Check
-            if (metrics.debtRatio > 70) { alerts.push(`Bardzo wysoki wskaźnik ogólnego zadłużenia (${metrics.debtRatio.toFixed(1)}%).`); scorePts -= 20; }
-            if (metrics.icr < 2.0) { alerts.push(`Niskie pokrycie odsetek zyskiem EBITDA (ICR = ${metrics.icr.toFixed(1)}x).`); scorePts -= 15; }
+    document.getElementById('modal-client-save').addEventListener('click', async () => {
+      const id = document.getElementById('fc-id').value;
+      const payload = {
+        bond_nazwa: document.getElementById('fc-nazwa').value.trim(),
+        bond_slug: document.getElementById('fc-slug').value.trim().toLowerCase(),
+        bond_nip: document.getElementById('fc-nip').value.trim() || null,
+        bond_regon: document.getElementById('fc-regon').value.trim() || null,
+        bond_krs: document.getElementById('fc-krs').value.trim() || null
+      };
+      
+      hideModalErrors('modal-client');
+      let errC;
+      if(id) { const r = await sb.from('bond_tenants').update(payload).eq('bond_id', id); errC = r.error; }
+      else { const r = await sb.from('bond_tenants').insert(payload); errC = r.error; }
+      
+      if(errC) { showModalError('modal-client', 'Błąd zapisu: ' + errC.message); return; }
+      closeModal('modal-client'); await loadAll();
+    });
 
-            // Margins Check
-            const lastEBITDAMargin = metrics.ebitdaMargin[metrics.ebitdaMargin.length - 1];
-            if (lastEBITDAMargin < 3.0) { alerts.push(`Niska marża EBITDA (${lastEBITDAMargin.toFixed(1)}%). Wrażliwość na wzrost kosztów budowy.`); scorePts -= 10; }
+    function editClient(id) {
+      const t = allTenants.find(x => x.bond_id === id); if(!t) return;
+      document.getElementById('modal-client-title').textContent = 'Edytuj klienta';
+      document.getElementById('fc-id').value = t.bond_id;
+      document.getElementById('fc-nazwa').value = t.bond_nazwa;
+      document.getElementById('fc-slug').value = t.bond_slug;
+      document.getElementById('fc-nip').value = t.bond_nip || '';
+      document.getElementById('fc-regon').value = t.bond_regon || '';
+      document.getElementById('fc-krs').value = t.bond_krs || '';
+      openModal('modal-client');
+    }
 
-            // Assign Grade
-            let grade = 'C';
-            let desc = 'Wysokie Ryzyko';
-            let colorClass = 'text-danger bg-red-50';
-            let letterClass = 'text-danger';
+    async function deleteClient(id) {
+      if(!confirm('Usunięcie klienta usunie też wszystkie jego gwarancje i limity! Kontynuować?')) return;
+      await sb.from('bond_tenants').delete().eq('bond_id', id);
+      await loadAll();
+    }
 
-            if (scorePts >= 85) { grade = 'A'; desc = 'Niskie Ryzyko'; colorClass = 'text-success bg-green-50'; letterClass = 'text-success'; }
-            else if (scorePts >= 75) { grade = 'A-'; desc = 'Niskie/Umiarkowane Ryzyko'; colorClass = 'text-success bg-green-50'; letterClass = 'text-success'; }
-            else if (scorePts >= 60) { grade = 'B+'; desc = 'Umiarkowane Ryzyko'; colorClass = 'text-warning bg-yellow-50'; letterClass = 'text-warning'; }
-            else if (scorePts >= 45) { grade = 'B'; desc = 'Podwyższone Ryzyko'; colorClass = 'text-warning bg-yellow-50'; letterClass = 'text-warning'; }
+    document.getElementById('modal-insurer-save').addEventListener('click', async () => {
+      const id = document.getElementById('fi-id').value;
+      const payload = {
+        bond_tenant_id: document.getElementById('fi-tenant').value || null,
+        bond_nazwa: document.getElementById('fi-nazwa').value,
+        bond_ul_nr: document.getElementById('fi-ul-nr').value.trim() || null,
+        bond_limit: parseFloat(document.getElementById('fi-limit').value) || null,
+        bond_ul_data_od: document.getElementById('fi-ul-od').value || null,
+        bond_ul_data_do: document.getElementById('fi-ul-do').value || null,
+        bond_stawka_bazowa: parseFloat(document.getElementById('fi-stawka').value) || null,
+        bond_skladka_min: parseFloat(document.getElementById('fi-skladka-min').value) || null
+      };
+      
+      hideModalErrors('modal-insurer');
+      let errI;
+      if(id) { const r = await sb.from('bond_insurers').update(payload).eq('bond_id', id); errI = r.error; }
+      else { const r = await sb.from('bond_insurers').insert(payload); errI = r.error; }
+      
+      if(errI) { showModalError('modal-insurer', 'Błąd zapisu: ' + errI.message); return; }
+      closeModal('modal-insurer'); await loadAll();
+    });
 
-            return { alerts, grade, desc, colorClass, letterClass };
-        }
+    function editInsurer(id) {
+      const i = allInsurers.find(x => x.bond_id === id); if(!i) return;
+      document.getElementById('modal-insurer-title').textContent = 'Edytuj TU / UL';
+      document.getElementById('fi-id').value = i.bond_id;
+      document.getElementById('fi-tenant').value = i.bond_tenant_id || '';
+      populateTuSelect(); document.getElementById('fi-nazwa').value = i.bond_nazwa || '';
+      document.getElementById('fi-ul-nr').value = i.bond_ul_nr || '';
+      document.getElementById('fi-limit').value = i.bond_limit || '';
+      document.getElementById('fi-ul-od').value = i.bond_ul_data_od || '';
+      document.getElementById('fi-ul-do').value = i.bond_ul_data_do || '';
+      document.getElementById('fi-stawka').value = i.bond_stawka_bazowa || '';
+      document.getElementById('fi-skladka-min').value = i.bond_skladka_min || '';
+      openModal('modal-insurer');
+    }
 
-        // ==========================================
-        // 3. UI UPDATERS
-        // ==========================================
-        const formatMoney = (val) => (val / 1000).toFixed(1) + ' mln PLN';
-        const formatPercent = (val) => val.toFixed(1) + '%';
-        const formatFloat = (val) => val.toFixed(2);
+    async function deleteInsurer(id) {
+      if(!confirm('Usunąć tego ubezpieczyciela/limit?')) return;
+      await sb.from('bond_insurers').delete().eq('bond_id', id);
+      await loadAll();
+    }
 
-        function updateUI() {
-            const data = currentState.data;
-            const m = calculateMetrics(data);
-            const scoreData = generateScoreAndAlerts(m);
+    function assignUser(uid, tId, role) {
+      document.getElementById('fu-id').value = uid;
+      document.getElementById('fu-email').textContent = uid;
+      document.getElementById('fu-tenant').value = tId || '';
+      document.getElementById('fu-rola').value = role || 'klient';
+      openModal('modal-user-assign');
+    }
 
-            // Update Tab 1 KPIs
-            document.getElementById('ui-kpi-revenue').textContent = formatMoney(m.rev);
-            document.getElementById('ui-kpi-equity').textContent = formatMoney(m.eq);
-            document.getElementById('ui-kpi-netprofit').textContent = formatMoney(m.net);
-            
-            const revTrendEl = document.getElementById('ui-kpi-revenue-trend');
-            revTrendEl.innerHTML = m.revGrowth >= 0 
-                ? `<span class="text-success font-bold mr-1">↑</span> <span class="text-success">${formatPercent(m.revGrowth)} r/r</span>`
-                : `<span class="text-danger font-bold mr-1">↓</span> <span class="text-danger">${formatPercent(m.revGrowth)} r/r</span>`;
+    document.getElementById('modal-user-save').addEventListener('click', async () => {
+      const id = document.getElementById('fu-id').value;
+      hideModalErrors('modal-user-assign');
+      const { error: errU } = await sb.from('bond_profiles').update({
+        bond_tenant_id: document.getElementById('fu-tenant').value || null,
+        bond_rola: document.getElementById('fu-rola').value
+      }).eq('bond_id', id);
+      
+      if(errU) { showModalError('modal-user-assign', 'Błąd zapisu: ' + errU.message); return; }
+      closeModal('modal-user-assign'); await loadAll();
+    });
 
-            const netTrendEl = document.getElementById('ui-kpi-netprofit-trend');
-            netTrendEl.innerHTML = m.netGrowth >= 0 
-                ? `<span class="text-success font-bold mr-1">↑</span> <span class="text-success">${formatPercent(m.netGrowth)} r/r</span>`
-                : `<span class="text-danger font-bold mr-1">↓</span> <span class="text-danger">${formatPercent(m.netGrowth)} r/r</span>`;
+    document.getElementById('btn-invite-user').addEventListener('click', () => {
+      openModal('modal-invite');
+    });
 
-            const lastCR = m.currentRatio[m.currentRatio.length - 1];
-            document.getElementById('ui-kpi-cr').textContent = formatFloat(lastCR);
-            const crStatusEl = document.getElementById('ui-kpi-cr-status');
-            if(lastCR >= 1.2) { crStatusEl.textContent = 'Poziom bezpieczny'; crStatusEl.className = 'text-xs mt-1 font-medium text-success'; }
-            else if(lastCR >= 1.0) { crStatusEl.textContent = 'Wymaga uwagi'; crStatusEl.className = 'text-xs mt-1 font-medium text-warning'; }
-            else { crStatusEl.textContent = 'Zagrożenie płynności'; crStatusEl.className = 'text-xs mt-1 font-medium text-danger'; }
+    document.getElementById('modal-invite-save').addEventListener('click', async () => {
+      const email = document.getElementById('finv-email').value.trim();
+      const tenantId_inv = document.getElementById('finv-tenant').value;
+      const rola = document.getElementById('finv-rola').value;
+      const errEl = document.querySelector('#modal-invite .modal-error');
+      
+      errEl.style.display = 'none';
+      if(!email) { errEl.textContent = 'Podaj adres e-mail'; errEl.style.display = 'block'; return; }
+      
+      alert('Zaproszenie: Użyj Supabase Dashboard → Authentication → Users → Invite User dla: ' + email + '\nPo rejestracji przypisz klienta: ' + tenantId_inv + ' / rola: ' + rola);
+      closeModal('modal-invite');
+    });
 
-            // Update Score Card
-            const scoreEl = document.getElementById('ui-rating-score');
-            const descEl = document.getElementById('ui-rating-desc');
-            scoreEl.textContent = scoreData.grade;
-            scoreEl.className = `text-6xl font-black mb-2 ${scoreData.letterClass}`;
-            descEl.textContent = scoreData.desc;
-            descEl.className = `text-sm font-medium px-3 py-1 rounded-full ${scoreData.colorClass}`;
+    // Widoki Detali
+    function openTenantDetail(tid) {
+      const t = allTenants.find(x => x.bond_id === tid); if(!t) return;
+      const bonds = allBonds.filter(b => b.bond_tenant_id === tid);
+      const insurers = allInsurers.filter(i => i.bond_tenant_id === tid);
+      const active = bonds.filter(b => bondStatus(b) !== 'expired');
+      const expiring = bonds.filter(b => bondStatus(b) === 'expiring');
+      const suma = active.reduce((s, b) => s + (b.bond_suma || 0), 0);
+      const skladka = bonds.reduce((s, b) => s + (b.bond_skladka || 0), 0);
+      
+      document.getElementById('tenant-detail-title').textContent = t.bond_nazwa;
+      document.getElementById('tenant-detail-meta').textContent = [
+        t.bond_nip ? 'NIP: ' + t.bond_nip : '',
+        t.bond_regon ? 'REGON: ' + t.bond_regon : '',
+        t.bond_krs ? 'KRS: ' + t.bond_krs : '',
+        'Slug: ' + t.bond_slug
+      ].filter(Boolean).join(' · ');
+      
+      document.getElementById('tenant-detail-kpi').innerHTML = `
+        <div class="kpi-card"><div class="kpi-label">Aktywne gwarancje</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">${expiring.length} wygasające</div></div>
+        <div class="kpi-card"><div class="kpi-label">Suma zaangażowana</div><div class="kpi-value">${fmt(suma)}</div><div class="kpi-sub">PLN</div></div>
+        <div class="kpi-card"><div class="kpi-label">Łączna składka</div><div class="kpi-value">${fmt(skladka)}</div><div class="kpi-sub">PLN</div></div>
+        <div class="kpi-card"><div class="kpi-label">Umowy limitów</div><div class="kpi-value">${insurers.length}</div><div class="kpi-sub">TU</div></div>`;
+      
+      document.getElementById('tenant-detail-bonds-tbody').innerHTML = bonds.length ? bonds.map(b => `<tr>
+        <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
+        <td>${rodzajBadge(b.bond_rodzaj)}</td>
+        <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div><div style="font-size:var(--text-xs);color:var(--color-primary)">${escapeHTML(b.bond_beneficjent||'')}</div></td>
+        <td style="font-size:var(--text-xs)">${escapeHTML(b.bond_insurers?.bond_nazwa||'—')}</td>
+        <td style="font-size:var(--text-xs);white-space:nowrap">${escapeHTML(b.bond_data_od)}<br>${escapeHTML(b.bond_data_do)}</td>
+        <td class="num">${fmt(b.bond_suma)}</td>
+        <td class="num">${fmt(b.bond_skladka)}</td>
+        <td>${statusBadge(b)}</td>
+      </tr>`).join('') : '<tr><td colspan="8"><div class="empty"><p>Brak gwarancji</p></div></td></tr>';
+      
+      document.getElementById('tenant-detail-limits').innerHTML = insurers.length ? insurers.map(ins => {
+        const iBonds = bonds.filter(b => b.bond_insurer_id === ins.bond_id && bondStatus(b) !== 'expired');
+        const zaang = iBonds.reduce((s, b) => s + (b.bond_suma || 0), 0);
+        const lim = ins.bond_limit; const wolny = lim != null ? lim - zaang : null;
+        const pct = lim ? Math.min(100, Math.round(zaang/lim*100)) : 0;
+        const fillClass = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : '';
+        return `<div class="limit-card"><div class="limit-card-header"><div class="limit-tu-name">${escapeHTML(ins.bond_nazwa)}</div><span class="badge badge-active">${iBonds.length} gwarancji</span></div>
+        ${lim != null ? `<div class="limit-bar-track"><div class="limit-bar-fill ${fillClass}" style="width:${pct}%"></div></div><div class="limit-nums"><span>Zaangażowane: <strong>${fmt(zaang)}</strong></span><span>${pct}%</span></div><div class="limit-nums" style="margin-top:var(--space-2)"><span>Limit: ${fmt(lim)}</span><span style="color:${(wolny||0)<0?'var(--color-error)':'var(--color-success)'}">Wolne: ${fmt(wolny)}</span></div>` : `<div style="font-size:var(--text-xs);color:var(--color-text-faint);font-style:italic">Brak UL</div>`}
+        ${ins.bond_ul_nr ? `<div style="font-size:var(--text-xs);color:var(--color-text-faint);margin-top:var(--space-3)">UL: ${escapeHTML(ins.bond_ul_nr)}</div>` : ''}
+        </div>`;
+      }).join('') : '<div class="empty"><p>Brak umów limitów</p></div>';
+      
+      navTo('tenant-detail');
+    }
 
-            // Update Alerts
-            const alertsList = document.getElementById('ui-alerts-list');
-            const emptyAlerts = document.getElementById('ui-alerts-empty');
-            alertsList.innerHTML = '';
-            
-            if(scoreData.alerts.length === 0) {
-                alertsList.classList.add('hidden');
-                emptyAlerts.classList.remove('hidden');
-            } else {
-                alertsList.classList.remove('hidden');
-                emptyAlerts.classList.add('hidden');
-                scoreData.alerts.forEach(alertText => {
-                    const li = document.createElement('li');
-                    li.className = 'text-sm text-slate-700 flex items-start bg-red-50 p-3 rounded border border-red-100';
-                    li.innerHTML = `<span class="text-danger mr-2 mt-0.5">•</span> <span>${alertText}</span>`;
-                    alertsList.appendChild(li);
-                });
-            }
+    function openInsurerDetail(iid) {
+      const ins = allInsurers.find(x => x.bond_id === iid); if(!ins) return;
+      const bonds = allBonds.filter(b => b.bond_insurer_id === iid);
+      const active = bonds.filter(b => bondStatus(b) !== 'expired');
+      const zaang = active.reduce((s, b) => s + (b.bond_suma || 0), 0);
+      const lim = ins.bond_limit; const pct = lim ? Math.min(100, Math.round(zaang/lim*100)) : 0;
+      const tenant = allTenants.find(t => t.bond_id === ins.bond_tenant_id);
+      
+      document.getElementById('insurer-detail-title').textContent = ins.bond_nazwa;
+      document.getElementById('insurer-detail-meta').textContent = [
+        tenant ? 'Klient: ' + tenant.bond_nazwa : '',
+        ins.bond_ul_nr ? 'UL nr: ' + ins.bond_ul_nr : '',
+        ins.bond_ul_data_od && ins.bond_ul_data_do ? ins.bond_ul_data_od + ' – ' + ins.bond_ul_data_do : '',
+        ins.bond_stawka_bazowa ? 'Stawka: ' + ins.bond_stawka_bazowa + '%' : ''
+      ].filter(Boolean).join(' · ');
+      
+      document.getElementById('insurer-detail-kpi').innerHTML = `
+        <div class="kpi-card"><div class="kpi-label">Limit UL</div><div class="kpi-value">${fmt(lim)}</div><div class="kpi-sub">PLN</div></div>
+        <div class="kpi-card"><div class="kpi-label">Zaangażowane</div><div class="kpi-value">${fmt(zaang)}</div><div class="kpi-sub">${pct}% limitu</div></div>
+        <div class="kpi-card"><div class="kpi-label">Wolne</div><div class="kpi-value" style="color:${lim&&zaang>lim?'var(--color-error)':'var(--color-success)'}">${fmt(lim!=null?lim-zaang:null)}</div><div class="kpi-sub">PLN</div></div>
+        <div class="kpi-card"><div class="kpi-label">Gwarancji aktywnych</div><div class="kpi-value">${active.length}</div><div class="kpi-sub">z ${bonds.length} łącznie</div></div>`;
+      
+      document.getElementById('insurer-detail-bonds-tbody').innerHTML = bonds.length ? bonds.map(b => `<tr>
+        <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
+        <td>${rodzajBadge(b.bond_rodzaj)}</td>
+        <td style="max-width:220px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div><div style="font-size:var(--text-xs);color:var(--color-primary)">${escapeHTML(b.bond_beneficjent||'')}</div></td>
+        <td style="font-size:var(--text-xs);white-space:nowrap">${escapeHTML(b.bond_data_od)}<br>${escapeHTML(b.bond_data_do)}</td>
+        <td class="num">${fmt(b.bond_suma)}</td>
+        <td class="num">${fmt(b.bond_skladka)}</td>
+        <td>${statusBadge(b)}</td>
+      </tr>`).join('') : '<tr><td colspan="7"><div class="empty"><p>Brak gwarancji</p></div></td></tr>';
+      
+      navTo('insurer-detail');
+    }
 
-            // Update Tab 2 Metrics
-            document.getElementById('ui-metric-dr').textContent = formatPercent(m.debtRatio);
-            document.getElementById('ui-metric-dr').className = m.debtRatio > 65 ? 'text-lg text-danger font-bold' : 'text-lg text-success font-bold';
-            
-            document.getElementById('ui-metric-icr').textContent = formatFloat(m.icr) + 'x';
-            document.getElementById('ui-metric-icr').className = m.icr < 3.0 ? 'text-lg text-warning font-bold' : 'text-lg text-success font-bold';
+    // Dodawanie nowego TU ze słownika inline
+    document.getElementById('btn-add-tu-inline').addEventListener('click', async () => {
+      const name = prompt('Nazwa nowego TU:');
+      if(!name || !name.trim()) return;
+      const { error } = await sb.from('bond_tu_dict').insert({ name: name.trim() });
+      if(error) { alert('Błąd: ' + error.message); return; }
+      await loadTuDict();
+      document.getElementById('fi-nazwa').value = name.trim();
+    });
 
-            // Populate Detailed Table
-            const tbody = document.getElementById('ui-financial-table');
-            tbody.innerHTML = '';
-            const labels = ['Przychody ze sprzedaży', 'EBITDA', 'Zysk Netto', 'Kapitał Własny', 'Zobowiązania Krótkoterminowe'];
-            const keys = ['revenue', 'ebitda', 'netProfit', 'equity', 'liabilitiesST'];
-            
-            keys.forEach((key, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition-colors';
-                let rowHtml = `<td class="px-5 py-3 border-b border-border font-medium text-slate-700">${labels[idx]}</td>`;
-                data.financials[key].forEach((val, i) => {
-                    const isLast = i === data.financials[key].length - 1;
-                    const cellClass = isLast ? 'font-bold text-primary bg-blue-50/30' : 'text-text-muted';
-                    // Format number with spaces
-                    const formatted = val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                    rowHtml += `<td class="px-5 py-3 border-b border-border text-right ${cellClass}">${formatted}</td>`;
-                });
-                tr.innerHTML = rowHtml;
-                tbody.appendChild(tr);
-            });
+    // Nawigacja
+    function navTo(page) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const navEl = document.querySelector('[data-page="' + page + '"]');
+      if(navEl) navEl.classList.add('active');
+      const pageEl = document.getElementById('page-' + page);
+      if(pageEl) pageEl.classList.add('active');
+      lucide.createIcons();
+    }
+    
+    document.getElementById('btn-theme').addEventListener('click', () => {
+      const b = document.body;
+      b.dataset.theme = b.dataset.theme === 'dark' ? 'light' : 'dark';
+    });
 
-            // Update Charts
-            renderCharts(data, m);
-        }
 
-        // ==========================================
-        // 4. CHART RENDERING (Chart.js)
-        // ==========================================
-        Chart.defaults.font.family = "'Inter', sans-serif";
-        Chart.defaults.color = '#64748b';
-        Chart.defaults.scale.grid.color = '#e2e8f0';
+    // =========================================================================
+    // --- 4. AUTH.JS (Logowanie, Wylogowanie i Autoryzacja Sesji) ---
+    // =========================================================================
 
-        function renderCharts(data, m) {
-            const years = data.years;
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-pass').value;
+      const err = document.getElementById('auth-error');
+      
+      err.style.display = 'none';
+      if(!email || !pass) { err.textContent='Podaj email i hasło'; err.style.display='block'; return; }
+      
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if(error) { err.textContent = 'Błąd logowania: ' + error.message; err.style.display='block'; }
+      else initApp();
+    });
+    
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      await sb.auth.signOut(); 
+      location.reload();
+    });
 
-            // 1. Chart Summary (Revenue vs EBITDA)
-            const ctxSummary = document.getElementById('chart-summary').getContext('2d');
-            if(currentState.charts.summary) currentState.charts.summary.destroy();
-            currentState.charts.summary = new Chart(ctxSummary, {
-                type: 'bar',
-                data: {
-                    labels: years,
-                    datasets: [
-                        {
-                            label: 'EBITDA (tys. PLN)',
-                            data: data.financials.ebitda,
-                            type: 'line',
-                            borderColor: '#f59e0b',
-                            backgroundColor: '#f59e0b',
-                            borderWidth: 3,
-                            tension: 0.3,
-                            yAxisID: 'y1',
-                            pointBackgroundColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 4
-                        },
-                        {
-                            label: 'Przychody (tys. PLN)',
-                            data: data.financials.revenue,
-                            backgroundColor: '#2563eb',
-                            borderRadius: 4,
-                            yAxisID: 'y'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
-                        tooltip: { backgroundColor: '#0f172a', titleFont: { size: 13 }, bodyFont: { size: 13 }, padding: 10 }
-                    },
-                    scales: {
-                        x: { grid: { display: false } },
-                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'Przychody' } },
-                        y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'EBITDA' } }
-                    }
-                }
-            });
+    // Automatyczne sprawdzenie sesji przy starcie
+    (async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if(session) initApp(); 
+      else lucide.createIcons();
+    })();
 
-            // 2. Chart Liquidity Trends
-            const ctxLiq = document.getElementById('chart-liquidity').getContext('2d');
-            if(currentState.charts.liquidity) currentState.charts.liquidity.destroy();
-            currentState.charts.liquidity = new Chart(ctxLiq, {
-                type: 'line',
-                data: {
-                    labels: years,
-                    datasets: [
-                        {
-                            label: 'Wskaźnik Bieżący (CR)',
-                            data: m.currentRatio,
-                            borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'Wskaźnik Szybki (QR)',
-                            data: m.quickRatio,
-                            borderColor: '#10b981',
-                            backgroundColor: 'transparent',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            tension: 0.3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        annotation: { // Conceptual line, drawn manually via Chart.js plugin normally, mimicking via scale config
-                        }
-                    },
-                    scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            suggestedMax: 2.5,
-                            grid: { color: (context) => context.tick.value === 1.2 ? '#ef4444' : '#e2e8f0', lineWidth: (context) => context.tick.value === 1.2 ? 2 : 1 }
-                        }
-                    }
-                }
-            });
+    // =========================================================================
+    // --- 5. LOGIKA ANALITYKI UNDERWRITINGOWEJ ---
+    // =========================================================================
+    document.getElementById('btn-analyze').addEventListener('click', () => {
+      const getVal = (id) => parseFloat(document.getElementById(id).value) || 0;
 
-            // 3. Chart Debt Structure (Doughnut)
-            const ctxDebt = document.getElementById('chart-debt-structure').getContext('2d');
-            if(currentState.charts.debt) currentState.charts.debt.destroy();
-            
-            const lastEq = data.financials.equity[data.financials.equity.length - 1];
-            const lastSt = data.financials.liabilitiesST[data.financials.liabilitiesST.length - 1];
-            const lastLt = data.financials.liabilitiesLT[data.financials.liabilitiesLT.length - 1];
+      // 1. Pobieranie Danych
+      const rev0 = getVal('rev-0'); const rev1 = getVal('rev-1');
+      const ebitda0 = getVal('ebitda-0');
+      const net0 = getVal('net-0');
+      const eq0 = getVal('eq-0');
+      const lst0 = getVal('lst-0');
+      const llt0 = getVal('llt-0');
+      const ca0 = getVal('ca-0');
+      const inv0 = getVal('inv-0');
+      const int0 = getVal('int-0');
 
-            currentState.charts.debt = new Chart(ctxDebt, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Kapitał Własny', 'Zobow. Krótkoterminowe', 'Zobow. Długoterminowe'],
-                    datasets: [{
-                        data: [lastEq, lastSt, lastLt],
-                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '65%',
-                    plugins: {
-                        legend: { position: 'right', labels: { boxWidth: 12 } },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) { label += ': '; }
-                                    const total = context.chart._metasets[context.datasetIndex].total;
-                                    const value = context.raw;
-                                    const percentage = Math.round((value / total) * 100) + '%';
-                                    label += new Intl.NumberFormat('pl-PL').format(value) + ' kPLN (' + percentage + ')';
-                                    return label;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+      // 2. Obliczenia
+      const currentRatio = lst0 === 0 ? 0 : (ca0 / lst0);
+      const quickRatio = lst0 === 0 ? 0 : ((ca0 - inv0) / lst0);
+      const revGrowth = rev1 === 0 ? 0 : ((rev0 - rev1) / rev1) * 100;
+      const ebitdaMargin = rev0 === 0 ? 0 : (ebitda0 / rev0) * 100;
+      
+      const totalDebt = lst0 + llt0;
+      const totalAssets = eq0 + totalDebt;
+      const debtRatio = totalAssets === 0 ? 0 : (totalDebt / totalAssets) * 100;
+      const icr = int0 === 0 ? 99.9 : (ebitda0 / int0);
 
-            // 4. Chart Profitability Margins
-            const ctxProf = document.getElementById('chart-profitability').getContext('2d');
-            if(currentState.charts.profitability) currentState.charts.profitability.destroy();
-            currentState.charts.profitability = new Chart(ctxProf, {
-                type: 'line',
-                data: {
-                    labels: years,
-                    datasets: [
-                        {
-                            label: 'Marża EBITDA (%)',
-                            data: m.ebitdaMargin,
-                            borderColor: '#8b5cf6',
-                            backgroundColor: '#8b5cf6',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            pointRadius: 5
-                        },
-                        {
-                            label: 'Marża Netto (ROS) (%)',
-                            data: m.ros,
-                            borderColor: '#3b82f6',
-                            backgroundColor: '#3b82f6',
-                            borderWidth: 2,
-                            borderDash: [3, 3],
-                            tension: 0.3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom' },
-                        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)}%` } }
-                    },
-                    scales: {
-                        y: { title: { display: true, text: 'Wartość %' }, suggestedMin: -5, suggestedMax: 15 }
-                    }
-                }
-            });
-        }
+      // 3. System Punktowy (Scoring)
+      let points = 100;
+      let alerts = [];
 
-        // ==========================================
-        // 5. INITIALIZATION & EVENTS
-        // ==========================================
-        function initApp() {
-            // Bind company selector
-            const select = document.getElementById('companySelect');
-            select.addEventListener('change', (e) => {
-                currentState.companyId = e.target.value;
-                currentState.data = db[currentState.companyId];
-                updateUI();
-            });
+      if (currentRatio < 1.0) { alerts.push("Krytyczny poziom płynności bieżącej (CR < 1.0). Zator płatniczy."); points -= 35; }
+      else if (currentRatio < 1.2) { alerts.push("Płynność poniżej bezpiecznego poziomu (CR < 1.2)."); points -= 15; }
 
-            // Bind tabs
-            const tabs = document.querySelectorAll('.tab-btn');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    // Remove active from all
-                    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active', 'text-brand', 'border-b-2', 'border-brand'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    
-                    // Add active to clicked
-                    tab.classList.add('active');
-                    const targetId = tab.getAttribute('data-tab');
-                    document.getElementById(targetId).classList.add('active');
-                });
-            });
+      if (net0 < 0) { alerts.push("Firma wygenerowała stratę netto w ostatnim roku."); points -= 25; }
+      if (revGrowth < -15) { alerts.push(`Drastyczny spadek przychodów r/r (${revGrowth.toFixed(1)}%).`); points -= 15; }
+      if (ebitdaMargin < 3) { alerts.push("Niska marża EBITDA. Wrażliwość na zmiany kosztów."); points -= 10; }
 
-            // Initial load
-            currentState.data = db[currentState.companyId];
-            updateUI();
-        }
+      if (debtRatio > 70) { alerts.push(`Bardzo wysokie zadłużenie ogólne (${debtRatio.toFixed(1)}%).`); points -= 20; }
+      if (icr < 2 && int0 > 0) { alerts.push(`Niskie pokrycie kosztów odsetek (ICR = ${icr.toFixed(1)}x).`); points -= 15; }
 
-        // Run when DOM is ready
-        document.addEventListener('DOMContentLoaded', initApp);
+      let grade, colorClass, desc;
+      if (points >= 85) { grade = 'A'; colorClass = 'bg-success'; desc = 'Doskonała kondycja. Niskie ryzyko.'; }
+      else if (points >= 70) { grade = 'B'; colorClass = 'bg-warning'; desc = 'Kondycja stabilna. Umiarkowane ryzyko.'; }
+      else if (points >= 50) { grade = 'C'; colorClass = 'bg-warning'; desc = 'Podwyższone ryzyko. Wymaga zabezpieczeń.'; }
+      else { grade = 'D'; colorClass = 'bg-error'; desc = 'Wysokie ryzyko niewypłacalności. Brak zdolności.'; }
 
-    </script>
+      // 4. Renderowanie Wyników UI
+      document.getElementById('results-placeholder').style.display = 'none';
+      document.getElementById('results-dashboard').style.display = 'flex';
+
+      const scoreEl = document.getElementById('ui-rating-score');
+      scoreEl.textContent = grade;
+      scoreEl.className = `score-grade ${colorClass}`;
+      document.getElementById('ui-rating-desc').textContent = desc;
+
+      const alertContainer = document.getElementById('ui-alerts-container');
+      const alertList = document.getElementById('ui-alerts-list');
+      alertList.innerHTML = '';
+      
+      if (alerts.length > 0) {
+        alertContainer.style.display = 'block';
+        alerts.forEach(msg => {
+          const li = document.createElement('li');
+          li.style.cssText = 'font-size:var(--text-sm);color:#991b1b;display:flex;align-items:flex-start;gap:6px;';
+          li.innerHTML = `<i data-lucide="x-circle" width="14" height="14" style="margin-top:2px;flex-shrink:0;"></i> <span>${msg}</span>`;
+          alertList.appendChild(li);
+        });
+      } else {
+        alertContainer.style.display = 'none';
+      }
+
+      // Funkcje pomocnicze
+      const setMetric = (id, val, suffix) => document.getElementById(id).textContent = val + suffix;
+      const setStatus = (id, isGood, isWarn) => {
+        const el = document.getElementById(id);
+        el.style.cssText = 'display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;text-transform:uppercase;';
+        if(isGood) { el.innerHTML = '<i data-lucide="check-circle" width="12" height="12"></i> OK'; el.style.color = 'var(--color-success)'; }
+        else if(isWarn) { el.innerHTML = '<i data-lucide="alert-triangle" width="12" height="12"></i> UWAGA'; el.style.color = 'var(--color-warning)'; }
+        else { el.innerHTML = '<i data-lucide="x-circle" width="12" height="12"></i> RYZYKO'; el.style.color = 'var(--color-error)'; }
+      };
+
+      setMetric('res-cr', currentRatio.toFixed(2), '');
+      setStatus('res-cr-status', currentRatio >= 1.2, currentRatio >= 1.0);
+      setMetric('res-qr', quickRatio.toFixed(2), '');
+      setStatus('res-qr-status', quickRatio >= 1.0, quickRatio >= 0.8);
+      document.getElementById('res-rev-growth').textContent = (revGrowth > 0 ? '+' : '') + revGrowth.toFixed(1) + '%';
+      setStatus('res-rev-trend', revGrowth >= 0, revGrowth >= -10);
+      setMetric('res-ebitda', ebitdaMargin.toFixed(1), '%');
+      setStatus('res-ebitda-status', ebitdaMargin >= 5, ebitdaMargin >= 2);
+      setMetric('res-debt', debtRatio.toFixed(1), '%');
+      setStatus('res-debt-status', debtRatio <= 60, debtRatio <= 75);
+      setMetric('res-icr', icr > 90 ? '>50' : icr.toFixed(1), 'x');
+      setStatus('res-icr-status', icr >= 3, icr >= 1.5);
+
+      lucide.createIcons();
+    });
+
+  </script>
 </body>
 </html>
