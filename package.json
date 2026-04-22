@@ -1,0 +1,30 @@
+{
+  "name": "bonds-panel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.ts --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src --ext .js,.ts --fix",
+    "format": "prettier --write \"src/**/*.{js,ts,html,css}\"",
+    "format:check": "prettier --check \"src/**/*.{js,ts,html,css}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "lucide": "^0.511.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^1.6.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.0",
+    "vite": "^5.2.0",
+    "vitest": "^1.6.0"
+  }
+}

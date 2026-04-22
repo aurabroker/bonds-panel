@@ -316,6 +316,7 @@
                 <tbody id="bonds-tbody"></tbody>
               </table>
             </div>
+            <div id="bonds-pagination"></div>
           </div>
         </div>
 
@@ -950,9 +951,16 @@
       auth: { storage: customStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
     });
 
+    /** @param {string|null|undefined} s @returns {string} */
     const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
+    /** @param {number|null|undefined} n @returns {string} */
     const fmt = n => n==null?'—':Number(n).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
 
+    /**
+     * @param {string} msg
+     * @param {'info'|'success'|'warn'|'error'} [type]
+     * @param {number} [duration]
+     */
     function showToast(msg, type = 'info', duration = 4000) {
       const container = document.getElementById('toast-container');
       const el = document.createElement('div');
@@ -961,6 +969,27 @@
       container.appendChild(el);
       setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, duration);
     }
+
+    // Throttle zapobiega flood-owaniu bazy przy szybkich kliknięciach
+    const _writeThrottle = new Map();
+    function throttleWrite(key, ms = 1000) {
+      const last = _writeThrottle.get(key) || 0;
+      if(Date.now() - last < ms) { showToast('Poczekaj chwilę przed kolejną operacją.', 'warn', 2000); return false; }
+      _writeThrottle.set(key, Date.now());
+      return true;
+    }
+
+    window.onerror = (msg, src, line, col, err) => {
+      console.error('Uncaught error:', msg, src && src.split('/').pop(), line + ':' + col);
+      showToast('Wystąpił nieoczekiwany błąd aplikacji.', 'error', 6000);
+      return true;
+    };
+    window.onunhandledrejection = (e) => {
+      const reason = e.reason?.message || String(e.reason);
+      if(reason.includes('JWT') || reason.includes('session')) return;
+      console.error('Unhandled promise rejection:', reason);
+      showToast('Błąd operacji asynchronicznej.', 'error', 5000);
+    };
     const dateDiff = (a,b) => Math.round((new Date(b)-new Date(a))/(1000*60*60*24));
     const today = () => new Date().toISOString().slice(0,10);
 
@@ -968,12 +997,14 @@
       const c = { 'wadialna':'primary', 'nalezyte_wykonanie':'success', 'usunięcie_wad':'warning', 'zwrot_zaliczki':'error', 'mieszana':'admin' }[r] || 'muted';
       return `<span class="badge" style="background:var(--color-surface-offset);border:1px solid oklch(from var(--color-${c}) l c h/0.2);color:var(--color-${c})">${r.replace('_',' ')}</span>`;
     };
+    /** @param {{ bond_data_do: string }} b @returns {'expired'|'expiring'|'active'} */
     const bondStatus = b => {
       const d = dateDiff(today(), b.bond_data_do);
       if(d < 0) return 'expired';
       if(d <= 30) return 'expiring';
       return 'active';
     };
+    /** @param {{ bond_data_do: string }} b @returns {string} */
     const statusBadge = b => {
       const s = bondStatus(b);
       if(s==='expired') return '<span class="badge badge-expired">Wygasła</span>';
@@ -984,6 +1015,10 @@
     // Stan globalny (State)
     let isAdmin = false, tenantId = null;
     let allBonds = [], allInsurers = [], allTenants = [], allUsers = [], allTuDict = [], allAnalytics = [];
+
+    const PAGE_SIZE = 50;
+    let bondsPage = 0, bondsTotalCount = 0;
+    let analyticsPage = 0, analyticsTotalCount = 0;
 
 
     // =========================================================================
@@ -1028,28 +1063,31 @@
       lucide.createIcons();
     }
 
-    async function loadAll() {
+    async function loadAll(resetPage = true) {
+      if(resetPage) bondsPage = 0;
+      const from = bondsPage * PAGE_SIZE, to = from + PAGE_SIZE - 1;
+
       const [rT, rI, rB, rU] = await Promise.all([
         sb.from('bond_tenants').select('*').order('bond_nazwa'),
         sb.from('bond_insurers').select('*,bond_tenants(bond_nazwa)').order('bond_nazwa'),
-        sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)').order('bond_data_do'),
+        sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)', { count: 'exact' }).order('bond_data_do').range(from, to),
         sb.from('bond_profiles').select('*,bond_tenants(bond_nazwa)')
       ]);
 
-      // Ładowanie historii analiz
-      try { 
-        const { data: rA } = await sb.from('bond_analytics').select('*').order('created_at', { ascending: false });
-        allAnalytics = rA || [];
+      try {
+        const { data: rA, count: aC } = await sb.from('bond_analytics').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(0, 19);
+        allAnalytics = rA || []; analyticsTotalCount = aC || 0;
       } catch (e) { allAnalytics = []; }
 
       allTenants = rT.data || [];
       allInsurers = rI.data || [];
-      allBonds = rB.data || [];
+      allBonds = rB.data || []; bondsTotalCount = rB.count || 0;
       allUsers = rU.data || [];
-      
+
       populateTenantSelectors();
       updateDash();
       renderBonds(allBonds);
+      renderPagination('bonds', bondsPage, bondsTotalCount, p => { bondsPage = p; loadAll(false); });
       renderLimits(allInsurers, allBonds);
       renderTerminarz(allBonds);
       renderSkladki(allBonds);
@@ -1058,24 +1096,44 @@
       renderUsers();
     }
 
-    async function loadBonds(tId) {
+    async function loadBonds(tId, resetPage = true) {
+      if(resetPage) bondsPage = 0;
+      const from = bondsPage * PAGE_SIZE, to = from + PAGE_SIZE - 1;
+
       const [rI, rB] = await Promise.all([
         sb.from('bond_insurers').select('*,bond_tenants(bond_nazwa)').eq('bond_tenant_id', tId).order('bond_nazwa'),
-        sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)').eq('bond_tenant_id', tId).order('bond_data_do')
+        sb.from('bond_bonds').select('*,bond_insurers(bond_nazwa,bond_limit),bond_tenants(bond_nazwa)', { count: 'exact' }).eq('bond_tenant_id', tId).order('bond_data_do').range(from, to)
       ]);
 
-      try { 
-        const { data: rA } = await sb.from('bond_analytics').select('*').eq('bond_tenant_id', tId).order('created_at', { ascending: false });
+      try {
+        const { data: rA } = await sb.from('bond_analytics').select('*').eq('bond_tenant_id', tId).order('created_at', { ascending: false }).range(0, 19);
         allAnalytics = rA || [];
       } catch (e) { allAnalytics = []; }
 
       allInsurers = rI.data || [];
-      allBonds = rB.data || [];
+      allBonds = rB.data || []; bondsTotalCount = rB.count || 0;
       updateDash();
       renderBonds(allBonds);
+      renderPagination('bonds', bondsPage, bondsTotalCount, p => { bondsPage = p; loadBonds(tId, false); });
       renderLimits(allInsurers, allBonds);
       renderTerminarz(allBonds);
       renderSkladki(allBonds);
+    }
+
+    function renderPagination(key, page, total, onPage) {
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      const containerId = key + '-pagination';
+      let el = document.getElementById(containerId);
+      if(!el) return;
+      if(totalPages <= 1) { el.innerHTML = ''; return; }
+      const pages = [];
+      if(page > 0) pages.push(`<button class="btn btn-ghost" style="padding:var(--space-1) var(--space-3)" data-p="${page-1}">‹</button>`);
+      for(let i = Math.max(0, page-2); i <= Math.min(totalPages-1, page+2); i++) {
+        pages.push(`<button class="btn ${i===page?'btn-primary':'btn-ghost'}" style="padding:var(--space-1) var(--space-3)" data-p="${i}">${i+1}</button>`);
+      }
+      if(page < totalPages-1) pages.push(`<button class="btn btn-ghost" style="padding:var(--space-1) var(--space-3)" data-p="${page+1}">›</button>`);
+      el.innerHTML = `<div style="display:flex;gap:4px;align-items:center;justify-content:flex-end;padding:var(--space-3) 0">${pages.join('')}<span style="font-size:var(--text-xs);color:var(--color-text-faint);margin-left:var(--space-2)">${total} rekordów</span></div>`;
+      el.querySelectorAll('[data-p]').forEach(btn => btn.addEventListener('click', () => onPage(+btn.dataset.p)));
     }
 
 
@@ -1142,9 +1200,7 @@
     }
 
     function renderBonds(list) {
-      const tb = document.getElementById('bonds-tbody');
-      if(!list.length) { tb.innerHTML = `<tr><td colspan="9"><div class="empty"><h3>Brak gwarancji</h3><p>Dodaj pierwszą gwarancję klikając przycisk powyżej</p></div></td></tr>`; lucide.createIcons(); return; }
-      tb.innerHTML = list.map(b => `<tr>
+      renderTable('bonds-tbody', list, b => `<tr>
         <td><strong>${escapeHTML(b.bond_nr)}</strong>${b.bond_bez_limitu?'<br><span style="font-size:10px;color:var(--color-text-faint)">poza UL</span>':''}${b.bond_stawka_override?'<br><span style="font-size:10px;color:var(--color-warning)">stawka negocj.</span>':''}</td>
         <td>${rodzajBadge(b.bond_rodzaj)}</td>
         <td style="max-width:200px"><div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div><div style="font-size:var(--text-xs);color:var(--color-text-muted)">${escapeHTML(b.bond_inwestor)||'—'}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">Ben: ${escapeHTML(b.bond_beneficjent)}</div>`:''}</td>
@@ -1154,8 +1210,7 @@
         <td class="num">${fmt(b.bond_skladka)}</td>
         <td>${statusBadge(b)}</td>
         <td style="white-space:nowrap"><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editBond('${b.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteBond('${b.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button></td>
-      </tr>`).join('');
-      lucide.createIcons();
+      </tr>`, 'Brak gwarancji', 9);
     }
 
     function renderLimits(insurers, bonds) {
@@ -1180,7 +1235,7 @@
     }
 
     function renderTerminarz(bonds) {
-      document.getElementById('terminarz-tbody').innerHTML = [...bonds].sort((a,b) => a.bond_data_do.localeCompare(b.bond_data_do)).map(b => `<tr>
+      renderTable('terminarz-tbody', [...bonds].sort((a,b) => a.bond_data_do.localeCompare(b.bond_data_do)), b => `<tr>
         <td><strong>${escapeHTML(b.bond_nr)}</strong></td>
         <td style="max-width:180px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</div>${b.bond_beneficjent?`<div style="font-size:var(--text-xs);color:var(--color-primary)">${escapeHTML(b.bond_beneficjent)}</div>`:''}</td>
         <td>${rodzajBadge(b.bond_rodzaj)}</td>
@@ -1188,23 +1243,21 @@
         <td style="font-size:var(--text-xs)">${escapeHTML(b.bond_data_od)}</td>
         <td style="font-size:var(--text-xs);font-weight:600;color:${dateDiff(today(), b.bond_data_do)<=30?'var(--color-error)':'inherit'}">${escapeHTML(b.bond_data_do)}</td>
         <td class="num">${fmt(b.bond_suma)}</td>
-      </tr>`).join('');
+      </tr>`, 'Brak gwarancji w terminarzu', 7);
     }
 
     function renderSkladki(bonds) {
       let total = 0;
-      document.getElementById('skladki-tbody').innerHTML = bonds.map(b => {
+      renderTable('skladki-tbody', bonds, b => {
         const dni = dateDiff(b.bond_data_od, b.bond_data_do);
         const sk = b.bond_skladka || 0; total += sk;
         return `<tr><td><strong>${escapeHTML(b.bond_nr)}</strong></td><td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(b.bond_kontrakt)}</td><td>${rodzajBadge(b.bond_rodzaj)}</td><td class="num">${dni}</td><td class="num">${b.bond_stawka!=null?b.bond_stawka+'%':'—'}</td><td class="num">${fmt(b.bond_suma)}</td><td class="num" style="font-weight:600">${fmt(sk)}</td></tr>`;
-      }).join('');
+      }, 'Brak składek', 7);
       document.getElementById('skladki-total').textContent = fmt(total) + ' PLN';
     }
 
     function renderClients() {
-      const tb = document.getElementById('clients-tbody');
-      if(!allTenants.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty"><p>Brak klientów</p></div></td></tr>'; return; }
-      tb.innerHTML = allTenants.map(t => {
+      renderTable('clients-tbody', allTenants, t => {
         const tBonds = allBonds.filter(b => b.bond_tenant_id === t.bond_id);
         const active = tBonds.filter(b => bondStatus(b) !== 'expired');
         const expiring = tBonds.filter(b => bondStatus(b) === 'expiring');
@@ -1217,18 +1270,15 @@
           <td>${expiring.length>0?`<span class="badge badge-expiring">${expiring.length} wygasające</span>`:'<span style="color:var(--color-text-faint);font-size:var(--text-xs)">—</span>'}</td>
           <td style="white-space:nowrap;display:flex;gap:4px">
             <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:11px" onclick="openTenantDetail('${t.bond_id}')"><i data-lucide="layout-dashboard" width="12" height="12"></i> Panel</button>
-            <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editClient('${t.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> 
+            <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editClient('${t.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button>
             <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteClient('${t.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button>
           </td>
         </tr>`;
-      }).join('');
-      lucide.createIcons();
+      }, 'Brak klientów', 6);
     }
 
     function renderInsurers() {
-      const tb = document.getElementById('insurers-tbody');
-      if(!allInsurers.length) { tb.innerHTML='<tr><td colspan="8"><div class="empty"><p>Brak ubezpieczycieli</p></div></td></tr>'; return; }
-      tb.innerHTML = allInsurers.map(i => `<tr>
+      renderTable('insurers-tbody', allInsurers, i => `<tr>
         <td><strong>${escapeHTML(i.bond_nazwa)}</strong></td>
         <td style="font-size:var(--text-xs)">${escapeHTML(i.bond_tenants?.bond_nazwa)||'—'}</td>
         <td class="num">${fmt(i.bond_limit)}</td>
@@ -1238,42 +1288,27 @@
         <td style="font-size:var(--text-xs);white-space:nowrap">${escapeHTML(i.bond_ul_data_od||'')}${i.bond_ul_data_do?' → '+escapeHTML(i.bond_ul_data_do):''}</td>
         <td style="white-space:nowrap;display:flex;gap:4px">
           <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:11px" onclick="openInsurerDetail('${i.bond_id}')"><i data-lucide="layout-dashboard" width="12" height="12"></i> Panel</button>
-          <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editInsurer('${i.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button> 
+          <button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2)" onclick="editInsurer('${i.bond_id}')"><i data-lucide="pencil" width="14" height="14"></i></button>
           <button class="btn btn-danger" style="padding:var(--space-1) var(--space-2)" onclick="deleteInsurer('${i.bond_id}')"><i data-lucide="trash-2" width="14" height="14"></i></button>
         </td>
-      </tr>`).join('');
-      lucide.createIcons();
+      </tr>`, 'Brak ubezpieczycieli', 8);
     }
 
     function renderUsers() {
-      const tb = document.getElementById('users-tbody');
-      if(!allUsers.length) { tb.innerHTML='<tr><td colspan="4"><div class="empty"><p>Brak profili użytkowników</p></div></td></tr>'; return; }
-      tb.innerHTML = allUsers.map(u => `<tr>
+      renderTable('users-tbody', allUsers, u => `<tr>
         <td><div style="font-weight:600;font-size:var(--text-sm)">${u.bond_email?'<span style="color:var(--color-primary)">@</span> '+escapeHTML(u.bond_email):''}</div><div style="font-size:10px;color:var(--color-text-faint);word-break:break-all">${u.bond_id}</div></td>
         <td>${escapeHTML(u.bond_tenants?.bond_nazwa)||'<span style="color:var(--color-text-faint)">Nieprzypisany</span>'}</td>
         <td><span class="badge ${u.bond_rola==='admin'?'badge-admin':'badge-active'}">${escapeHTML(u.bond_rola)||'klient'}</span></td>
         <td><button class="btn btn-ghost" style="padding:var(--space-1) var(--space-2);font-size:var(--text-xs)" onclick="assignUser('${u.bond_id}','${u.bond_tenant_id||''}','${escapeHTML(u.bond_rola)||'klient'}')"><i data-lucide="user-cog" width="14" height="14"></i> Przypisz</button></td>
-      </tr>`).join('');
-      lucide.createIcons();
+      </tr>`, 'Brak profili użytkowników', 4);
     }
 
     function renderTenantAnalytics(tid) {
-      const tb = document.getElementById('tenant-detail-analytics-tbody');
       const ana = allAnalytics.filter(a => a.bond_tenant_id === tid);
-      
-      if(!ana.length) { tb.innerHTML='<tr><td colspan="5"><div class="empty">Brak przeprowadzonych analiz.</div></td></tr>'; return; }
-      
-      tb.innerHTML = ana.map(a => {
+      renderTable('tenant-detail-analytics-tbody', ana, a => {
         let rev = 0, net = 0;
-        if(a.financial_data) {
-          rev = a.financial_data.rev_0 || 0;
-          net = a.financial_data.net_0 || 0;
-        }
-        
-        let colorClass = 'success';
-        if(a.score_grade.includes('B') || a.score_grade.includes('C')) colorClass = 'warning';
-        if(a.score_grade.includes('D')) colorClass = 'error';
-
+        if(a.financial_data) { rev = a.financial_data.rev_0 || 0; net = a.financial_data.net_0 || 0; }
+        const colorClass = a.score_grade.includes('D') ? 'error' : (a.score_grade.includes('B') || a.score_grade.includes('C')) ? 'warning' : 'success';
         return `<tr>
           <td><strong>${new Date(a.created_at).toLocaleDateString('pl-PL')}</strong></td>
           <td><span class="badge" style="background:oklch(from var(--color-${colorClass}) l c h/0.1);color:var(--color-${colorClass});font-size:12px">${escapeHTML(a.score_grade)}</span></td>
@@ -1281,7 +1316,7 @@
           <td>${fmt(rev)} kPLN</td>
           <td>${fmt(net)} kPLN</td>
         </tr>`;
-      }).join('');
+      }, 'Brak przeprowadzonych analiz.', 5);
     }
 
     // Modal helpers
@@ -1319,6 +1354,44 @@
       if(el) el.style.display = 'none';
     }
 
+    /**
+     * Generyczny zapis INSERT/UPDATE do Supabase z obsługą błędów.
+     * @param {string} table - nazwa tabeli Supabase
+     * @param {string} modalId - ID modalu do wyświetlenia błędu
+     * @param {Object} payload - dane do zapisu
+     * @param {string} [id] - bond_id istniejącego rekordu (UPDATE); falsy = INSERT
+     * @returns {Promise<boolean>}
+     */
+    async function saveCRUD(table, modalId, payload, id) {
+      hideModalErrors(modalId);
+      const r = id
+        ? await sb.from(table).update(payload).eq('bond_id', id)
+        : await sb.from(table).insert(payload);
+      if(r.error) {
+        console.warn(table + ' save error:', r.error.code);
+        showModalError(modalId, 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.');
+        return false;
+      }
+      closeModal(modalId);
+      return true;
+    }
+
+    /**
+     * Renderuje generyczną tabelę z obsługą stanu pustego.
+     * @param {string} tbodyId - ID elementu tbody
+     * @param {Array} list - dane do wyrenderowania
+     * @param {function(*): string} rowFn - funkcja zwracająca HTML wiersza
+     * @param {string} [emptyMsg] - komunikat gdy lista pusta
+     * @param {number} [colSpan] - colspan dla pustego wiersza
+     */
+    function renderTable(tbodyId, list, rowFn, emptyMsg, colSpan) {
+      const tb = document.getElementById(tbodyId);
+      if(!tb) return;
+      if(!list.length) { tb.innerHTML = `<tr><td colspan="${colSpan||6}"><div class="empty"><p>${emptyMsg||'Brak danych'}</p></div></td></tr>`; return; }
+      tb.innerHTML = list.map(rowFn).join('');
+      lucide.createIcons();
+    }
+
     function calcSkladka() {
       const od = document.getElementById('f-od').value, dod = document.getElementById('f-do').value;
       const suma = parseFloat(document.getElementById('f-suma').value) || 0;
@@ -1346,6 +1419,7 @@
 
     // Formularze zapisu
     document.getElementById('modal-bond-save').addEventListener('click', async () => {
+      if(!throttleWrite('bond-save')) return;
       const id = document.getElementById('f-id').value;
       const tid = isAdmin ? document.getElementById('f-tenant-select').value : tenantId;
       const payload = {
@@ -1365,14 +1439,9 @@
         bond_tenant_id: tid
       };
       
-      hideModalErrors('modal-bond');
-      let errB;
-      if(id) { const r = await sb.from('bond_bonds').update(payload).eq('bond_id', id); errB = r.error; }
-      else { const r = await sb.from('bond_bonds').insert(payload); errB = r.error; }
-      
-      if(errB) { console.warn('bond_bonds save error:', errB.code); showModalError('modal-bond', 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.'); return; }
-      closeModal('modal-bond');
-      if(isAdmin) await loadAll(); else await loadBonds(tenantId);
+      if(await saveCRUD('bond_bonds', 'modal-bond', payload, id)) {
+        if(isAdmin) await loadAll(); else await loadBonds(tenantId);
+      }
     });
 
     function editBond(id) {
@@ -1406,6 +1475,7 @@
     }
 
     document.getElementById('modal-client-save').addEventListener('click', async () => {
+      if(!throttleWrite('client-save')) return;
       const id = document.getElementById('fc-id').value;
       const payload = {
         bond_nazwa: document.getElementById('fc-nazwa').value.trim(),
@@ -1415,13 +1485,7 @@
         bond_krs: document.getElementById('fc-krs').value.trim() || null
       };
       
-      hideModalErrors('modal-client');
-      let errC;
-      if(id) { const r = await sb.from('bond_tenants').update(payload).eq('bond_id', id); errC = r.error; }
-      else { const r = await sb.from('bond_tenants').insert(payload); errC = r.error; }
-      
-      if(errC) { console.warn('bond_tenants save error:', errC.code); showModalError('modal-client', 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.'); return; }
-      closeModal('modal-client'); await loadAll();
+      if(await saveCRUD('bond_tenants', 'modal-client', payload, id)) await loadAll();
     });
 
     function editClient(id) {
@@ -1446,6 +1510,7 @@
     }
 
     document.getElementById('modal-insurer-save').addEventListener('click', async () => {
+      if(!throttleWrite('insurer-save')) return;
       const id = document.getElementById('fi-id').value;
       const payload = {
         bond_tenant_id: document.getElementById('fi-tenant').value || null,
@@ -1458,13 +1523,7 @@
         bond_skladka_min: parseFloat(document.getElementById('fi-skladka-min').value) || null
       };
       
-      hideModalErrors('modal-insurer');
-      let errI;
-      if(id) { const r = await sb.from('bond_insurers').update(payload).eq('bond_id', id); errI = r.error; }
-      else { const r = await sb.from('bond_insurers').insert(payload); errI = r.error; }
-      
-      if(errI) { console.warn('bond_insurers save error:', errI.code); showModalError('modal-insurer', 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.'); return; }
-      closeModal('modal-insurer'); await loadAll();
+      if(await saveCRUD('bond_insurers', 'modal-insurer', payload, id)) await loadAll();
     });
 
     function editInsurer(id) {
@@ -1500,15 +1559,13 @@
     }
 
     document.getElementById('modal-user-save').addEventListener('click', async () => {
+      if(!throttleWrite('user-save')) return;
       const id = document.getElementById('fu-id').value;
-      hideModalErrors('modal-user-assign');
-      const { error: errU } = await sb.from('bond_profiles').update({
+      const payload = {
         bond_tenant_id: document.getElementById('fu-tenant').value || null,
         bond_rola: document.getElementById('fu-rola').value
-      }).eq('bond_id', id);
-      
-      if(errU) { console.warn('bond_profiles save error:', errU.code); showModalError('modal-user-assign', 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.'); return; }
-      closeModal('modal-user-assign'); await loadAll();
+      };
+      if(await saveCRUD('bond_profiles', 'modal-user-assign', payload, id)) await loadAll();
     });
 
     document.getElementById('btn-invite-user').addEventListener('click', () => {
@@ -1519,6 +1576,7 @@
     // --- 6. NAPRAWIONE: TWORZENIE UŻYTKOWNIKÓW Z POZIOMU FRONTENDU ---
     // =========================================================================
     document.getElementById('modal-invite-save').addEventListener('click', async () => {
+      if(!throttleWrite('invite-save', 3000)) return;
       const email = document.getElementById('finv-email').value.trim();
       const tenantId_inv = document.getElementById('finv-tenant').value;
       const rola = document.getElementById('finv-rola').value;
@@ -1834,6 +1892,7 @@
     // Zapis do bazy danych
     document.getElementById('btn-save-analysis').addEventListener('click', async () => {
       if(!currentAnalysisData) return;
+      if(!throttleWrite('analysis-save', 2000)) return;
       
       const btn = document.getElementById('btn-save-analysis');
       btn.innerHTML = 'Zapisywanie...'; btn.disabled = true;
