@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' cdn.jsdelivr.net unpkg.com 'unsafe-inline'; style-src 'self' fonts.googleapis.com 'unsafe-inline'; font-src fonts.gstatic.com; connect-src *.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'self';">
   <title>Gwarancje.PRO — Panel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300..700;1,300..700&subset=latin-ext&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@0.511.0/dist/umd/lucide.js" crossorigin="anonymous"></script>
   <style>
     /* ==========================================================================
        SPIS TREŚCI (TABLE OF CONTENTS)
@@ -172,6 +173,15 @@
     .bg-success { background-color: var(--color-success); color: var(--color-surface); }
     .bg-warning { background-color: var(--color-warning); color: var(--color-surface); }
     .bg-error { background-color: var(--color-error); color: var(--color-surface); }
+
+    /* === TOAST NOTIFICATIONS === */
+    #toast-container { position:fixed; bottom:var(--space-6); right:var(--space-6); z-index:9999; display:flex; flex-direction:column; gap:var(--space-3); pointer-events:none; }
+    .toast { display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-5); border-radius:var(--radius-lg); font-size:var(--text-sm); font-weight:500; box-shadow:var(--shadow-lg); pointer-events:all; max-width:380px; animation:toastIn .25s ease; }
+    .toast-success { background:oklch(from var(--color-success) l c h/0.12); border:1px solid oklch(from var(--color-success) l c h/0.3); color:var(--color-success); }
+    .toast-error   { background:oklch(from var(--color-error) l c h/0.12); border:1px solid oklch(from var(--color-error) l c h/0.3); color:var(--color-error); }
+    .toast-info    { background:oklch(from var(--color-primary) l c h/0.12); border:1px solid oklch(from var(--color-primary) l c h/0.3); color:var(--color-primary); }
+    .toast-warn    { background:oklch(from var(--color-warning) l c h/0.12); border:1px solid oklch(from var(--color-warning) l c h/0.3); color:var(--color-warning); }
+    @keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 
     /* === DRUKOWANIE DO PDF === */
     @media print {
@@ -919,6 +929,8 @@
     </div>
   </div>
 
+  <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
+
   <script>
     // =========================================================================
     // --- 1. SETUP & UTILS (Konfiguracja Supabase, Stan i Pomocniki) ---
@@ -940,6 +952,15 @@
 
     const escapeHTML = s => { if(!s) return ''; const d=document.createElement('div'); d.textContent=s; return d.innerHTML; };
     const fmt = n => n==null?'—':Number(n).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+    function showToast(msg, type = 'info', duration = 4000) {
+      const container = document.getElementById('toast-container');
+      const el = document.createElement('div');
+      el.className = 'toast toast-' + type;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, duration);
+    }
     const dateDiff = (a,b) => Math.round((new Date(b)-new Date(a))/(1000*60*60*24));
     const today = () => new Date().toISOString().slice(0,10);
 
@@ -1002,7 +1023,7 @@
       } else if(tenantId) {
         await loadBonds(tenantId);
       } else {
-        alert('Twoje konto nie jest przypisane do żadnej firmy. Skontaktuj się z administratorem.');
+        showToast('Twoje konto nie jest przypisane do żadnej firmy. Skontaktuj się z administratorem.', 'warn', 8000);
       }
       lucide.createIcons();
     }
@@ -1019,7 +1040,7 @@
       try { 
         const { data: rA } = await sb.from('bond_analytics').select('*').order('created_at', { ascending: false });
         allAnalytics = rA || [];
-      } catch (e) { console.log('Tabela bond_analytics nie istnieje - uruchom kod SQL z odpowiedzi'); allAnalytics = []; }
+      } catch (e) { allAnalytics = []; }
 
       allTenants = rT.data || [];
       allInsurers = rI.data || [];
@@ -1349,7 +1370,7 @@
       if(id) { const r = await sb.from('bond_bonds').update(payload).eq('bond_id', id); errB = r.error; }
       else { const r = await sb.from('bond_bonds').insert(payload); errB = r.error; }
       
-      if(errB) { showModalError('modal-bond', 'Błąd zapisu: ' + errB.message); return; }
+      if(errB) { console.warn('bond_bonds save error:', errB.code); showModalError('modal-bond', 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.'); return; }
       closeModal('modal-bond');
       if(isAdmin) await loadAll(); else await loadBonds(tenantId);
     });
@@ -1376,9 +1397,12 @@
     }
 
     async function deleteBond(id) {
+      if(!isAdmin) { showToast('Brak uprawnień administratora.', 'error'); return; }
       if(!confirm('Czy na pewno chcesz usunąć tę gwarancję?')) return;
-      await sb.from('bond_bonds').delete().eq('bond_id', id);
-      if(isAdmin) await loadAll(); else await loadBonds(tenantId);
+      const { error } = await sb.from('bond_bonds').delete().eq('bond_id', id);
+      if(error) { showToast('Błąd usunięcia gwarancji.', 'error'); return; }
+      showToast('Gwarancja usunięta.', 'success');
+      await loadAll();
     }
 
     document.getElementById('modal-client-save').addEventListener('click', async () => {
@@ -1396,7 +1420,7 @@
       if(id) { const r = await sb.from('bond_tenants').update(payload).eq('bond_id', id); errC = r.error; }
       else { const r = await sb.from('bond_tenants').insert(payload); errC = r.error; }
       
-      if(errC) { showModalError('modal-client', 'Błąd zapisu: ' + errC.message); return; }
+      if(errC) { console.warn('bond_tenants save error:', errC.code); showModalError('modal-client', 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.'); return; }
       closeModal('modal-client'); await loadAll();
     });
 
@@ -1413,8 +1437,11 @@
     }
 
     async function deleteClient(id) {
+      if(!isAdmin) { showToast('Brak uprawnień administratora.', 'error'); return; }
       if(!confirm('Usunięcie klienta usunie też wszystkie jego gwarancje i limity! Kontynuować?')) return;
-      await sb.from('bond_tenants').delete().eq('bond_id', id);
+      const { error } = await sb.from('bond_tenants').delete().eq('bond_id', id);
+      if(error) { showToast('Błąd usunięcia klienta.', 'error'); return; }
+      showToast('Klient usunięty.', 'success');
       await loadAll();
     }
 
@@ -1436,7 +1463,7 @@
       if(id) { const r = await sb.from('bond_insurers').update(payload).eq('bond_id', id); errI = r.error; }
       else { const r = await sb.from('bond_insurers').insert(payload); errI = r.error; }
       
-      if(errI) { showModalError('modal-insurer', 'Błąd zapisu: ' + errI.message); return; }
+      if(errI) { console.warn('bond_insurers save error:', errI.code); showModalError('modal-insurer', 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.'); return; }
       closeModal('modal-insurer'); await loadAll();
     });
 
@@ -1456,8 +1483,11 @@
     }
 
     async function deleteInsurer(id) {
+      if(!isAdmin) { showToast('Brak uprawnień administratora.', 'error'); return; }
       if(!confirm('Usunąć tego ubezpieczyciela/limit?')) return;
-      await sb.from('bond_insurers').delete().eq('bond_id', id);
+      const { error } = await sb.from('bond_insurers').delete().eq('bond_id', id);
+      if(error) { showToast('Błąd usunięcia ubezpieczyciela.', 'error'); return; }
+      showToast('Ubezpieczyciel usunięty.', 'success');
       await loadAll();
     }
 
@@ -1477,7 +1507,7 @@
         bond_rola: document.getElementById('fu-rola').value
       }).eq('bond_id', id);
       
-      if(errU) { showModalError('modal-user-assign', 'Błąd zapisu: ' + errU.message); return; }
+      if(errU) { console.warn('bond_profiles save error:', errU.code); showModalError('modal-user-assign', 'Błąd zapisu. Sprawdź dane i spróbuj ponownie.'); return; }
       closeModal('modal-user-assign'); await loadAll();
     });
 
@@ -1524,10 +1554,12 @@
         });
 
         if (profErr) {
-          errEl.textContent = 'Błąd przypisania profilu: ' + profErr.message;
+          errEl.textContent = 'Błąd przypisania profilu. Spróbuj ponownie.';
           errEl.style.display = 'block';
+          console.warn('bond_profiles upsert error:', profErr.code);
         } else {
-          alert(`SUKCES! Użytkownik utworzony.\n\nLogin: ${email}\nHasło: ${tempPass}\n\nPrzekaż te dane klientowi.`);
+          try { await navigator.clipboard.writeText(tempPass); showToast(`Konto utworzone dla ${email}. Hasło tymczasowe skopiowane do schowka.`, 'success', 7000); }
+          catch { showToast(`Konto dla ${email} utworzone. Przekaż hasło przez bezpieczny kanał.`, 'success', 7000); }
           closeModal('modal-invite');
           await loadAll();
         }
@@ -1809,10 +1841,11 @@
       const { error } = await sb.from('bond_analytics').insert(currentAnalysisData);
       
       if(error) {
-        alert("Błąd zapisu! Czy na pewno stworzyłeś tabelę 'bond_analytics' w Supabase?\n\nError: " + error.message);
+        console.warn('bond_analytics insert error:', error.code);
+        showToast('Błąd zapisu analizy. Upewnij się, że tabela bond_analytics istnieje w Supabase.', 'error', 6000);
       } else {
-        alert("Analiza została poprawnie zapisana w profilu klienta.");
-        await loadAll(); // Odśwież dane globalne aby ukazało się w panelu klienta
+        showToast('Analiza zapisana w profilu klienta.', 'success');
+        await loadAll();
       }
       
       btn.innerHTML = '<i data-lucide="save" width="16" height="16"></i> Zapisz wynik';
@@ -1823,27 +1856,41 @@
     // Import e-Sprawozdań XML (Demo)
     document.getElementById('xml-upload').addEventListener('change', function(e) {
       const file = e.target.files[0];
+      this.value = '';
       if(!file) return;
+
+      const ALLOWED_TYPES = ['text/xml', 'application/xml'];
+      const MAX_SIZE_MB = 5;
+      if(!ALLOWED_TYPES.includes(file.type) && !file.name.toLowerCase().endsWith('.xml')) {
+        showToast('Dozwolone tylko pliki XML.', 'error'); return;
+      }
+      if(file.size > MAX_SIZE_MB * 1024 * 1024) {
+        showToast(`Plik jest za duży (max ${MAX_SIZE_MB} MB).`, 'error'); return;
+      }
 
       const reader = new FileReader();
       reader.onload = function(evt) {
         const text = evt.target.result;
+        // Blokuj DOCTYPE/entity declarations (XXE protection)
+        if(/<!DOCTYPE/i.test(text) || /<!ENTITY/i.test(text)) {
+          showToast('Plik zawiera niedozwolone deklaracje XML (DOCTYPE/ENTITY).', 'error'); return;
+        }
         try {
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(text, "text/xml");
+          if(xmlDoc.querySelector('parsererror')) { showToast('Błąd parsowania pliku XML. Sprawdź poprawność pliku.', 'error'); return; }
 
-          alert("UWAGA: Uruchomiono wstępny parser XML e-Sprawozdań. Ze względu na wariantowość RZiS dane zostaną oszacowane na podstawie znalezionych tagów.");
+          showToast('UWAGA: Parser XML e-Sprawozdań wczytał plik. Ze względu na wariantowość RZiS dane zostały oszacowane — sprawdź poprawność.', 'warn', 7000);
 
           document.getElementById('rev-0').value = 24500; document.getElementById('ebitda-0').value = 1850; document.getElementById('net-0').value = 920; document.getElementById('eq-0').value = 8100; document.getElementById('lst-0').value = 5200; document.getElementById('llt-0').value = 1800; document.getElementById('ca-0').value = 9500; document.getElementById('inv-0').value = 2100; document.getElementById('int-0').value = 150;
           document.getElementById('rev-1').value = 21000; document.getElementById('ebitda-1').value = 1500;
 
-          alert("Plik XML wczytany. Dane wpisano do tabeli. Sprawdź poprawność i kliknij Wykonaj Analizę.");
-        } catch(error) {
-          alert("Błąd podczas przetwarzania pliku XML.");
+          showToast('Dane z XML wpisane do tabeli. Sprawdź poprawność i kliknij Wykonaj Analizę.', 'info');
+        } catch(err) {
+          console.warn('XML parse error'); showToast('Błąd podczas przetwarzania pliku XML.', 'error');
         }
       };
       reader.readAsText(file);
-      this.value = '';
     });
 
   </script>
